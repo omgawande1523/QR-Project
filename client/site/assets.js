@@ -72,7 +72,12 @@ export function siteFiles({ name = appName(), siteUrl = '' } = {}) {
   <p>${name} needs an internet connection to show the menu and send orders. Check your Wi-Fi or mobile data and try again.</p>
   <button type="button" onclick="location.reload()">Try again</button>
 </main>
-<script>window.addEventListener('online', function () { location.reload(); });</script>
+<script>
+window.addEventListener('online', function () { location.reload(); });
+// Online but the page still did not load (the connection came back a moment too late, or the server is
+// restarting): keep trying every few seconds.
+if (navigator.onLine) setTimeout(function () { location.reload(); }, 5000);
+</script>
 </body>
 </html>
 `
