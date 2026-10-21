@@ -1,0 +1,13 @@
+/* Privacy policy and account deletion: a readable column of text. */
+.legal { min-height: 100vh; display: flex; flex-direction: column; }
+.legal-header { border-bottom: 1px solid var(--cream-300); padding: var(--space-3) 0; }
+.legal-body { flex: 1; max-width: 760px; padding-top: var(--space-8); padding-bottom: var(--space-12); display: flex; flex-direction: column; gap: var(--space-4); line-height: 1.6; }
+.legal-body h1 { font-size: var(--text-3xl); font-weight: var(--weight-extrabold); line-height: 1.2; }
+.legal-body h2 { font-size: var(--text-xl); font-weight: var(--weight-bold); margin-top: var(--space-4); }
+.legal-body ul { margin: 0; padding-left: 1.25em; display: flex; flex-direction: column; gap: var(--space-2); }
+.legal-body a { color: var(--primary); font-weight: var(--weight-semibold); }
+.legal-body table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.legal-body th, .legal-body td { text-align: left; vertical-align: top; padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--cream-300); }
+.legal-form { max-width: 420px; }
+.legal-footer { max-width: 760px; padding-bottom: var(--space-8); }
+.legal-footer a { color: inherit; }

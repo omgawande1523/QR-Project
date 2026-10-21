@@ -236,6 +236,7 @@ export default function LandingPage() {
             {NAV.map((item) => <a key={item.href} href={item.href}>{item.label}</a>)}
             <Link to="/login">Log in</Link>
             <Link to="/register">Start free</Link>
+            <Link to="/privacy">Privacy</Link>
           </nav>
           <p>© {year} {APP_NAME}. Made in India.</p>
         </div>
