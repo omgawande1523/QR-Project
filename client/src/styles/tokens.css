@@ -1,0 +1,106 @@
+/*
+ * Design tokens: the only place colours, type, radii, shadows and spacing are defined.
+ * Brand: olive leaf green. --olive-500 is the base (approximate #A3B23A until the colour is
+ * sampled from design-reference/olive-color.png); the scale was generated in OKLab around it.
+ *
+ * Contrast rule (WCAG AA): white text only on --olive-700 or darker (#606B00 = 5.8:1 on white).
+ * Light olive (300-500) is for accents and backgrounds with --ink content on top (7:1 on 500).
+ */
+:root {
+  /* Olive scale */
+  --olive-50: #f5fae4;
+  --olive-100: #eaf2cc;
+  --olive-200: #dbe5aa;
+  --olive-300: #c6d481;
+  --olive-400: #b3c259;
+  --olive-500: #a3b23a;
+  --olive-600: #7d8906;
+  --olive-700: #606b00;
+  --olive-800: #485000;
+  --olive-900: #313700;
+
+  /* Neutrals */
+  --cream-bg: #faf6ee; /* warm off-white page background */
+  --cream-200: #f3ecdf; /* subtle fills: inputs, image wells, chips */
+  --cream-300: #e8dfcd; /* borders */
+  --surface: #ffffff; /* cards */
+  --ink: #1e2112; /* text, dark nav and sidebar (15:1 on cream) */
+  --ink-soft: #2c301d; /* hover on dark surfaces */
+  --muted: #5f634e; /* secondary text (5.8:1 on cream) */
+  --on-dark-muted: #b9bca7; /* secondary text on --ink */
+
+  /* Semantic */
+  --success: #2e7d32;
+  --success-bg: #e6f2e4;
+  --danger: #b3261e;
+  --danger-bg: #fbe7e5;
+  --warning: #9a5b00;
+  --warning-bg: #fbefd9;
+  --info: #1f5f8b;
+  --info-bg: #e3eef6;
+  --veg-green: #2e7d32;
+  --nonveg-red: #b3261e;
+
+  /* Roles */
+  --primary: var(--olive-700);
+  --primary-hover: var(--olive-800);
+  --on-primary: #ffffff;
+  --accent: var(--olive-500);
+  --accent-soft: var(--olive-100);
+  --on-accent: var(--ink);
+  --focus-ring: 0 0 0 3px rgba(125, 137, 6, 0.45); /* olive-600 */
+
+  /* Type */
+  --font-sans: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --text-3xl: 2.25rem;
+  --text-4xl: clamp(2.25rem, 5vw, 3.5rem);
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --weight-extrabold: 800;
+  --leading-tight: 1.2;
+  --leading-normal: 1.5;
+
+  /* Shape */
+  --radius-sm: 10px;
+  --radius-input: 14px;
+  --radius-md: 16px;
+  --radius-card: 22px;
+  --radius-lg: 28px;
+  --radius-pill: 999px;
+
+  /* Elevation: soft and low */
+  --shadow-sm: 0 1px 2px rgba(30, 33, 18, 0.06), 0 1px 3px rgba(30, 33, 18, 0.05);
+  --shadow-md: 0 4px 14px rgba(30, 33, 18, 0.08);
+  --shadow-lg: 0 12px 32px rgba(30, 33, 18, 0.12);
+
+  /* Spacing (4px grid) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Layout */
+  --mobile-max: 480px;
+  --tap: 44px; /* minimum tap target */
+  --nav-height: 72px;
+  --sidebar-width: 248px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 120ms;
+  --duration: 220ms;
+}

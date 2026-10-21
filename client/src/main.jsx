@@ -1,6 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
+import '@fontsource-variable/plus-jakarta-sans';
+import './styles/tokens.css';
+import './styles/base.css';
+import './styles/components.css';
 import App from './App';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));

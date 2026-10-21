@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import { useParams, useLocation, useNavigate } from 'react-router';
 import { io } from 'socket.io-client';
 import OrderSuccessModal from './OrderSuccessModal';
 import API_BASE_URL, { SOCKET_URL } from '../config';
