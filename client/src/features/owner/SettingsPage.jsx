@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react';
 import { BellRing, Copy } from 'lucide-react';
 import { useOwner } from './OwnerContext';
 import { PageHeader } from './OwnerLayout';
-import { Button, Card, Skeleton, Switch, TextField, SelectField, useToast } from '../../components/ui';
+import { Button, Skeleton, Switch, TextField, SelectField, useToast } from '../../components/ui';
+import { Section } from './SettingsSection';
+import { DevicesSection, AppNotificationsSection, DeleteAccountSection } from './AccountSections';
+import { IS_APP } from '../../lib/platform';
 import { PasswordField } from '../auth/PasswordField';
 import { api, errorMessage } from '../../lib/api';
 import { setSession } from '../../lib/session';
@@ -14,23 +17,6 @@ import { can, ROLE_LABEL } from '../../lib/roles';
 
 const WEEK = [1, 2, 3, 4, 5, 6, 0]; // Monday first
 const defaultHours = () => WEEK.map((day) => ({ day, open: '09:00', close: '22:00', closed: false }));
-
-function Section({ title, description, children, onSave, saving, dirty = true }) {
-  return (
-    <Card as="section" className="settings-section">
-      <div className="settings-head">
-        <h2 className="card-title">{title}</h2>
-        {description && <p className="muted text-sm">{description}</p>}
-      </div>
-      <div className="stack">{children}</div>
-      {onSave && (
-        <div className="settings-foot">
-          <Button onClick={onSave} loading={saving} disabled={!dirty}>Save</Button>
-        </div>
-      )}
-    </Card>
-  );
-}
 
 export default function SettingsPage() {
   const { profile, saveProfile, alerts, setAlerts, role, me } = useOwner();
@@ -166,7 +152,7 @@ export default function SettingsPage() {
           <p className="muted text-sm">Alerts on this device:</p>
           <Switch checked={alerts.sound} onChange={(on) => setAlerts({ sound: on })} label="Sound for new orders and table requests" />
           <Switch checked={alerts.voice} onChange={(on) => setAlerts({ voice: on })} label="Read new orders aloud" />
-          <Switch checked={alerts.browser} onChange={enableBrowserAlerts} label={<span className="row" style={{ gap: 6 }}><BellRing size={16} aria-hidden="true" /> Browser notifications when this tab is hidden</span>} />
+          {!IS_APP && <Switch checked={alerts.browser} onChange={enableBrowserAlerts} label={<span className="row" style={{ gap: 6 }}><BellRing size={16} aria-hidden="true" /> Browser notifications when this tab is hidden</span>} />}
           <Button variant="secondary" size="sm" onClick={() => new Audio('/notification.wav').play().catch(() => toast.error('Click anywhere on the page first, then try again'))}>Play test sound</Button>
         </Section>
 
@@ -178,6 +164,10 @@ export default function SettingsPage() {
           </div>
           <div><Button variant="secondary" onClick={changePassword} loading={saving === 'password'} disabled={!passwords.currentPassword || !passwords.newPassword}>Change password</Button></div>
         </Section>
+
+        <AppNotificationsSection role={role} />
+        <DevicesSection />
+        <DeleteAccountSection isStaff={isStaff} />
       </div>
     </>
   );

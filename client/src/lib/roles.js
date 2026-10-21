@@ -19,5 +19,12 @@ const ACCESS = {
 
 export const can = (role, area) => Boolean(role && ACCESS[area]?.includes(role));
 
+// Push notifications in the staff app: which roles receive each type (same as server/src/services/push).
+export const NOTIFICATIONS = [
+  { type: 'newOrder', label: 'New orders', roles: ['owner', 'manager', 'kitchen'] },
+  { type: 'tableRequest', label: 'Waiter calls and bill requests', roles: ['owner', 'manager', 'waiter'] },
+  { type: 'orderReady', label: 'Orders ready to serve', roles: ['waiter'] }
+];
+
 // Where each role lands after logging in (or when it opens a page it cannot use).
 export const homeFor = (role) => (role === 'kitchen' ? '/kitchen' : role === 'waiter' ? '/dashboard/orders' : '/dashboard');

@@ -12,7 +12,9 @@ const view = (session, currentId) => ({
   createdAt: session.createdAt,
   lastActiveAt: session.lastActiveAt,
   current: String(session._id) === String(currentId),
-  notifications: Boolean(session.push?.token)
+  notifications: Boolean(session.push?.token),
+  // This device's own switches (shown in its Settings)
+  ...(String(session._id) === String(currentId) ? { prefs: session.push?.prefs || {} } : {})
 });
 
 // Push tokens belong to a session, so a token from before sessions existed cannot register one.

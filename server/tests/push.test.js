@@ -66,6 +66,7 @@ describe('device registration', () => {
 
     const list = await request(app).get('/api/sessions').set(auth(owner.token));
     expect(list.body[0].notifications).toBe(true);
+    expect(list.body[0].prefs).toMatchObject({ newOrder: true, tableRequest: false }); // this device's own switches
 
     expect((await request(app).delete('/api/sessions/current/push').set(auth(owner.token))).status).toBe(204);
     expect(await Session.exists({ 'push.token': 'device-token-1234567890abcdef' })).toBeNull();

@@ -306,3 +306,16 @@
 .staff-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--accent-soft); color: var(--olive-800); display: grid; place-items: center; font-weight: var(--weight-extrabold); flex-shrink: 0; }
 .staff-role { width: auto; min-width: 130px; min-height: 44px; padding: 8px 12px; }
 @media (max-width: 640px) { .staff-row .grow { flex-basis: calc(100% - 60px); } }
+
+/* Settings: signed-in devices and account deletion */
+.device-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.device-row { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) 0; }
+.device-row + .device-row { border-top: 1px solid var(--cream-200); }
+.device-icon { width: 40px; height: 40px; border-radius: var(--radius-md); background: var(--accent-soft); color: var(--olive-800); display: grid; place-items: center; flex-shrink: 0; }
+.settings-danger { box-shadow: inset 0 0 0 1.5px var(--danger-bg), var(--shadow-sm); }
+
+/* Orders board in the staff app: a card opened from a notification, and a card being dragged by touch */
+.order-card.is-focused { box-shadow: 0 0 0 3px var(--olive-500), var(--shadow-md); animation: pop-in var(--duration) var(--ease-out); }
+.order-card.is-dragging { position: relative; z-index: 20; opacity: 0.92; box-shadow: var(--shadow-lg); transition: none; cursor: grabbing; }
+.settings-grid > * { min-width: 0; } /* long device names truncate instead of widening the page */
+.device-row .row { min-width: 0; }
