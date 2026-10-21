@@ -38,8 +38,13 @@ describe('seed script', () => {
     expect(menu.body.every((item) => item.image.includes('/uploads/menu/'))).toBe(true);
 
     const orders = await request(app).get('/api/orders').set('Authorization', `Bearer ${login.body.token}`);
-    expect(orders.body).toHaveLength(8);
+    expect(orders.body.length).toBeGreaterThan(300); // 8 live orders and eight weeks of history
     expect(orders.body.every((order) => order.totalAmount > 0)).toBe(true);
+
+    const report = await request(app).get('/api/analytics').query({ from: new Date(Date.now() - 29 * 86400000).toISOString().slice(0, 10) }).set('Authorization', `Bearer ${login.body.token}`);
+    expect(report.body.totals.orders).toBeGreaterThan(200);
+    expect(report.body.payments.map((p) => p.method).sort()).toEqual(['card', 'cash', 'upi']);
+    expect(report.body.tables.every((t) => t.scans > 0)).toBe(true);
 
     const profile = await request(app).get(`/api/users/${login.body.userId}/public`);
     expect(profile.body).toMatchObject({ restaurantName: 'Olive Leaf Café', tables: [1, 2, 3, 4, 5], taxPercent: 5 });

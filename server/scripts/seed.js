@@ -18,7 +18,7 @@ const MenuItem = require('../src/models/MenuItem');
 const Order = require('../src/models/Order');
 const ServiceRequest = require('../src/models/ServiceRequest');
 const Counter = require('../src/models/Counter');
-const { nextInvoiceNumber } = require('../src/services/invoices');
+const { nextInvoiceNumber, financialYear, counterKey, formatInvoiceNumber } = require('../src/services/invoices');
 const { IMAGE_KINDS, saveOriginal, cropOriginal } = require('../src/services/images');
 const Upload = require('../src/models/Upload');
 const Staff = require('../src/models/Staff');
@@ -127,6 +127,83 @@ const SAMPLE_ORDERS = [
   [52 * 60, 4, 'cancelled', 'Dev', [['Chicken 65', 1]]]
 ];
 
+// Eight weeks of past orders so analytics has something to show: breakfast, lunch, tea and dinner
+// with dinner the busiest, busier weekends and a slow upward trend. A fixed seed keeps runs identical.
+const HISTORY_DAYS = 56;
+const MEALS = [
+  { hours: [8, 11], weight: 2, pools: [['Masala Dosa', 'Idli Sambar', 'Kanda Poha', 'Aloo Paratha'], ['Masala Chai', 'Filter Coffee']] },
+  { hours: [12, 15], weight: 4, pools: [['Paneer Butter Masala', 'Dal Makhani', 'Veg Biryani', 'Chicken Biryani', 'Home-style Chicken Curry'], ['Butter Naan', 'Garlic Naan', 'Jeera Rice'], ['Mango Lassi', 'Masala Chai']] },
+  { hours: [16, 18], weight: 1.5, pools: [['Veg Spring Rolls', 'Hara Bhara Kebab', 'Chicken 65', 'Paneer Tikka'], ['Masala Chai', 'Filter Coffee']] },
+  { hours: [19, 22], weight: 5, pools: [['Paneer Tikka', 'Chicken Tikka', 'Chicken 65'], ['Paneer Butter Masala', 'Dal Makhani', 'Chicken Biryani', 'Home-style Chicken Curry', 'Veg Biryani'], ['Butter Naan', 'Garlic Naan'], ['Gulab Jamun', 'Rasmalai']] }
+];
+const GUESTS = ['Aarav', 'Diya', 'Ishaan', 'Kavya', 'Rohan', 'Sneha', 'Vikram', 'Neha', 'Aditya', 'Pooja', 'Siddharth', 'Tanvi'];
+const IST_OFFSET_MS = 330 * 60 * 1000;
+
+function mulberry32(seed) {
+  let state = seed;
+  return () => {
+    state = (state + 0x6d2b79f5) | 0;
+    let t = Math.imul(state ^ (state >>> 15), 1 | state);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function historyOrders(restaurant, pricingMenu, itemsByName) {
+  const random = mulberry32(2026);
+  const pick = (list) => list[Math.floor(random() * list.length)];
+  const weighted = (list, weightOf) => {
+    let r = random() * list.reduce((sum, entry) => sum + weightOf(entry), 0);
+    return list.find((entry) => (r -= weightOf(entry)) < 0) || list[list.length - 1];
+  };
+  const pad = (n) => String(n).padStart(2, '0');
+  const today = new Date(Date.now() + IST_OFFSET_MS).toISOString().slice(0, 10);
+  const orders = [];
+  for (let back = HISTORY_DAYS; back >= 2; back -= 1) {
+    const date = new Date(Date.parse(`${today}T00:00:00Z`) - back * 86400000).toISOString().slice(0, 10);
+    const weekday = new Date(`${date}T00:00:00Z`).getUTCDay();
+    const weekend = weekday === 0 || weekday === 5 || weekday === 6;
+    const trend = 1 + ((HISTORY_DAYS - back) / HISTORY_DAYS) * 0.35;
+    const count = Math.max(3, Math.round((weekend ? 14 : 8) * trend + random() * 5 - 2));
+    for (let i = 0; i < count; i += 1) {
+      const meal = weighted(MEALS, (m) => m.weight);
+      const hour = meal.hours[0] + Math.floor(random() * (meal.hours[1] - meal.hours[0] + 1));
+      const createdAt = new Date(`${date}T${pad(hour)}:${pad(Math.floor(random() * 60))}:00+05:30`);
+      const party = 1 + Math.floor(random() * 4);
+      const lines = meal.pools
+        .filter((_, index) => index === 0 || random() < 0.7)
+        .map((pool) => {
+          const item = itemsByName.get(pick(pool));
+          return [item.name, Math.max(1, Math.round(party * (0.5 + random() * 0.6))), item.variants.length ? pick(item.variants).name : null];
+        });
+      const cancelled = random() < 0.03;
+      const invoicedAt = new Date(createdAt.getTime() + 45 * 60 * 1000);
+      orders.push({
+        ...priceOrder(restaurant, pricingMenu, buildLines(lines, itemsByName)),
+        tableNumber: pick(restaurant.tables),
+        customerName: random() < 0.6 ? pick(GUESTS) : undefined,
+        status: cancelled ? 'cancelled' : 'complete',
+        ...(cancelled ? {} : {
+          invoicedAt,
+          payment: { method: weighted([['upi', 55], ['cash', 30], ['card', 15]], (m) => m[1])[0], paidAt: new Date(invoicedAt.getTime() + 5 * 60 * 1000) }
+        }),
+        restaurantId: restaurant._id,
+        trackingToken: crypto.randomBytes(24).toString('hex'),
+        createdAt
+      });
+    }
+  }
+  // Invoice numbers in date order, per financial year.
+  orders.sort((a, b) => a.createdAt - b.createdAt);
+  const counters = new Map();
+  for (const order of orders.filter((o) => o.invoicedAt)) {
+    const fy = financialYear(order.invoicedAt);
+    counters.set(fy, (counters.get(fy) || 0) + 1);
+    order.invoiceNumber = formatInvoiceNumber(fy, counters.get(fy));
+  }
+  return { orders, counters };
+}
+
 async function logoBuffer() {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
     <circle cx="256" cy="256" r="256" fill="#5b6b1f"/>
@@ -210,6 +287,14 @@ async function main() {
   // Orders are priced from the menu; mark everything available while pricing sample orders.
   const pricingMenu = new Map(items.map((item) => [String(item._id), { ...item.toObject(), available: true }]));
 
+  const history = historyOrders(restaurant, pricingMenu, itemsByName);
+  await Order.insertMany(history.orders);
+  for (const [fy, seq] of history.counters) await Counter.updateOne({ _id: counterKey(restaurant._id, fy) }, { $set: { seq } }, { upsert: true });
+  // QR scans per table, roughly in line with the orders placed there
+  const scans = {};
+  for (const o of history.orders) scans[o.tableNumber] = (scans[o.tableNumber] || 0) + 1;
+  await User.updateOne({ _id: restaurant._id }, { $set: { tableStats: Object.fromEntries(Object.entries(scans).map(([t, n]) => [t, Math.round(n * 1.4)])) } });
+
   // Oldest first, so billed and paid orders get invoice numbers in date order.
   const PAYMENT_METHODS = ['upi', 'cash', 'card'];
   const byAge = [...SAMPLE_ORDERS].sort((a, b) => b[0] - a[0]);
@@ -239,7 +324,7 @@ async function main() {
   await Staff.deleteMany({ email: { $in: DEMO_STAFF.map((s) => s.email) } });
   await Staff.insertMany(DEMO_STAFF.map((member) => ({ ...member, restaurant: restaurant._id, password: staffPassword })));
 
-  console.log(`Created "${DEMO.restaurantName}": ${items.length} menu items, ${DEMO.tables.length} tables, ${SAMPLE_ORDERS.length} orders.`);
+  console.log(`Created "${DEMO.restaurantName}": ${items.length} menu items, ${DEMO.tables.length} tables, ${SAMPLE_ORDERS.length} live orders, ${history.orders.length} past orders.`);
   console.log(`Login: ${DEMO.email} / ${DEMO.password}`);
   console.log(`Staff logins (same password): ${DEMO_STAFF.map((m) => `${m.email} (${m.role})`).join(', ')}`);
   console.log(`Customer menu: ${config.frontendUrl || 'http://localhost:3000'}/menu/${restaurant._id}?table=1`);

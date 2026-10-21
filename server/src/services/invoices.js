@@ -9,11 +9,14 @@ function financialYear(date = new Date()) {
   return `${start}-${String((start + 1) % 100).padStart(2, '0')}`;
 }
 
-// Consecutive per restaurant and financial year; "2026-27/000123" stays within GST's 16-character limit.
+const counterKey = (restaurantId, fy) => `${restaurantId}:invoice:${fy}`;
+// "2026-27/000123" stays within GST's 16-character limit.
+const formatInvoiceNumber = (fy, seq) => `${fy}/${String(seq).padStart(6, '0')}`;
+
+// Consecutive per restaurant and financial year.
 async function nextInvoiceNumber(restaurantId, date = new Date()) {
   const fy = financialYear(date);
-  const seq = await Counter.next(`${restaurantId}:invoice:${fy}`);
-  return `${fy}/${String(seq).padStart(6, '0')}`;
+  return formatInvoiceNumber(fy, await Counter.next(counterKey(restaurantId, fy)));
 }
 
-module.exports = { financialYear, nextInvoiceNumber };
+module.exports = { financialYear, nextInvoiceNumber, counterKey, formatInvoiceNumber };
