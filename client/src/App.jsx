@@ -2,22 +2,28 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import LandingPage from './components/LandingPage';
-import Login from './components/Login';
-import Register from './components/Register';
-import ForgotPassword from './components/ForgotPassword';
-import ResetPassword from './components/ResetPassword';
-import Dashboard from './components/Dashboard';
-const Menu = lazy(() => import('./components/Menu')); // old menu, replaced next; lazy so its global CSS stays out
-import Order from './components/Order';
-import Demo from './components/Demo';
-import Profile from './components/Profile';
 import { ToastProvider, Spinner } from './components/ui';
 import './App.css';
 
+const LandingPage = lazy(() => import('./components/LandingPage'));
+const Login = lazy(() => import('./components/Login'));
+const Register = lazy(() => import('./components/Register'));
+const ForgotPassword = lazy(() => import('./components/ForgotPassword'));
+const ResetPassword = lazy(() => import('./components/ResetPassword'));
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const Order = lazy(() => import('./components/Order'));
+const Demo = lazy(() => import('./components/Demo'));
+const Profile = lazy(() => import('./components/Profile'));
+
+// Old pages (replaced during the redesign) are lazy so their global CSS only loads on those pages.
 // Customer screens load separately so a scanned QR code downloads only what the menu needs.
 const CustomerApp = lazy(() => import('./features/customer/CustomerApp'));
+const WelcomeScreen = lazy(() => import('./features/customer/WelcomeScreen'));
+const MenuScreen = lazy(() => import('./features/customer/MenuScreen'));
 const ItemDetailScreen = lazy(() => import('./features/customer/ItemDetailScreen'));
+const CartScreen = lazy(() => import('./features/customer/CartScreen'));
+const OrdersScreen = lazy(() => import('./features/customer/OrdersScreen'));
+const OrderTrackingScreen = lazy(() => import('./features/customer/OrderTrackingScreen'));
 
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -34,7 +40,7 @@ function PageLoader() {
 
 function AppContent() {
   const location = useLocation();
-  const isCustomerMenu = location.pathname.startsWith('/menu/') || location.pathname.startsWith('/order/');
+  const isCustomerMenu = location.pathname.startsWith('/menu/');
 
   return (
     <div className="App">
@@ -62,11 +68,14 @@ function AppContent() {
                 <div className="page-wrapper"><Order /></div>
               </PrivateRoute>
             } />
-            <Route path="/menu/:userId" element={<Menu />} />
             <Route path="/menu/:restaurantId" element={<CustomerApp />}>
+              <Route index element={<WelcomeScreen />} />
+              <Route path="browse" element={<MenuScreen />} />
               <Route path="item/:itemId" element={<ItemDetailScreen />} />
+              <Route path="cart" element={<CartScreen />} />
+              <Route path="orders" element={<OrdersScreen />} />
+              <Route path="orders/:orderId" element={<OrderTrackingScreen />} />
             </Route>
-            <Route path="/order/:userId" element={<Order />} />
             <Route path="/demo" element={<div className="page-wrapper"><Demo /></div>} />
           </Routes>
         </Suspense>

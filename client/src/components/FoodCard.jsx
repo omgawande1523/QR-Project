@@ -28,7 +28,8 @@ export function FoodCard({ item, quantity = 0, favourite = false, onOpen, onAdd,
       </IconButton>
       <div className="food-card-body" onClick={onOpen}>
         <h3 className="food-card-name clamp-2">
-          <button type="button" onClick={onOpen} style={{ textAlign: 'left' }}>{item.name}</button>
+          {/* The card body also opens the item; stop here so one tap navigates once. */}
+          <button type="button" onClick={(e) => { e.stopPropagation(); onOpen(); }} style={{ textAlign: 'left' }}>{item.name}</button>
         </h3>
         {item.description && <p className="food-card-desc truncate">{item.description}</p>}
         <p className="food-card-price price">
@@ -47,7 +48,7 @@ export function FoodCard({ item, quantity = 0, favourite = false, onOpen, onAdd,
             onClick={customisable ? onOpen : onAdd}
             icon={<Plus size={16} />}
             className={bump ? 'bounce' : ''}
-            aria-label={soldOut ? `${item.name} is sold out` : `Add ${item.name}`}
+            aria-label={soldOut ? `${item.name} is sold out` : customisable ? `Choose options for ${item.name}` : `Add ${item.name}`}
           >
             {soldOut ? 'Sold out' : quantity > 0 ? `Add more (${quantity})` : 'Add'}
           </Button>
