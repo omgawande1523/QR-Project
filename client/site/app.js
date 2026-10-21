@@ -1,5 +1,6 @@
 // Build settings for the staff app (`vite build --mode app`, packaged by Capacitor from mobile/).
 import { readFileSync, existsSync } from 'node:fs';
+import process from 'node:process';
 
 const MOBILE = new URL('../../mobile/', import.meta.url);
 
