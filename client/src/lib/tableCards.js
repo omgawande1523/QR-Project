@@ -1,5 +1,9 @@
 import QRCode from 'qrcode';
 import { APP_NAME } from '../config';
+import { cssVar } from './tokens';
+
+// Default QR colour: the brand's dark olive (dark enough to scan reliably).
+export const defaultQrColor = () => cssVar('--olive-800', '#485000');
 
 export const tableUrl = (restaurantId, table) => `${window.location.origin}/menu/${restaurantId}?table=${table}`;
 
@@ -23,7 +27,7 @@ export function loadImage(src) {
 }
 
 // QR code canvas with an optional logo in the centre (error correction H tolerates ~30% cover).
-export async function qrCanvas(text, { size = 600, color = '#485000', logo = null } = {}) {
+export async function qrCanvas(text, { size = 600, color = defaultQrColor(), logo = null } = {}) {
   const canvas = document.createElement('canvas');
   await QRCode.toCanvas(canvas, text, { width: size, margin: 1, errorCorrectionLevel: 'H', color: { dark: color, light: '#ffffff' } });
   if (logo) {
@@ -63,7 +67,7 @@ export async function tableCardCanvas({ restaurantName, restaurantId, table, col
   await document.fonts?.ready;
   const font = (weight, px) => `${weight} ${px}px "Plus Jakarta Sans Variable", "Plus Jakarta Sans", system-ui, sans-serif`;
 
-  ctx.fillStyle = '#faf6ee';
+  ctx.fillStyle = cssVar('--cream-bg', '#faf6ee');
   ctx.fillRect(0, 0, width, height);
   ctx.fillStyle = '#ffffff';
   roundRect(ctx, 60, 60, width - 120, height - 120, 80);
@@ -78,7 +82,7 @@ export async function tableCardCanvas({ restaurantName, restaurantId, table, col
   ctx.font = font(800, 72);
   ctx.fillText(fitText(ctx, restaurantName, width - 240), width / 2, 200);
 
-  ctx.fillStyle = '#1e2112';
+  ctx.fillStyle = cssVar('--ink', '#1e2112');
   ctx.font = font(700, 54);
   ctx.fillText('Scan to see the menu & order', width / 2, 400);
 
@@ -89,7 +93,7 @@ export async function tableCardCanvas({ restaurantName, restaurantId, table, col
   ctx.fillStyle = color;
   ctx.fillText(`Table ${table}`, width / 2, 1390);
   ctx.font = font(600, 36);
-  ctx.fillStyle = '#5f634e';
+  ctx.fillStyle = cssVar('--muted', '#5f634e');
   ctx.fillText(`Powered by ${APP_NAME}`, width / 2, 1470);
   return canvas;
 }

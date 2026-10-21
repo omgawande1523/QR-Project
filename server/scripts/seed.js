@@ -30,7 +30,6 @@ const DEMO = {
   tables: [1, 2, 3, 4, 5],
   taxPercent: 5,
   serviceChargePercent: 0,
-  qrColor: '#485000',
   tagline: 'Fresh South & North Indian favourites, made to order.',
   address: 'Lane 7, Koregaon Park, Pune 411001',
   gstin: '27AAACO1234F1Z5',

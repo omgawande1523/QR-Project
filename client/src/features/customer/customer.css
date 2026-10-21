@@ -196,8 +196,8 @@
   text-align: left;
   font-size: var(--text-sm);
 }
-.order-banner-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--olive-400); box-shadow: 0 0 0 0 rgba(179, 194, 89, 0.7); animation: pulse 1.8s infinite; }
-@keyframes pulse { 70% { box-shadow: 0 0 0 10px rgba(179, 194, 89, 0); } 100% { box-shadow: 0 0 0 0 rgba(179, 194, 89, 0); } }
+.order-banner-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--olive-400); box-shadow: 0 0 0 0 color-mix(in srgb, var(--olive-400) 70%, transparent); animation: pulse 1.8s infinite; }
+@keyframes pulse { 70% { box-shadow: 0 0 0 10px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
 .order-banner-link { display: inline-flex; align-items: center; color: var(--olive-300); font-weight: var(--weight-bold); }
 
 /* ---------- Cart ---------- */

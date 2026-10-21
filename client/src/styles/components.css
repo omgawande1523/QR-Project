@@ -228,7 +228,7 @@
   position: fixed;
   inset: 0;
   z-index: 50;
-  background: rgba(30, 33, 18, 0.45);
+  background: var(--scrim);
   display: flex;
   animation: fade-in var(--duration) var(--ease-out);
 }

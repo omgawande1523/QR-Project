@@ -6,9 +6,11 @@ import { Button, Card, EmptyState, IconButton, Skeleton, useToast } from '../../
 import { errorMessage } from '../../lib/api';
 import { ImagePicker } from '../../components/ImagePicker';
 import { isActiveOrder } from '../../lib/orderStatus';
-import { tableUrl, qrCanvas, tableCardCanvas, downloadCanvas, downloadTablesPdf, isDarkEnough, loadImage } from '../../lib/tableCards';
+import { tableUrl, qrCanvas, tableCardCanvas, downloadCanvas, downloadTablesPdf, isDarkEnough, loadImage, defaultQrColor } from '../../lib/tableCards';
+import { cssVar } from '../../lib/tokens';
 
-const PRESETS = ['#485000', '#313700', '#1e2112', '#606b00', '#7a2e12', '#1f3d5c'];
+// Brand shades come from the design tokens; rust and navy are extra dark options.
+const presetColors = () => [cssVar('--olive-800'), cssVar('--olive-900'), cssVar('--ink'), cssVar('--olive-700'), '#7a2e12', '#1f3d5c'].filter(Boolean);
 
 function QrPreview({ restaurantId, table, color, logo }) {
   const [src, setSrc] = useState(null);
@@ -27,7 +29,8 @@ export default function TablesPage() {
   const [logoImg, setLogoImg] = useState(null);
   const [busy, setBusy] = useState(null);
 
-  const color = profile?.qrColor && profile.qrColor !== '#000000' ? profile.qrColor : '#485000';
+  // #000000 is the model default, i.e. the owner never chose: use the brand colour.
+  const color = profile?.qrColor && profile.qrColor !== '#000000' ? profile.qrColor : defaultQrColor();
   const logoSrc = profile?.qrLogo || profile?.profilePicture || '';
   const tables = useMemo(() => profile?.tables || [], [profile]);
   const scans = profile?.tableStats || {};
@@ -89,7 +92,7 @@ export default function TablesPage() {
           <div>
             <p className="field-label" style={{ marginBottom: 8 }}>Colour</p>
             <div className="row wrap">
-              {PRESETS.map((c) => (
+              {presetColors().map((c) => (
                 <button key={c} type="button" className={`swatch ${color === c ? 'active' : ''}`} style={{ background: c }} onClick={() => save({ qrColor: c })} aria-label={`Use colour ${c}`} aria-pressed={color === c} />
               ))}
               <label className="swatch swatch-custom" title="Custom colour">

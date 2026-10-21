@@ -19,7 +19,7 @@
   transition: transform var(--duration) var(--ease-out);
 }
 .sidebar.is-open { transform: none; box-shadow: var(--shadow-lg); }
-.sidebar-scrim { position: fixed; inset: 0; z-index: 55; background: rgba(30, 33, 18, 0.45); }
+.sidebar-scrim { position: fixed; inset: 0; z-index: 55; background: var(--scrim); }
 .sidebar-head { display: flex; align-items: center; justify-content: space-between; padding: 0 var(--space-2); }
 .sidebar-close { background: rgba(255, 255, 255, 0.08); color: #fff; box-shadow: none; }
 .sidebar-nav, .sidebar-foot { display: flex; flex-direction: column; gap: 4px; }
