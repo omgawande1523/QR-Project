@@ -10,10 +10,12 @@ const config: CapacitorConfig = {
   appName: app.appName,
   // The staff screens, built by `vite build --mode app` (npm run app:build).
   webDir: '../client/dist-app',
-  android: {
-    // Only for testing against a local API over plain http (10.0.2.2 or the PC's LAN address): set by
-    // scripts/app.mjs when VITE_API_URL starts with http://. Release builds use https and keep it off.
-    allowMixedContent: process.env.QRMENU_ALLOW_HTTP === '1'
+  // The app's pages load from https://localhost (an origin the API allows). Testing against a local API
+  // over plain http (10.0.2.2 or the PC's LAN address) would make every image "mixed content", which Android
+  // blocks, so those builds use http://localhost instead (allowed by the API in development only).
+  // scripts/app.mjs sets QRMENU_ALLOW_HTTP when VITE_API_URL starts with http://; release builds never do.
+  server: {
+    androidScheme: process.env.QRMENU_ALLOW_HTTP === '1' ? 'http' : 'https'
   },
   plugins: {
     SplashScreen: {
@@ -23,7 +25,8 @@ const config: CapacitorConfig = {
       androidScaleType: 'CENTER_INSIDE'
     },
     SystemBars: {
-      insetsHandling: 'css',
+      // The app's CSS uses env(safe-area-inset-*) (client/src/app/app.css), so no injected variables needed.
+      insetsHandling: 'native',
       initialViewportFitValueHint: 'cover'
     },
     PushNotifications: {

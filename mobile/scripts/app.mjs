@@ -27,7 +27,10 @@ const fail = (message) => {
 
 function run(command, args, { cwd, env = {} } = {}) {
   console.log(`\n> ${command} ${args.join(' ')}`);
-  const result = spawnSync(command, args, { cwd, stdio: 'inherit', shell: isWindows, env: { ...process.env, ...env } });
+  // On Windows npx and gradlew.bat need a shell; give it one command line (no user input goes in here).
+  const result = isWindows
+    ? spawnSync([command, ...args].map((part) => (part.includes(' ') ? `"${part}"` : part)).join(' '), { cwd, stdio: 'inherit', shell: true, env: { ...process.env, ...env } })
+    : spawnSync(command, args, { cwd, stdio: 'inherit', env: { ...process.env, ...env } });
   if (result.status !== 0) fail(`${command} ${args.join(' ')} failed (exit ${result.status})`);
 }
 

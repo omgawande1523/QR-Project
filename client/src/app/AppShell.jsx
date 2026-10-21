@@ -59,17 +59,17 @@ function usePush() {
   }, [location.pathname]);
 }
 
-// Brand colours behind the status bar: cream on most screens, dark on the kitchen display.
+// The status bar is cream with dark icons on every screen. Depending on the Android and WebView version the
+// strip behind it is either the app window (cream) or the page, so the kitchen display keeps a cream strip too
+// (app.css) instead of switching colours.
 function useStatusBar() {
-  const { pathname } = useLocation();
   useEffect(() => {
     if (!isNative()) return;
-    const dark = pathname.startsWith('/kitchen');
     import('@capacitor/status-bar').then(({ StatusBar, Style }) => {
-      StatusBar.setStyle({ style: dark ? Style.Dark : Style.Light }).catch(() => {});
-      StatusBar.setBackgroundColor({ color: dark ? '#1e2112' : '#faf6ee' }).catch(() => {});
+      StatusBar.setStyle({ style: Style.Light }).catch(() => {});
+      StatusBar.setBackgroundColor({ color: '#faf6ee' }).catch(() => {}); // Android 14 and older
     });
-  }, [pathname]);
+  }, []);
 }
 
 function useOnline() {
