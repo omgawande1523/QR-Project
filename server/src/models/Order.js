@@ -30,6 +30,9 @@ const orderSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+// Dashboard and analytics: one restaurant's orders, newest first.
+orderSchema.index({ restaurantId: 1, createdAt: -1 });
+
 orderSchema.set('toJSON', {
   transform: (doc, ret) => {
     delete ret.trackingToken;

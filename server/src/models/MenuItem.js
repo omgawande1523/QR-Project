@@ -24,4 +24,7 @@ const menuItemSchema = new mongoose.Schema({
   owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false }
 });
 
+// Customer menu and menu manager: one restaurant's items grouped by category.
+menuItemSchema.index({ owner: 1, category: 1 });
+
 module.exports = mongoose.model('MenuItem', menuItemSchema);

@@ -12,6 +12,9 @@ const serviceRequestSchema = new mongoose.Schema({
   handledAt: Date
 });
 
+// Dashboard: a restaurant's pending requests, newest first.
+serviceRequestSchema.index({ restaurantId: 1, status: 1, timestamp: -1 });
+
 const ServiceRequest = mongoose.model('ServiceRequest', serviceRequestSchema);
 ServiceRequest.TYPES = SERVICE_REQUEST_TYPES;
 
