@@ -4,6 +4,7 @@ const { defineConfig, devices } = require('@playwright/test');
 
 module.exports = defineConfig({
   testDir: './e2e',
+  testIgnore: ['app/**'], // the staff app build has its own config (playwright.app.config.js)
   outputDir: './e2e/.results',
   timeout: 60_000,
   expect: { timeout: 10_000 },
