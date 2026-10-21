@@ -4,6 +4,7 @@ const createLocalStorage = require('./localStorage');
 /*
  * Storage adapter interface. A Cloudinary or S3 adapter only needs to implement:
  *   save(buffer, { folder, extension, contentType }) -> Promise<{ key, url }>   (url is public)
+ *   read(key) -> Promise<Buffer>
  *   remove(key) -> Promise<void>
  *   keyFromUrl(url) -> key | null   (null for URLs this adapter did not create)
  * Register it below and select it with STORAGE_DRIVER.

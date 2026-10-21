@@ -27,6 +27,10 @@ function createLocalStorage({ uploadDir, publicUrl }) {
       return { key, url: urlBase + key };
     },
 
+    async read(key) {
+      return fs.readFile(resolveKey(key));
+    },
+
     async remove(key) {
       await fs.rm(resolveKey(key), { force: true });
     },
