@@ -14,6 +14,8 @@ async function staffScreen(browser, owner, path) {
 }
 
 test('scan -> menu -> item with size and add-on -> cart -> order -> dashboard and kitchen -> live status', async ({ page, browser, request }) => {
+  // Unique per run: orders from earlier runs stay on today's board until the next seed.
+  const guest = `E2E Customer ${Date.now()}`;
   const { restaurantId } = await demo(request);
   const owner = await ownerLogin(request);
   const desk = await staffScreen(browser, owner, '/dashboard/orders');
@@ -45,7 +47,7 @@ test('scan -> menu -> item with size and add-on -> cart -> order -> dashboard an
   await page.getByRole('link', { name: /Cart/ }).first().click();
   await expect(page.getByRole('heading', { name: 'Your cart' })).toBeVisible();
   await expect(page.getByText('₹498.75').first()).toBeVisible();
-  await page.getByLabel('Name', { exact: true }).fill('E2E Customer');
+  await page.getByLabel('Name', { exact: true }).fill(guest);
 
   const orderResponse = page.waitForResponse((r) => r.url() === `${API}/api/orders` && r.request().method() === 'POST');
   await page.getByRole('button', { name: /Place order/ }).click();
@@ -55,10 +57,10 @@ test('scan -> menu -> item with size and add-on -> cart -> order -> dashboard an
   await expect(page.locator('.tracking-status')).toHaveText('Received');
 
   // The order appears at once on the open dashboard board and the kitchen display.
-  const board = desk.getByRole('article').filter({ hasText: 'E2E Customer' });
+  const board = desk.getByRole('article').filter({ hasText: guest });
   await expect(board).toBeVisible();
   await expect(board).toContainText('2×');
-  const ticket = kitchen.getByRole('article').filter({ hasText: 'E2E Customer' });
+  const ticket = kitchen.getByRole('article').filter({ hasText: guest });
   await expect(ticket).toBeVisible();
   await expect(ticket).toContainText('extra onions');
 
@@ -68,7 +70,7 @@ test('scan -> menu -> item with size and add-on -> cart -> order -> dashboard an
   await expect(ticket).toContainText('COOKING');
   await ticket.getByRole('button', { name: /Bump/ }).click();
   await expect(page.locator('.tracking-status')).toHaveText('Ready');
-  await expect(desk.getByRole('region', { name: /^Ready/ }).getByRole('article').filter({ hasText: 'E2E Customer' })).toBeVisible();
+  await expect(desk.getByRole('region', { name: /^Ready/ }).getByRole('article').filter({ hasText: guest })).toBeVisible();
   await setOrderStatus(request, owner.token, order._id, 'served');
   await expect(page.locator('.tracking-status')).toHaveText('Served');
 
