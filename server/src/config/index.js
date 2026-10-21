@@ -87,9 +87,11 @@ const config = {
 };
 
 const splitList = (value) => (value || '').split(',').map((s) => s.trim().replace(/\/+$/, '')).filter(Boolean);
-const DEV_ORIGINS = ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000'];
+// Development only: the website's dev servers, and http://localhost, the origin of staff app test builds that
+// talk to this PC over plain http (mobile/capacitor.config.ts).
+const DEV_ORIGINS = ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://localhost'];
 // The staff app (Capacitor) loads its screens from these origins on Android and iOS. Exact matches only:
-// http://localhost, other ports and look-alike hosts are not allowed.
+// other ports and look-alike hosts are not allowed (nor http://localhost outside development).
 const APP_ORIGINS = ['https://localhost', 'capacitor://localhost'];
 
 config.trustProxy = env.TRUST_PROXY;

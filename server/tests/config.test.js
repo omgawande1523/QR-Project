@@ -34,6 +34,13 @@ describe('config', () => {
 
   const strong = { NODE_ENV: 'production', JWT_SECRET: 'x'.repeat(64) };
 
+  test('http://localhost (staff app test builds) is allowed in development only', () => {
+    const dev = JSON.parse(loadConfigWith({ ...strong, NODE_ENV: 'development', FRONTEND_URL: 'http://localhost:3000', CORS_ORIGINS: '' }, 'allowedOrigins'));
+    const prod = JSON.parse(loadConfigWith({ ...strong, FRONTEND_URL: 'https://menu.example.com', CORS_ORIGINS: '' }, 'allowedOrigins'));
+    expect(dev).toContain('http://localhost');
+    expect(prod).toEqual(['https://menu.example.com', 'https://localhost', 'capacitor://localhost']);
+  });
+
   test('UPLOAD_CLEANUP=off turns the automatic image cleanup off', () => {
     expect(loadConfigWith({ ...strong, UPLOAD_CLEANUP: 'off' }, 'uploadCleanup').trim()).toBe('false');
     expect(loadConfigWith({ ...strong, UPLOAD_CLEANUP: '' }, 'uploadCleanup').trim()).toBe('true');
