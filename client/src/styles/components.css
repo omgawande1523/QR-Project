@@ -192,7 +192,7 @@
 
 /* ---------- Option rows (radio / checkbox with price on the right) ---------- */
 .option-group { display: flex; flex-direction: column; }
-.option-group-title { font-weight: var(--weight-bold); font-size: var(--text-md); margin-bottom: var(--space-2); }
+.option-group-title { font-weight: var(--weight-bold); font-size: var(--text-md); margin-bottom: var(--space-2); padding: 0; display: block; }
 .option-row {
   display: flex;
   align-items: center;
