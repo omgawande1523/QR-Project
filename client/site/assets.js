@@ -109,18 +109,47 @@ export function seoTags({ name = appName(), siteUrl = '' } = {}) {
   };
 }
 
+// A guest who scanned a table QR code is waiting for the menu, so index.html starts its two API requests
+// while the app's code is still downloading. src/lib/prefetch.js hands the responses to CustomerContext.
+export function menuPrefetchScript(apiUrl) {
+  const api = JSON.stringify(apiUrl).replace(/</g, '\\u003c');
+  return `(function () {
+  var m = location.pathname.match(/^\\/menu\\/([0-9a-f]{24})(\\/|$)/);
+  if (!m || !window.fetch) return;
+  var store = window.__qrPrefetch = {};
+  ['/api/users/' + m[1] + '/public', '/api/menu/' + m[1]].forEach(function (path) {
+    store[path] = fetch(${api} + path).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); });
+    store[path].catch(function () {});
+  });
+})();`;
+}
+
+// <head> tags that speed up the first screen: an early connection to the API (which also serves images)
+// and the menu prefetch above.
+export function performanceTags(apiUrl) {
+  const origin = new URL(apiUrl).origin;
+  return [
+    { tag: 'link', attrs: { rel: 'preconnect', href: origin, crossorigin: '' }, injectTo: 'head' },
+    { tag: 'link', attrs: { rel: 'preconnect', href: origin }, injectTo: 'head' },
+    { tag: 'script', children: menuPrefetchScript(apiUrl), injectTo: 'head' }
+  ];
+}
+
 const TYPES = { webmanifest: 'application/manifest+json', html: 'text/html; charset=utf-8', txt: 'text/plain; charset=utf-8', xml: 'application/xml' };
 
 export function sitePlugin() {
   let siteUrl = '';
+  let apiUrl = '';
   return {
     name: 'qr-menu-site-assets',
     configResolved(config) {
       siteUrl = (config.env.VITE_SITE_URL || '').replace(/\/+$/, '');
+      // Same default as src/config.js
+      apiUrl = (config.env.VITE_API_URL || 'http://localhost:5000').replace(/\/+$/, '');
     },
     transformIndexHtml(html) {
       const { title, tags } = seoTags({ siteUrl });
-      return { html: html.replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`), tags };
+      return { html: html.replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`), tags: [...performanceTags(apiUrl), ...tags] };
     },
     configureServer(server) {
       server.middlewares.use((req, res, next) => {

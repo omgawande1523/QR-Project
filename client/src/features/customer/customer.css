@@ -262,4 +262,9 @@
 /* Menu language */
 .language-switch { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); color: var(--muted); }
 .language-switch .segmented button { padding-inline: 14px; }
-.language-switch button[lang='hi'], .language-switch button[lang='mr'] { font-size: var(--text-md); }
+/* The labels use the phone's own Devanagari font, so an English menu never downloads the 118 KB web font
+   just for the words हिंदी and मराठी. */
+.language-switch button[lang='hi'], .language-switch button[lang='mr'] {
+  font-size: var(--text-md);
+  font-family: 'Noto Sans Devanagari', 'Nirmala UI', 'Kohinoor Devanagari', 'Devanagari Sangam MN', 'Mangal', system-ui, sans-serif;
+}

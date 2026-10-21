@@ -1,12 +1,19 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../../lib/api';
-import { connectSocket } from '../../lib/socket';
 import { local, session } from '../../lib/storage';
 import { availableLanguages, localizeItem } from '../../lib/menuLanguage';
 import { unitPricePaise, computeBill } from '../../lib/pricing';
 import { isActiveOrder } from '../../lib/orderStatus';
+import { takePrefetched } from '../../lib/prefetch';
 
 const CustomerContext = createContext(null);
+
+// GET a public endpoint, using the response index.html already started fetching if there is one.
+// A failed prefetch is retried through axios, so errors keep their usual shape (err.response.status).
+const getJson = (path) => {
+  const viaApi = () => api.get(path).then((res) => res.data);
+  return takePrefetched(path)?.catch(viaApi) ?? viaApi();
+};
 
 export const lineKey = ({ itemId, variantId = '', addOnIds = [], notes = '' }) =>
   [itemId, variantId, [...addOnIds].sort().join('+'), notes.trim().toLowerCase()].join('|');
@@ -43,11 +50,11 @@ export function CustomerProvider({ restaurantId, children }) {
     try {
       setError(null);
       const [profile, items] = await Promise.all([
-        api.get(`/api/users/${restaurantId}/public`),
-        api.get(`/api/menu/${restaurantId}`)
+        getJson(`/api/users/${restaurantId}/public`),
+        getJson(`/api/menu/${restaurantId}`)
       ]);
-      setRestaurant(profile.data);
-      setMenu(items.data);
+      setRestaurant(profile);
+      setMenu(items);
       setStatus('ready');
     } catch (err) {
       setError(err.response?.status === 404 || err.response?.status === 400
@@ -65,23 +72,30 @@ export function CustomerProvider({ restaurantId, children }) {
   useEffect(() => local.set(k.favourites, [...favourites]), [k.favourites, favourites]);
 
   // ---------- Live updates ----------
+  // socket.io-client is loaded after the menu has started rendering, so it never delays the first screen.
   useEffect(() => {
-    const socket = connectSocket();
-    socketRef.current = socket;
-    const trackAll = () => trackedRef.current.forEach((t) => socket.emit('trackOrder', { orderId: t.id, token: t.token }));
-    socket.on('connect', () => {
-      socket.emit('joinMenu', restaurantId);
-      trackAll();
-    });
-    socket.on('menuUpdated', (item) => {
-      setMenu((list) => (list.some((i) => i._id === item._id) ? list.map((i) => (i._id === item._id ? item : i)) : [...list, item]));
-    });
-    socket.on('menuItemDeleted', ({ _id }) => setMenu((list) => list.filter((i) => i._id !== _id)));
-    socket.on('orderUpdated', (order) => {
-      setOrders((map) => (map[order._id] ? { ...map, [order._id]: { ...order, trackingToken: map[order._id].trackingToken } } : map));
-    });
+    let socket = null;
+    let cancelled = false;
+    import('../../lib/socket').then(({ connectSocket }) => {
+      if (cancelled) return;
+      socket = connectSocket();
+      socketRef.current = socket;
+      const trackAll = () => trackedRef.current.forEach((t) => socket.emit('trackOrder', { orderId: t.id, token: t.token }));
+      socket.on('connect', () => {
+        socket.emit('joinMenu', restaurantId);
+        trackAll();
+      });
+      socket.on('menuUpdated', (item) => {
+        setMenu((list) => (list.some((i) => i._id === item._id) ? list.map((i) => (i._id === item._id ? item : i)) : [...list, item]));
+      });
+      socket.on('menuItemDeleted', ({ _id }) => setMenu((list) => list.filter((i) => i._id !== _id)));
+      socket.on('orderUpdated', (order) => {
+        setOrders((map) => (map[order._id] ? { ...map, [order._id]: { ...order, trackingToken: map[order._id].trackingToken } } : map));
+      });
+    }).catch(() => {}); // offline while loading: the menu still works, just without live updates
     return () => {
-      socket.disconnect();
+      cancelled = true;
+      socket?.disconnect();
       socketRef.current = null;
     };
   }, [restaurantId]);
