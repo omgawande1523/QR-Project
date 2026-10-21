@@ -141,8 +141,17 @@ screen"). The dashboard manifest opens `/dashboard`; on a menu page the manifest
 `/menu/`, which returns the guest to the restaurant they last visited. `public/sw.js` shows an offline page
 (`/offline.html`) when there is no connection and caches only the offline page, icons and content-hashed build
 files: menus, orders and the API always come from the network. The manifests and offline page are generated from
-`APP_NAME` by `client/pwa/assets.js`. Icons are rendered from `client/scripts/icon/mark.svg` with
+`APP_NAME` by `client/site/assets.js`. Icons are rendered from `client/scripts/icon/mark.svg` with
 `node scripts/make-icons.mjs` (in `client/`).
+
+### SEO and link previews
+
+The landing page gets its title, description, Open Graph and Twitter card tags from `client/site/assets.js`
+at build time, with `client/public/og-image.jpg` (1200 x 630, rendered by `node scripts/make-og-image.mjs`) as
+the preview image. Set `VITE_SITE_URL` to the public address of the site in production: link previews need an
+absolute image URL, and it also enables the canonical link and `sitemap.xml`. `robots.txt` keeps `/dashboard`
+and `/kitchen` out of search results. Every screen sets its own browser tab title (for example
+"Orders · QR Menu").
 
 ### Images
 
@@ -185,6 +194,7 @@ must decode as a raster image. The limit is 20 links per owner per 10 minutes.
 | --- | --- |
 | `VITE_API_URL` | API base URL (default `http://localhost:5000`) |
 | `VITE_SOCKET_URL` | Socket.io URL (defaults to `VITE_API_URL`) |
+| `VITE_SITE_URL` | Public address of the site, for link previews, the canonical link and sitemap.xml (empty in development) |
 
 To test from a phone on the same Wi-Fi, set `VITE_API_URL` to your PC's LAN address
 (for example `http://192.168.1.20:5000`) and add that client origin to `CORS_ORIGINS` in `server/.env`. Client env changes need a dev-server restart.

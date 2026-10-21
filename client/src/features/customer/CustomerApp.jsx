@@ -3,6 +3,7 @@ import { Navigate, Outlet, useLocation, useParams } from 'react-router';
 import { QrCode } from 'lucide-react';
 import { local } from '../../lib/storage';
 import { APP_NAME } from '../../config';
+import { usePageTitle } from '../../lib/usePageTitle';
 import { Home, Search, ShoppingBag, ClipboardList, ConciergeBell, RefreshCw } from 'lucide-react';
 import { CustomerProvider, useCustomer } from './CustomerContext';
 import { BottomNav, Button, EmptyState } from '../../components/ui';
@@ -10,7 +11,8 @@ import { CallWaiterSheet } from './CallWaiterSheet';
 import './customer.css';
 
 function CustomerShell() {
-  const { restaurantId, status, error, reload, cartCount, activeOrders } = useCustomer();
+  const { restaurantId, restaurant, status, error, reload, cartCount, activeOrders } = useCustomer();
+  usePageTitle(restaurant?.restaurantName);
   const location = useLocation();
   const [waiterOpen, setWaiterOpen] = useState(false);
   const base = `/menu/${restaurantId}`;

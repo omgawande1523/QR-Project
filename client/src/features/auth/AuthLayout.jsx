@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 import { QrCode, Zap, ChefHat, IndianRupee } from 'lucide-react';
 import { APP_NAME } from '../../config';
+import { usePageTitle } from '../../lib/usePageTitle';
 import './auth.css';
 
 const POINTS = [
@@ -20,6 +21,7 @@ export function Brand({ light = false }) {
 }
 
 export function AuthLayout({ title, subtitle, children, footer }) {
+  usePageTitle(title);
   return (
     <div className="auth">
       <aside className="auth-aside" aria-hidden="true">

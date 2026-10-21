@@ -5,6 +5,7 @@ import { OwnerProvider, useOwner } from '../owner/OwnerContext';
 import { isLoggedIn, clearSession } from '../../lib/session';
 import { homeFor } from '../../lib/roles';
 import { useNow } from '../../lib/useNow';
+import { usePageTitle } from '../../lib/usePageTitle';
 import './kitchen.css';
 
 // The kitchen only works on orders that are new or being cooked.
@@ -63,6 +64,7 @@ function Ticket({ order, now, onBump, busy }) {
 
 function Kitchen() {
   const { orders, ordersLoaded, setOrderStatus, profile, connected, alerts, setAlerts, role } = useOwner();
+  usePageTitle('Kitchen display');
   const navigate = useNavigate();
   const now = useNow(1000);
   const [filter, setFilter] = useState('all');

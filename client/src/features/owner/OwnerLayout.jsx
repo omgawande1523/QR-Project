@@ -7,6 +7,7 @@ import { BottomSheet, Button, EmptyState, IconButton, Switch } from '../../compo
 import { isLoggedIn, clearSession } from '../../lib/session';
 import { timeAgo } from '../../lib/format';
 import { can, ROLE_LABEL } from '../../lib/roles';
+import { usePageTitle } from '../../lib/usePageTitle';
 import './owner.css';
 
 const NAV = [
@@ -147,6 +148,7 @@ export default function OwnerLayout() {
 }
 
 export function PageHeader({ title, subtitle, actions }) {
+  usePageTitle(title);
   return (
     <div className="owner-page-header">
       <div className="grow">

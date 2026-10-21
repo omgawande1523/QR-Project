@@ -14,7 +14,7 @@ In this order, one commit each:
 7. Optional online payment: Razorpay test mode behind a feature flag (pay at counter stays the default).
 8. ~~PWA: installable customer menu and dashboard, offline fallback page, real app icons~~ done.
    (the favicon and logo192/512 referenced by index.html and manifest.json are still missing).
-9. SEO / meta tags and an Open Graph image for the landing page.
+9. ~~SEO / meta tags and an Open Graph image for the landing page~~ done.
 10. Abandoned-upload cleanup: delete images older than 24 hours that nothing uses: `Upload` records
     (originals and crops, see server/src/models/Upload.js) whose crop is not referenced by any dish or
     restaurant image field, plus their files (owner request, Phase 3). Keep originals that still back a used crop.
