@@ -6,7 +6,8 @@ let io = null;
 const rooms = {
   restaurant: (id) => `restaurant:${id}`, // authenticated dashboard sockets of one owner
   menu: (id) => `menu:${id}`, // public menu viewers (availability and price changes)
-  order: (id) => `order:${id}` // one customer's order, joined with its tracking token
+  order: (id) => `order:${id}`, // one customer's order, joined with its tracking token
+  session: (id) => `session:${id}` // the dashboard sockets of one signed-in device
 };
 
 function setIo(instance) {
@@ -32,5 +33,9 @@ module.exports = {
   rooms,
   toRestaurant: (id, event, payload) => emitTo(rooms.restaurant(id), event, payload),
   toMenu: (id, event, payload) => emitTo(rooms.menu(id), event, payload),
-  toOrder: (id, event, payload) => emitTo(rooms.order(id), event, payload)
+  toOrder: (id, event, payload) => emitTo(rooms.order(id), event, payload),
+  // A signed-out device stops receiving live orders at once, not just at its next reconnect.
+  disconnectSession: (id) => {
+    if (io) io.in(rooms.session(id)).disconnectSockets(true);
+  }
 };

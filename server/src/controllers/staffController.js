@@ -3,7 +3,7 @@ const Staff = require('../models/Staff');
 const User = require('../models/User');
 const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
-const { signStaffToken } = require('../services/auth');
+const { reissue, endSessions, otherSessions } = require('../services/sessions');
 
 // An email can belong to one login only (owner accounts and staff share the login screen).
 async function assertEmailFree(email, exceptStaffId) {
@@ -36,6 +36,7 @@ exports.update = asyncHandler(async (req, res) => {
   staff.set(req.body);
   if (signOut) staff.tokenVersion += 1; // a new role or deactivation takes effect immediately
   await staff.save();
+  if (signOut) await endSessions({ staff: staff._id });
   res.json(staff);
 });
 
@@ -44,12 +45,14 @@ exports.resetPassword = asyncHandler(async (req, res) => {
   staff.password = await bcrypt.hash(req.body.password, 10);
   staff.tokenVersion += 1;
   await staff.save();
+  await endSessions({ staff: staff._id });
   res.json({ message: `Password reset for ${staff.name}. They have been signed out.` });
 });
 
 exports.remove = asyncHandler(async (req, res) => {
   const staff = await findOwnStaff(req);
   await staff.deleteOne();
+  await endSessions({ staff: staff._id });
   res.json({ message: 'Staff member removed' });
 });
 
@@ -63,7 +66,8 @@ exports.changeOwnPassword = asyncHandler(async (req, res) => {
   staff.password = await bcrypt.hash(req.body.newPassword, 10);
   staff.tokenVersion += 1;
   await staff.save();
-  res.json({ message: 'Password changed', token: signStaffToken(staff) });
+  await endSessions(otherSessions(req.user));
+  res.json({ message: 'Password changed', token: await reissue(req.user.sessionId, { staff }) });
 });
 
 exports.assertEmailFree = assertEmailFree;

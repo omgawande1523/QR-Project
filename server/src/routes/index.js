@@ -6,6 +6,7 @@ const router = express.Router();
 router.get('/', health.root);
 router.get('/health', health.health);
 router.get('/api', health.apiInfo);
+router.get('/api/app-version', health.appVersion);
 
 router.use('/api/users', require('./users'));
 router.use('/api/menu', require('./menu'));
@@ -15,5 +16,6 @@ router.use('/api/uploads', require('./uploads'));
 router.use('/api/public', require('./public'));
 router.use('/api/staff', require('./staff'));
 router.use('/api/analytics', require('./analytics'));
+router.use('/api/sessions', require('./sessions'));
 
 module.exports = router;

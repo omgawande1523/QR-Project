@@ -11,8 +11,9 @@ function authenticate(socket, next) {
   const token = socket.handshake.auth?.token;
   if (!token) return next();
   verifySessionToken(token)
-    .then(({ userId }) => {
+    .then(({ userId, sessionId }) => {
       socket.data.userId = userId;
+      socket.data.sessionId = sessionId;
       next();
     })
     .catch(() => next(new Error('unauthorized')));
@@ -28,6 +29,7 @@ function registerSocketHandlers(io) {
   io.on('connection', (socket) => {
     if (socket.data.userId) {
       socket.join(rooms.restaurant(socket.data.userId));
+      if (socket.data.sessionId) socket.join(rooms.session(socket.data.sessionId));
     }
 
     // Public: live availability updates for one restaurant's menu.

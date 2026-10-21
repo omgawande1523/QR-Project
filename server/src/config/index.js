@@ -3,6 +3,8 @@ const { z } = require('zod');
 const { parseCloudinaryUrl } = require('../services/storage/cloudinaryStorage');
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
 
+const VERSION = /^\d+\.\d+\.\d+$/;
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().int().positive().default(5000),
@@ -25,7 +27,15 @@ const envSchema = z.object({
   CLOUDINARY_FOLDER: z.preprocess((v) => v || undefined, z.string()
     .regex(/^[a-z0-9_-]+(\/[a-z0-9_-]+)*$/i, 'may only contain letters, digits, - _ and /')
     .default('qr-menu')),
-  UPLOAD_CLEANUP: z.string().optional()
+  UPLOAD_CLEANUP: z.string().optional(),
+  // Firebase service-account key (the JSON itself, or a path to the .json file outside the repo) for push
+  // notifications to the staff app. Empty: no push notifications.
+  FIREBASE_SERVICE_ACCOUNT: z.string().optional(),
+  // Staff app versions (x.y.z): below APP_MIN_VERSION the app asks to update before it can be used, below
+  // APP_LATEST_VERSION it offers the update. APP_UPDATE_URL is where the update button goes.
+  APP_MIN_VERSION: z.preprocess((v) => v || undefined, z.string().regex(VERSION, 'must look like 1.2.3').default('1.0.0')),
+  APP_LATEST_VERSION: z.preprocess((v) => v || undefined, z.string().regex(VERSION, 'must look like 1.2.3').optional()),
+  APP_UPDATE_URL: z.preprocess((v) => v || undefined, z.string().url().default('https://play.google.com/store/apps/details?id=com.qrmenu.staff'))
 }).superRefine((env, ctx) => {
   if (env.STORAGE_DRIVER === 'cloudinary' && !parseCloudinaryUrl(env.CLOUDINARY_URL || '')) {
     ctx.addIssue({
@@ -67,17 +77,28 @@ const config = {
       : null
   },
   // Removes images that were added but never used (see services/uploadCleanup.js); UPLOAD_CLEANUP=off disables it.
-  uploadCleanup: env.UPLOAD_CLEANUP !== 'off'
+  uploadCleanup: env.UPLOAD_CLEANUP !== 'off',
+  push: { serviceAccount: env.FIREBASE_SERVICE_ACCOUNT },
+  app: {
+    minVersion: env.APP_MIN_VERSION,
+    latestVersion: env.APP_LATEST_VERSION || env.APP_MIN_VERSION,
+    updateUrl: env.APP_UPDATE_URL
+  }
 };
 
 const splitList = (value) => (value || '').split(',').map((s) => s.trim().replace(/\/+$/, '')).filter(Boolean);
 const DEV_ORIGINS = ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000'];
+// The staff app (Capacitor) loads its screens from these origins on Android and iOS. Exact matches only:
+// http://localhost, other ports and look-alike hosts are not allowed.
+const APP_ORIGINS = ['https://localhost', 'capacitor://localhost'];
 
 config.trustProxy = env.TRUST_PROXY;
 config.allowedOrigins = [...new Set([
   ...splitList(env.FRONTEND_URL),
   ...splitList(env.CORS_ORIGINS),
+  ...APP_ORIGINS,
   ...(env.NODE_ENV === 'development' ? DEV_ORIGINS : [])
 ])];
+config.appOrigins = APP_ORIGINS;
 
 module.exports = config;

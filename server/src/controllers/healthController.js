@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const config = require('../config');
 
 exports.root = (req, res) => {
   res.json({
@@ -31,4 +32,10 @@ exports.apiInfo = (req, res) => {
     message: 'QR Menu API v1.0.0',
     documentation: 'Available endpoints: /api/users, /api/menu, /api/orders'
   });
+};
+
+// The staff app checks this on start: below minVersion it must update, below latestVersion it may.
+exports.appVersion = (req, res) => {
+  res.set('Cache-Control', 'public, max-age=300');
+  res.json(config.app);
 };

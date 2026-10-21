@@ -30,7 +30,19 @@ describe('CORS', () => {
 
   test('dev-only localhost origins are not added outside development', () => {
     expect(config.env).toBe('test');
-    expect(config.allowedOrigins).toEqual(['http://localhost:3000']);
+    // FRONTEND_URL plus the staff app's two fixed origins
+    expect(config.allowedOrigins).toEqual(['http://localhost:3000', 'https://localhost', 'capacitor://localhost']);
+  });
+
+  test('allows the staff app origins and nothing that only looks like them', async () => {
+    for (const origin of ['https://localhost', 'capacitor://localhost']) {
+      const res = await request(app).get('/health').set('Origin', origin);
+      expect(res.headers['access-control-allow-origin']).toBe(origin);
+    }
+    for (const origin of ['http://localhost', 'https://localhost:8443', 'https://localhost.evil.example', 'capacitor://evil', 'ionic://localhost']) {
+      const res = await request(app).get('/health').set('Origin', origin);
+      expect(res.headers['access-control-allow-origin']).toBeUndefined();
+    }
   });
 });
 

@@ -7,7 +7,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const safeEqual = require('../utils/safeEqual');
 const { isEmailConfigured, sendPasswordResetEmail } = require('../services/mailer');
 const { discardImage } = require('../services/storage');
-const { signToken, signStaffToken } = require('../services/auth');
+const { signIn, reissue, endSessions, subjectFilter, otherSessions } = require('../services/sessions');
 const Staff = require('../models/Staff');
 const log = require('../utils/logger');
 
@@ -49,7 +49,8 @@ exports.register = asyncHandler(async (req, res) => {
     restaurantName,
     tables: tables && tables.length > 0 ? tables : [1]
   });
-  res.json({ message: 'Registered', token: signToken(user), userId: user._id, role: 'owner' });
+  const { token } = await signIn(req, { user });
+  res.json({ message: 'Registered', token, userId: user._id, role: 'owner' });
 });
 
 exports.login = asyncHandler(async (req, res) => {
@@ -64,7 +65,8 @@ exports.login = asyncHandler(async (req, res) => {
   }).select('+password');
   if (user) {
     if (!await bcrypt.compare(password, user.password)) throw AppError.badRequest('Invalid credentials', 'INVALID_CREDENTIALS');
-    return res.json({ token: signToken(user), userId: user._id, role: 'owner' });
+    const { token } = await signIn(req, { user });
+    return res.json({ token, userId: user._id, role: 'owner' });
   }
 
   // Staff log in on the same screen with their email.
@@ -72,7 +74,8 @@ exports.login = asyncHandler(async (req, res) => {
   if (!staff || !await bcrypt.compare(password, staff.password)) throw AppError.badRequest('Invalid credentials', 'INVALID_CREDENTIALS');
   staff.lastLoginAt = new Date();
   await staff.save();
-  return res.json({ token: signStaffToken(staff), userId: staff.restaurant, role: staff.role, staffId: staff._id, name: staff.name });
+  const { token } = await signIn(req, { staff });
+  return res.json({ token, userId: staff.restaurant, role: staff.role, staffId: staff._id, name: staff.name });
 });
 
 // Who is logged in: the restaurant, the role, and for staff their name.
@@ -139,6 +142,8 @@ exports.resetPassword = asyncHandler(async (req, res) => {
     $unset: { resetCodeHash: 1, resetCodeExpiry: 1 },
     $inc: { tokenVersion: 1 }
   });
+  // Every device, the staff app included, has to sign in again with the new password.
+  await endSessions(subjectFilter({ userId: String(user._id) }));
   res.json({ message: 'Password reset successfully' });
 });
 
@@ -199,9 +204,10 @@ exports.changePassword = asyncHandler(async (req, res) => {
     throw AppError.badRequest('Current password is incorrect', 'WRONG_PASSWORD');
   }
 
-  // Bumping tokenVersion signs out every other session; this one gets a fresh token.
+  // Bumping tokenVersion and ending the other sessions signs out every other device; this one gets a fresh token.
   user.password = await bcrypt.hash(newPassword, 10);
   user.tokenVersion = (user.tokenVersion || 0) + 1;
   await user.save();
-  res.json({ message: 'Password changed successfully', token: signToken(user) });
+  await endSessions(otherSessions(req.user));
+  res.json({ message: 'Password changed successfully', token: await reissue(req.user.sessionId, { user }) });
 });
