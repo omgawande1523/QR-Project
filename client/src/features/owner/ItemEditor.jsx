@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { ImagePlus, Trash2, Plus, X } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { Button, Chip, Modal, Switch, TextField, IconButton, useToast } from '../../components/ui';
 import { api, errorMessage } from '../../lib/api';
-import { uploadImage } from '../../lib/uploadImage';
+import { ImagePicker } from '../../components/ImagePicker';
 
 const TAGS = [
   { value: 'bestseller', label: 'Bestseller' },
@@ -49,23 +49,8 @@ export function ItemEditor({ item, categories, defaultCategory, onClose, onSaved
   const [newCategory, setNewCategory] = useState('');
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const set = (field, value) => setForm((f) => ({ ...f, [field]: value }));
   const categoryChoice = form.category === NEW_CATEGORY || (form.category && !categories.includes(form.category) && !item) ? NEW_CATEGORY : form.category;
-
-  const onImage = async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-    setUploading(true);
-    try {
-      set('image', await uploadImage(file, 'menu'));
-    } catch (err) {
-      toast.error(errorMessage(err, 'Image upload failed'));
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const save = async () => {
     const category = form.category === NEW_CATEGORY ? newCategory.trim() : form.category;
@@ -112,7 +97,7 @@ export function ItemEditor({ item, categories, defaultCategory, onClose, onSaved
       wide
       onClose={onClose}
       title={editing ? `Edit ${item.name}` : 'Add a dish'}
-      footer={<><Button variant="secondary" onClick={onClose}>Cancel</Button><Button onClick={save} loading={saving} disabled={uploading}>{editing ? 'Save changes' : 'Add dish'}</Button></>}
+      footer={<><Button variant="secondary" onClick={onClose}>Cancel</Button><Button onClick={save} loading={saving}>{editing ? 'Save changes' : 'Add dish'}</Button></>}
     >
       <div className="editor-grid">
         <div className="stack">
@@ -166,28 +151,18 @@ export function ItemEditor({ item, categories, defaultCategory, onClose, onSaved
           {errors.addOns && <p className="field-error">{errors.addOns}</p>}
         </div>
 
-        <div className="stack-sm">
-          <p className="field-label">Photo</p>
-          <label className={`image-drop ${form.image ? 'has-image' : ''}`}>
-            {form.image ? <img src={form.image} alt="" /> : (
-              <span className="stack-sm" style={{ alignItems: 'center' }}>
-                <ImagePlus size={28} aria-hidden="true" />
-                <span className="text-sm bold">{uploading ? 'Uploading…' : 'Upload a photo'}</span>
-                <span className="field-hint">JPEG, PNG or WebP, up to 5 MB</span>
-              </span>
-            )}
-            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={onImage} className="sr-only" aria-label="Upload a photo" />
-          </label>
-          {form.image && (
-            <div className="row">
-              <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
-                {uploading ? 'Uploading…' : 'Replace'}
-                <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={onImage} className="sr-only" />
-              </label>
-              <Button size="sm" variant="ghost" icon={<Trash2 size={16} />} onClick={() => set('image', '')}>Remove</Button>
-            </div>
-          )}
-        </div>
+        <ImagePicker
+          kind="menu"
+          label="Photo"
+          value={form.image}
+          onChange={(url) => set('image', url)}
+          globalPaste
+          emptyHint="or paste an image with Ctrl+V"
+          previewContext={{
+            title: form.name,
+            price: form.variants.length ? Math.min(...form.variants.map((v) => Number(v.price) || 0)) : Number(form.price) || 0
+          }}
+        />
       </div>
     </Modal>
   );

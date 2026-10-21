@@ -1,7 +1,7 @@
 const multer = require('multer');
 const AppError = require('../utils/AppError');
 
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 // SVG is deliberately excluded: it can carry scripts.
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif', 'image/heic', 'image/heif'];
 
@@ -24,7 +24,7 @@ function singleImage(req, res, next) {
       return next();
     }
     if (err instanceof multer.MulterError) {
-      if (err.code === 'LIMIT_FILE_SIZE') return next(new AppError(413, 'Images must be 5 MB or smaller', 'FILE_TOO_LARGE'));
+      if (err.code === 'LIMIT_FILE_SIZE') return next(new AppError(413, 'Image is too large (the limit is 8 MB)', 'FILE_TOO_LARGE'));
       return next(AppError.badRequest('Upload one image in the "image" field', 'INVALID_UPLOAD'));
     }
     next(err);

@@ -3,18 +3,24 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { IconButton } from './Button';
 
+// Open dialogs, topmost last: with a crop dialog over the dish editor, Escape closes only the top one.
+const openDialogs = [];
+
 // Shared behaviour for dialogs: Escape closes, body scroll locks, focus moves in and back out.
 function useDialog(open, onClose, ref) {
   useEffect(() => {
     if (!open) return undefined;
+    const token = {};
+    openDialogs.push(token);
     const previouslyFocused = document.activeElement;
-    const onKey = (e) => e.key === 'Escape' && onClose?.();
+    const onKey = (e) => e.key === 'Escape' && openDialogs[openDialogs.length - 1] === token && onClose?.();
     document.addEventListener('keydown', onKey);
     const overflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const first = ref.current?.querySelector('input, textarea, select, button:not([data-close]), [href]');
     (first || ref.current)?.focus({ preventScroll: true });
     return () => {
+      openDialogs.splice(openDialogs.indexOf(token), 1);
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = overflow;
       previouslyFocused?.focus?.({ preventScroll: true });

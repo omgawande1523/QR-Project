@@ -530,3 +530,58 @@
 .kv { display: flex; justify-content: space-between; gap: var(--space-3); font-variant-numeric: tabular-nums; }
 .kv + .kv { margin-top: var(--space-2); }
 .kv-total { font-size: var(--text-lg); font-weight: var(--weight-extrabold); }
+
+/* ---------- Image picker ---------- */
+.image-picker { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.picker-zone {
+  position: relative;
+  width: 100%;
+  max-width: 360px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-card);
+  border: 2px dashed var(--cream-300);
+  background: var(--cream-bg);
+  color: var(--muted);
+  cursor: pointer;
+  overflow: hidden;
+  text-align: center;
+  transition: border-color var(--duration-fast), background var(--duration-fast);
+}
+.picker-zone:hover, .picker-zone:focus-visible, .picker-zone.is-drag { border-color: var(--olive-600); background: var(--accent-soft); color: var(--olive-800); }
+.picker-zone.is-round { border-radius: 50%; max-width: 160px; }
+.picker-zone.has-image { border-style: solid; border-color: var(--cream-300); }
+.picker-zone img { width: 100%; height: 100%; object-fit: cover; }
+.picker-empty { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: var(--space-3); }
+.picker-zone.is-round .picker-empty .text-xs { display: none; }
+.picker-busy { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: var(--space-2); background: rgba(250, 246, 238, 0.85); color: var(--olive-800); font-weight: var(--weight-bold); font-size: var(--text-sm); }
+.picker-busy .spinner { width: 18px; height: 18px; }
+.picker-url { display: flex; align-items: center; gap: var(--space-2); max-width: 420px; color: var(--muted); }
+.picker-url .input { min-height: 40px; padding: 8px 12px; }
+
+/* ---------- Crop modal ---------- */
+.crop-layout { display: grid; gap: var(--space-5); grid-template-columns: minmax(0, 1fr); }
+.crop-layout > * { min-width: 0; }
+@media (min-width: 760px) { .crop-layout { grid-template-columns: minmax(0, 1fr) 260px; } }
+.crop-area { position: relative; height: min(52vh, 380px); border-radius: var(--radius-md); overflow: hidden; background: var(--ink); touch-action: none; }
+.crop-control { display: flex; align-items: center; gap: var(--space-2); min-height: var(--tap); }
+.crop-control input[type='range'] { flex: 1; min-width: 0; accent-color: var(--primary); height: 32px; }
+.crop-control-label { font-weight: var(--weight-semibold); font-size: var(--text-sm); min-width: 52px; }
+.crop-degrees { font-variant-numeric: tabular-nums; font-size: var(--text-sm); min-width: 44px; text-align: right; }
+.crop-preview { display: flex; flex-direction: column; gap: var(--space-2); align-items: flex-start; }
+.crop-preview-canvas { display: block; width: 100%; height: 100%; }
+.crop-preview-card { width: 200px; background: var(--surface); border-radius: var(--radius-card); box-shadow: var(--shadow-md); overflow: hidden; }
+.crop-preview-media { aspect-ratio: 4 / 3; background: var(--olive-50); }
+.crop-preview-body { display: flex; flex-direction: column; gap: 2px; padding: var(--space-3); font-size: var(--text-sm); }
+.crop-preview-btn { margin-top: var(--space-2); text-align: center; border-radius: var(--radius-pill); background: var(--primary); color: var(--on-primary); font-weight: var(--weight-bold); font-size: var(--text-xs); padding: 6px; }
+.crop-preview-logo { width: 120px; height: 120px; border-radius: 50%; overflow: hidden; border: 4px solid var(--cream-bg); box-shadow: var(--shadow-md); }
+.crop-preview-hero { position: relative; width: 220px; aspect-ratio: 1; border-radius: 0 0 var(--radius-lg) var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-md); }
+.crop-preview-hero span { position: absolute; left: 8px; bottom: 8px; font-size: 11px; font-weight: var(--weight-bold); background: rgba(255, 255, 255, 0.9); padding: 2px 8px; border-radius: var(--radius-pill); }
+.crop-preview-qr { width: 120px; height: 120px; border-radius: var(--radius-md); overflow: hidden; box-shadow: 0 0 0 10px #fff, 0 0 0 12px var(--cream-300); margin: 12px; }
+@media (max-width: 759px) {
+  .crop-preview { flex-direction: row; align-items: center; gap: var(--space-4); }
+  .crop-preview-card { width: 150px; }
+  .crop-control-label { min-width: 0; }
+  .modal-wide { width: calc(100% - var(--space-4)); }
+  .modal-wide .modal-body { padding: var(--space-4); }
+}

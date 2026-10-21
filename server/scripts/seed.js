@@ -17,7 +17,8 @@ const User = require('../src/models/User');
 const MenuItem = require('../src/models/MenuItem');
 const Order = require('../src/models/Order');
 const ServiceRequest = require('../src/models/ServiceRequest');
-const { saveImage } = require('../src/services/images');
+const { IMAGE_KINDS, saveOriginal, cropOriginal } = require('../src/services/images');
+const Upload = require('../src/models/Upload');
 const { discardImage } = require('../src/services/storage');
 const { priceOrder } = require('../src/services/pricing');
 
@@ -124,16 +125,31 @@ async function logoBuffer() {
   return sharp(Buffer.from(svg)).png().toBuffer();
 }
 
+// Stores an image the way the dashboard does: full-size original plus a centred crop at the field's
+// ratio, so "Edit crop" works on demo images too.
+async function addImage(buffer, kind, ownerId) {
+  const original = await saveOriginal(buffer, ownerId);
+  const { width, height } = IMAGE_KINDS[kind];
+  const ratio = width / height;
+  const cropWidth = Math.min(original.width, original.height * ratio);
+  const cropHeight = cropWidth / ratio;
+  const crop = { x: (original.width - cropWidth) / 2, y: (original.height - cropHeight) / 2, width: cropWidth, height: cropHeight };
+  return cropOriginal({ ownerId, originalId: original._id, kind, crop, rotation: 0 });
+}
+
 async function removeExistingDemo() {
   const existing = await User.findOne({ email: DEMO.email });
   if (!existing) return;
   const items = await MenuItem.find({ owner: existing._id }).select('image');
+  const uploads = await Upload.find({ owner: existing._id });
   await Promise.all([
     ...items.map((item) => discardImage(item.image)),
+    ...uploads.map((upload) => discardImage(upload.url)),
     discardImage(existing.profilePicture),
     discardImage(existing.bannerImage),
     discardImage(existing.qrLogo)
   ]);
+  await Upload.deleteMany({ owner: existing._id });
   await Promise.all([
     MenuItem.deleteMany({ owner: existing._id }),
     Order.deleteMany({ restaurantId: existing._id }),
@@ -162,22 +178,19 @@ async function main() {
 
   await removeExistingDemo();
 
-  const [banner, logo] = await Promise.all([
-    saveImage(fs.readFileSync(path.join(ASSETS, 'hero.webp')), 'banner'),
-    logoBuffer().then((buffer) => saveImage(buffer, 'logo'))
+  const restaurant = await User.create({ ...DEMO, password: await bcrypt.hash(DEMO.password, 10) });
+  const logoPng = await logoBuffer();
+  const [banner, logo, qrLogo] = await Promise.all([
+    addImage(fs.readFileSync(path.join(ASSETS, 'hero.webp')), 'banner', restaurant._id),
+    addImage(logoPng, 'profile', restaurant._id),
+    addImage(logoPng, 'logo', restaurant._id)
   ]);
-
-  const restaurant = await User.create({
-    ...DEMO,
-    password: await bcrypt.hash(DEMO.password, 10),
-    bannerImage: banner.url,
-    profilePicture: logo.url,
-    qrLogo: logo.url
-  });
+  restaurant.set({ bannerImage: banner.url, profilePicture: logo.url, qrLogo: qrLogo.url });
+  await restaurant.save();
 
   const items = [];
   for (const { image, ...fields } of MENU) {
-    const { url } = await saveImage(fs.readFileSync(path.join(ASSETS, `${image}.webp`)), 'menu');
+    const { url } = await addImage(fs.readFileSync(path.join(ASSETS, `${image}.webp`)), 'menu', restaurant._id);
     items.push(await MenuItem.create({ ...fields, image: url, owner: restaurant._id }));
   }
   const itemsByName = new Map(items.map((item) => [item.name, item]));

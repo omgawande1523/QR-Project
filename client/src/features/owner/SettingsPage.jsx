@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { ImagePlus, BellRing, Copy } from 'lucide-react';
+import { BellRing, Copy } from 'lucide-react';
 import { useOwner } from './OwnerContext';
 import { PageHeader } from './OwnerLayout';
 import { Button, Card, Skeleton, Switch, TextField, SelectField, useToast } from '../../components/ui';
 import { PasswordField } from '../auth/PasswordField';
 import { api, errorMessage } from '../../lib/api';
 import { setSession } from '../../lib/session';
-import { uploadImage } from '../../lib/uploadImage';
+import { ImagePicker } from '../../components/ImagePicker';
 import { computeBill } from '../../lib/pricing';
 import { formatPrice } from '../../lib/format';
 import { DAY_NAMES } from '../../lib/hours';
@@ -28,33 +28,6 @@ function Section({ title, description, children, onSave, saving, dirty = true })
         </div>
       )}
     </Card>
-  );
-}
-
-function ImageField({ label, value, kind, onUploaded, aspect = '1' }) {
-  const toast = useToast();
-  const [uploading, setUploading] = useState(false);
-  const onFile = async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-    setUploading(true);
-    try {
-      onUploaded(await uploadImage(file, kind));
-    } catch (err) {
-      toast.error(errorMessage(err, 'Upload failed'));
-    } finally {
-      setUploading(false);
-    }
-  };
-  return (
-    <div className="field">
-      <span className="field-label">{label}</span>
-      <label className={`image-drop ${value ? 'has-image' : ''}`} style={{ aspectRatio: aspect, maxWidth: aspect === '1' ? 160 : 420 }}>
-        {value ? <img src={value} alt="" /> : <span className="stack-sm" style={{ alignItems: 'center' }}><ImagePlus size={24} aria-hidden="true" /><span className="text-sm bold">{uploading ? 'Uploading…' : 'Upload'}</span></span>}
-        <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={onFile} aria-label={`Upload ${label.toLowerCase()}`} />
-      </label>
-    </div>
   );
 }
 
@@ -131,9 +104,11 @@ export default function SettingsPage() {
           <TextField label="Tagline" value={info.tagline} onChange={(e) => setInfo({ ...info, tagline: e.target.value })} maxLength={120} hint="One short line, e.g. Fresh South Indian breakfasts" />
           <TextField label="Address" value={info.address} onChange={(e) => setInfo({ ...info, address: e.target.value })} maxLength={200} />
           <div className="row wrap" style={{ alignItems: 'flex-start', gap: 'var(--space-6)' }}>
-            <ImageField label="Logo" kind="profile" value={info.profilePicture} onUploaded={(url) => setInfo({ ...info, profilePicture: url })} />
+            <div style={{ width: 170 }}>
+              <ImagePicker kind="profile" label="Logo" value={info.profilePicture} onChange={(url) => setInfo({ ...info, profilePicture: url })} />
+            </div>
             <div className="grow" style={{ minWidth: 220 }}>
-              <ImageField label="Banner photo" kind="banner" aspect="16 / 9" value={info.bannerImage} onUploaded={(url) => setInfo({ ...info, bannerImage: url })} />
+              <ImagePicker kind="banner" label="Banner photo" value={info.bannerImage} onChange={(url) => setInfo({ ...info, bannerImage: url })} />
             </div>
           </div>
         </Section>

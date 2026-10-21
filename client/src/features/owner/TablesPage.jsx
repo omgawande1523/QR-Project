@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Download, FileDown, Plus, Trash2, ExternalLink, AlertTriangle, ImagePlus } from 'lucide-react';
+import { Download, FileDown, Plus, Trash2, ExternalLink, AlertTriangle } from 'lucide-react';
 import { useOwner } from './OwnerContext';
 import { PageHeader } from './OwnerLayout';
 import { Button, Card, EmptyState, IconButton, Skeleton, useToast } from '../../components/ui';
 import { errorMessage } from '../../lib/api';
-import { uploadImage } from '../../lib/uploadImage';
+import { ImagePicker } from '../../components/ImagePicker';
 import { isActiveOrder } from '../../lib/orderStatus';
 import { tableUrl, qrCanvas, tableCardCanvas, downloadCanvas, downloadTablesPdf, isDarkEnough, loadImage } from '../../lib/tableCards';
 
@@ -73,18 +73,6 @@ export default function TablesPage() {
     }
   };
 
-  const onLogo = async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-    try {
-      const url = await uploadImage(file, 'logo');
-      await save({ qrLogo: url }, 'QR logo updated');
-    } catch (err) {
-      toast.error(errorMessage(err, 'Upload failed'));
-    }
-  };
-
   const nextTable = tables.length ? Math.max(...tables) + 1 : 1;
 
   return (
@@ -113,18 +101,10 @@ export default function TablesPage() {
             )}
           </div>
           <div>
-            <p className="field-label" style={{ marginBottom: 8 }}>Centre logo</p>
-            <p className="muted text-sm" style={{ marginBottom: 8 }}>
-              {profile.qrLogo ? 'Using a custom QR logo.' : logoSrc ? 'Using your restaurant logo.' : 'No logo yet.'}
+            <ImagePicker kind="logo" label="Centre logo" value={profile.qrLogo || ''} onChange={(url) => save({ qrLogo: url }, url ? 'QR logo updated' : 'Using the restaurant logo')} emptyHint="Empty uses your restaurant logo" />
+            <p className="field-hint" style={{ marginTop: 6 }}>
+              {profile.qrLogo ? 'Remove it to use your restaurant logo instead.' : logoSrc ? 'Using your restaurant logo.' : 'No logo yet: add one here or in Settings.'}
             </p>
-            <div className="row wrap">
-              <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
-                <ImagePlus size={16} aria-hidden="true" /> Upload QR logo
-                <input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={onLogo} />
-              </label>
-              {profile.qrLogo && <Button size="sm" variant="ghost" onClick={() => save({ qrLogo: '' }, 'Using the restaurant logo')}>Use restaurant logo</Button>}
-            </div>
-            {!logoSrc && <p className="field-hint" style={{ marginTop: 6 }}>Add a logo in Settings or upload one here.</p>}
           </div>
           <div className="qr-sample">
             <QrPreview restaurantId={userId} table={tables[0] || 1} color={color} logo={logoImg} />

@@ -97,11 +97,10 @@
 
 /* ---------- Welcome ---------- */
 .welcome { min-height: 100vh; display: flex; flex-direction: column; }
+/* 1:1 to match the banner crop (server output 1200x1200). */
 .welcome-hero {
   position: relative;
-  height: 52vh;
-  min-height: 300px;
-  max-height: 460px;
+  aspect-ratio: 1 / 1;
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
   overflow: hidden;
   background: var(--olive-100);

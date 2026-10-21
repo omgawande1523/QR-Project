@@ -69,9 +69,9 @@ describe('image uploads', () => {
     expect(res.body.code).toBe('INVALID_IMAGE');
   });
 
-  test('rejects files over 5 MB', async () => {
+  test('rejects files over 8 MB', async () => {
     const owner = await registerOwner(app);
-    const res = await upload(owner.token, 'menu', Buffer.alloc(5 * 1024 * 1024 + 1, 1));
+    const res = await upload(owner.token, 'menu', Buffer.alloc(8 * 1024 * 1024 + 1, 1));
     expect(res.status).toBe(413);
     expect(res.body.code).toBe('FILE_TOO_LARGE');
   });
