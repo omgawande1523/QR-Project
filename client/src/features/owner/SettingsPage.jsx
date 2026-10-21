@@ -46,7 +46,7 @@ export default function SettingsPage() {
   useEffect(() => {
     if (!profile || info) return;
     setInfo({ restaurantName: profile.restaurantName || '', tagline: profile.tagline || '', address: profile.address || '', profilePicture: profile.profilePicture || '', bannerImage: profile.bannerImage || '' });
-    setBilling({ gstin: profile.gstin || '', taxPercent: String(profile.taxPercent ?? 0), serviceChargePercent: String(profile.serviceChargePercent ?? 0) });
+    setBilling({ gstin: profile.gstin || '', upiId: profile.upiId || '', taxPercent: String(profile.taxPercent ?? 0), serviceChargePercent: String(profile.serviceChargePercent ?? 0) });
     const byDay = new Map((profile.openingHours || []).map((h) => [h.day, h]));
     setHours(profile.openingHours?.length ? WEEK.map((day) => byDay.get(day) || { day, open: '09:00', close: '22:00', closed: true }) : defaultHours());
   }, [profile, info]);
@@ -120,8 +120,9 @@ export default function SettingsPage() {
           </div>
         </Section>
 
-        <Section title="Billing and tax" description="Used by the server to price every order." onSave={() => save('billing', { gstin: billing.gstin.trim(), taxPercent: Number(billing.taxPercent) || 0, serviceChargePercent: Number(billing.serviceChargePercent) || 0 })} saving={saving === 'billing'}>
-          <TextField label="GSTIN" value={billing.gstin} onChange={(e) => setBilling({ ...billing, gstin: e.target.value.toUpperCase() })} maxLength={15} placeholder="27ABCDE1234F1Z5" hint="Printed on receipts. Leave empty if you are not GST registered." />
+        <Section title="Billing and tax" description="Used by the server to price every order." onSave={() => save('billing', { gstin: billing.gstin.trim(), upiId: billing.upiId.trim(), taxPercent: Number(billing.taxPercent) || 0, serviceChargePercent: Number(billing.serviceChargePercent) || 0 })} saving={saving === 'billing'}>
+          <TextField label="GSTIN" value={billing.gstin} onChange={(e) => setBilling({ ...billing, gstin: e.target.value.toUpperCase() })} maxLength={15} placeholder="27ABCDE1234F1Z5" hint="Printed on invoices. Leave empty if you are not GST registered." />
+          <TextField label="UPI ID" value={billing.upiId} onChange={(e) => setBilling({ ...billing, upiId: e.target.value })} maxLength={60} placeholder="restaurant@okaxis" hint="Unpaid bills show a QR code guests can scan with any UPI app." />
           <div className="form-grid">
             <SelectField label="GST rate" value={billing.taxPercent} onChange={(e) => setBilling({ ...billing, taxPercent: e.target.value })}
               options={['0', '5', '12', '18'].map((v) => ({ value: v, label: v === '0' ? 'No GST' : `${v}%` }))} hint="Most restaurants charge 5%" />

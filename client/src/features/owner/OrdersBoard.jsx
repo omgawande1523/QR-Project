@@ -3,11 +3,12 @@ import { Printer, Volume2, VolumeX } from 'lucide-react';
 import { useOwner } from './OwnerContext';
 import { PageHeader } from './OwnerLayout';
 import { OrderCard, OrderItems } from './OrderCard';
-import { ReceiptModal } from './ReceiptModal';
-import { Badge, Button, Card, EmptyState, IconButton, SelectField, Skeleton } from '../../components/ui';
+import { BillModal } from './BillModal';
+import { Badge, Button, Card, EmptyState, IconButton, SelectField, Skeleton, useToast } from '../../components/ui';
 import { BOARD_COLUMNS, STATUS_LABEL, STATUS_TONE } from '../../lib/orderStatus';
 import { api, errorMessage } from '../../lib/api';
 import { formatPrice, formatTime } from '../../lib/format';
+import { PAYMENT_LABEL } from '../../lib/invoice';
 import { useNow } from '../../lib/useNow';
 
 const todayInput = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD in local time
@@ -46,16 +47,20 @@ function History({ table, onPrint }) {
       {shown.length > 0 && (
         <div className="table-scroll">
           <table className="data-table">
-            <thead><tr><th>Time</th><th>Table</th><th>Items</th><th>Status</th><th className="num">Total</th><th><span className="sr-only">Receipt</span></th></tr></thead>
+            <thead><tr><th>Time</th><th>Table</th><th>Items</th><th>Status</th><th>Invoice</th><th className="num">Total</th><th><span className="sr-only">Bill</span></th></tr></thead>
             <tbody>
               {shown.map((o) => (
                 <tr key={o._id}>
                   <td>{formatTime(o.createdAt)}</td>
                   <td>T{o.tableNumber}</td>
                   <td><OrderItems items={o.items} compact /></td>
-                  <td><Badge tone={STATUS_TONE[o.status]}>{STATUS_LABEL[o.status]}</Badge></td>
+                  <td>
+                    <Badge tone={STATUS_TONE[o.status]}>{STATUS_LABEL[o.status]}</Badge>
+                    {o.payment?.paidAt && <span className="muted text-xs" style={{ display: 'block', marginTop: 2 }}>{PAYMENT_LABEL[o.payment.method]}</span>}
+                  </td>
+                  <td className="text-xs" style={{ whiteSpace: 'nowrap' }}>{o.invoiceNumber || <span className="muted">-</span>}</td>
                   <td className="num price">{formatPrice(o.totalAmount)}</td>
-                  <td><IconButton label="Print receipt" variant="flat" onClick={() => onPrint(o)}><Printer size={18} /></IconButton></td>
+                  <td><IconButton label="Open bill" variant="flat" onClick={() => onPrint(o)}><Printer size={18} /></IconButton></td>
                 </tr>
               ))}
             </tbody>
@@ -67,7 +72,8 @@ function History({ table, onPrint }) {
 }
 
 export default function OrdersBoard() {
-  const { orders, ordersLoaded, setOrderStatus, profile, alerts, setAlerts } = useOwner();
+  const { orders, ordersLoaded, setOrderStatus, replaceOrder, profile, alerts, setAlerts } = useOwner();
+  const toast = useToast();
   const now = useNow();
   const [view, setView] = useState('board');
   const [table, setTable] = useState('all');
@@ -84,8 +90,25 @@ export default function OrdersBoard() {
     return map;
   }, [orders, table]);
 
+  // "Bill" assigns the invoice number and opens the bill; "Mark paid" opens it to take payment.
+  const bill = async (order) => {
+    setBusy(order._id);
+    try {
+      const res = await api.post(`/api/orders/${order._id}/invoice`);
+      replaceOrder(res.data);
+      setReceipt(res.data);
+    } catch (err) {
+      toast.error(errorMessage(err, 'Could not make the bill'));
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const change = async (order, status) => {
-    if (status === 'cancelled' && !window.confirm(`Cancel the order for table ${order.tableNumber}?`)) return;
+    if (status === 'billed') return bill(order);
+    if (status === 'complete') return setReceipt(order);
+    if (status === 'cancelled' && order.payment?.paidAt && !window.confirm(`Table ${order.tableNumber} has already paid. Cancel anyway? Refund them separately.`)) return;
+    if (status === 'cancelled' && !order.payment?.paidAt && !window.confirm(`Cancel the order for table ${order.tableNumber}?`)) return;
     setBusy(order._id);
     try { await setOrderStatus(order._id, status); } catch { /* toast shown */ } finally { setBusy(null); }
   };
@@ -153,7 +176,7 @@ export default function OrdersBoard() {
         </div>
       )}
 
-      <ReceiptModal order={receipt} onClose={() => setReceipt(null)} />
+      {receipt && <BillModal order={receipt} onClose={() => setReceipt(null)} />}
       {view === 'board' && ordersLoaded && Object.values(byStatus).every((list) => list.length === 0) && (
         <p className="muted text-sm" style={{ marginTop: 'var(--space-4)' }}>
           Completed and cancelled orders are under <Button variant="ghost" size="sm" onClick={() => setView('history')}>History</Button>.

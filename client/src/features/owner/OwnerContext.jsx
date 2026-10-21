@@ -126,6 +126,11 @@ export function OwnerProvider({ children }) {
     }
   }, [toast]);
 
+  // Puts an order returned by the API (bill, payment) on the board without waiting for the socket.
+  const replaceOrder = useCallback((order) => {
+    setOrders((list) => list.map((o) => (o._id === order._id ? order : o)));
+  }, []);
+
   const markRequestHandled = useCallback(async (id) => {
     setRequests((list) => list.filter((r) => r._id !== id));
     try {
@@ -146,13 +151,14 @@ export function OwnerProvider({ children }) {
     ordersLoaded,
     loadOrders,
     setOrderStatus,
+    replaceOrder,
     requests,
     markRequestHandled,
     connected,
     alerts,
     setAlerts,
     subscribe
-  }), [userId, me, profile, loadProfile, saveProfile, orders, ordersLoaded, loadOrders, setOrderStatus, requests, markRequestHandled, connected, alerts, setAlerts, subscribe]);
+  }), [userId, me, profile, loadProfile, saveProfile, orders, ordersLoaded, loadOrders, setOrderStatus, replaceOrder, requests, markRequestHandled, connected, alerts, setAlerts, subscribe]);
 
   return <OwnerContext.Provider value={value}>{children}</OwnerContext.Provider>;
 }

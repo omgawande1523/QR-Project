@@ -179,6 +179,17 @@
 .receipt-row small { display: block; color: #555; }
 .receipt-total { font-weight: 700; font-size: 15px; margin-top: 4px; }
 .receipt-thanks { margin-top: 8px; }
+.receipt-title { font-weight: 700; letter-spacing: 0.08em; }
+.receipt-paid { margin-top: 8px; font-weight: 700; letter-spacing: 0.04em; }
+.receipt-qr { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 10px; }
+.receipt-qr img { display: block; width: 140px; height: 140px; }
+
+/* ---------- Bill: payment ---------- */
+.bill-payment { display: flex; flex-direction: column; gap: var(--space-3); margin-bottom: var(--space-5); padding-bottom: var(--space-5); border-bottom: 1px solid var(--cream-300); }
+.bill-payment-title { font-size: var(--text-md); }
+.bill-methods { display: flex; width: 100%; }
+.bill-methods button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; }
+.bill-paid { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: var(--success-bg); color: var(--success); font-weight: var(--weight-semibold); }
 
 @media print {
   body * { visibility: hidden; }

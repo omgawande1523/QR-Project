@@ -87,7 +87,7 @@ Re-running replaces only the demo account's own data. Image credits: `server/scr
 | --- | --- |
 | Marketing | `/` landing page, `/demo` opens the demo café |
 | Customer (from a table QR code) | `/menu/:restaurantId?table=N` welcome, `/browse` menu, `/item/:id`, `/cart`, `/orders`, `/orders/:id` live tracking |
-| Owner | `/login`, `/register`, `/dashboard` home, `/dashboard/orders`, `/dashboard/menu`, `/dashboard/tables`, `/dashboard/settings` |
+| Owner and staff | `/login`, `/register`, `/dashboard` home, `/dashboard/orders`, `/dashboard/menu`, `/dashboard/tables`, `/dashboard/staff`, `/dashboard/settings`, `/kitchen` kitchen display |
 
 Screenshots at 375px and 1440px are in [docs/screenshots](docs/screenshots). The planned next steps are in
 [docs/ROADMAP.md](docs/ROADMAP.md).
@@ -97,6 +97,17 @@ Screenshots at 375px and 1440px are in [docs/screenshots](docs/screenshots). The
 All colours, type, radii, shadows and spacing are tokens in `client/src/styles/tokens.css` (olive scale around
 `--olive-500`, cream background, ink text). Filled buttons use `--olive-700` with white text so they pass WCAG AA;
 light olive is only used under dark text. Reusable components live in `client/src/components/ui`.
+
+### Billing
+
+"Bill" on a served order assigns a GST invoice number, consecutive per restaurant and Indian financial year
+(`2026-27/000001`, within GST's 16-character limit), and opens the bill: an 80 mm printable receipt and an A4
+invoice PDF with GSTIN, place of supply (from the GSTIN state code), SAC 996331, taxable value, CGST/SGST split
+in whole paise and the amount in words. Without a GSTIN the document is titled "Bill" instead of "Tax Invoice".
+If the restaurant sets a UPI ID in Settings, unpaid bills carry a UPI QR code with the amount filled in.
+"Mark paid" records cash, UPI or card (with an optional reference) and closes the order. Payment taken before
+the food is served keeps the order on the kitchen display. Owners, managers and waiters can bill; the kitchen
+cannot.
 
 ### Images
 

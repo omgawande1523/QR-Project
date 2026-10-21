@@ -2,6 +2,7 @@ import { ChevronLeft, X, Printer, StickyNote } from 'lucide-react';
 import { Button, IconButton, Badge } from '../../components/ui';
 import { BOARD_COLUMNS, STATUS_LABEL, STATUS_TONE } from '../../lib/orderStatus';
 import { formatPrice, timeAgo } from '../../lib/format';
+import { PAYMENT_LABEL } from '../../lib/invoice';
 
 const shortId = (id) => String(id).slice(-6).toUpperCase();
 const PREVIOUS = { process: 'pending', ready: 'process', served: 'ready', billed: 'served' };
@@ -50,12 +51,13 @@ export function OrderCard({ order, onStatus, onPrint, draggable = false, busy = 
           <span className="muted text-xs">#{shortId(order._id)} · {timeAgo(order.createdAt, now)}</span>
         </div>
         {!column && <Badge tone={STATUS_TONE[order.status]}>{STATUS_LABEL[order.status]}</Badge>}
+        {column && order.payment?.paidAt && <Badge tone="success">Paid · {PAYMENT_LABEL[order.payment.method]}</Badge>}
       </header>
       <OrderItems items={order.items} />
       <footer className="order-card-foot">
         <span className="price">{formatPrice(order.totalAmount)}</span>
         <div className="row" style={{ gap: 4 }}>
-          {onPrint && <IconButton label="Print receipt" variant="flat" onClick={() => onPrint(order)}><Printer size={18} /></IconButton>}
+          {onPrint && <IconButton label="Open bill" variant="flat" onClick={() => onPrint(order)}><Printer size={18} /></IconButton>}
           {previous && <IconButton label={`Move back to ${STATUS_LABEL[previous]}`} variant="flat" onClick={() => onStatus(order, previous)} disabled={busy}><ChevronLeft size={18} /></IconButton>}
           {canCancel && <IconButton label="Cancel order" variant="flat" onClick={() => onStatus(order, 'cancelled')} disabled={busy}><X size={18} /></IconButton>}
         </div>

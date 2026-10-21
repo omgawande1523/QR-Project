@@ -17,6 +17,8 @@ const User = require('../src/models/User');
 const MenuItem = require('../src/models/MenuItem');
 const Order = require('../src/models/Order');
 const ServiceRequest = require('../src/models/ServiceRequest');
+const Counter = require('../src/models/Counter');
+const { nextInvoiceNumber } = require('../src/services/invoices');
 const { IMAGE_KINDS, saveOriginal, cropOriginal } = require('../src/services/images');
 const Upload = require('../src/models/Upload');
 const Staff = require('../src/models/Staff');
@@ -34,6 +36,8 @@ const DEMO = {
   tagline: 'Fresh South & North Indian favourites, made to order.',
   address: 'Lane 7, Koregaon Park, Pune 411001',
   gstin: '27AAACO1234F1Z5',
+  // Not a real UPI handle, so a scan of the demo bill cannot send money anywhere.
+  upiId: 'qrmenu.demo@example',
   categories: ['Breakfast', 'Starters', 'Mains', 'Breads & Rice', 'Beverages', 'Desserts'],
   openingHours: [0, 1, 2, 3, 4, 5, 6].map((day) => ({ day, open: '08:00', close: day === 5 || day === 6 ? '23:30' : '22:30', closed: false })),
   isDemo: true
@@ -161,7 +165,8 @@ async function removeExistingDemo() {
   await Promise.all([
     MenuItem.deleteMany({ owner: existing._id }),
     Order.deleteMany({ restaurantId: existing._id }),
-    ServiceRequest.deleteMany({ restaurantId: existing._id })
+    ServiceRequest.deleteMany({ restaurantId: existing._id }),
+    Counter.deleteMany({ _id: { $regex: `^${existing._id}:` } })
   ]);
   await User.deleteOne({ _id: existing._id });
   console.log('Replaced the existing demo restaurant.');
@@ -205,16 +210,26 @@ async function main() {
   // Orders are priced from the menu; mark everything available while pricing sample orders.
   const pricingMenu = new Map(items.map((item) => [String(item._id), { ...item.toObject(), available: true }]));
 
-  for (const [minutesAgo, tableNumber, status, customerName, lines] of SAMPLE_ORDERS) {
+  // Oldest first, so billed and paid orders get invoice numbers in date order.
+  const PAYMENT_METHODS = ['upi', 'cash', 'card'];
+  const byAge = [...SAMPLE_ORDERS].sort((a, b) => b[0] - a[0]);
+  for (const [index, [minutesAgo, tableNumber, status, customerName, lines]] of byAge.entries()) {
     const pricing = priceOrder(restaurant, pricingMenu, buildLines(lines, itemsByName));
+    const createdAt = new Date(Date.now() - minutesAgo * 60 * 1000);
+    const billedAt = new Date(createdAt.getTime() + 40 * 60 * 1000);
+    const billing = ['billed', 'complete'].includes(status)
+      ? { invoiceNumber: await nextInvoiceNumber(restaurant._id, billedAt), invoicedAt: billedAt }
+      : {};
+    if (status === 'complete') billing.payment = { method: PAYMENT_METHODS[index % 3], paidAt: new Date(billedAt.getTime() + 5 * 60 * 1000) };
     await Order.create({
       ...pricing,
+      ...billing,
       tableNumber,
       status,
       customerName,
       restaurantId: restaurant._id,
       trackingToken: crypto.randomBytes(24).toString('hex'),
-      createdAt: new Date(Date.now() - minutesAgo * 60 * 1000)
+      createdAt
     });
   }
 
