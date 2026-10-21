@@ -27,6 +27,15 @@ exports.create = {
   })
 };
 
+exports.listForOwner = {
+  query: z.object({
+    from: z.coerce.date({ invalid_type_error: 'from must be a date' }).optional(),
+    to: z.coerce.date({ invalid_type_error: 'to must be a date' }).optional(),
+    status: z.enum(ORDER_STATUSES).optional(),
+    limit: z.coerce.number().int().min(1).max(1000).default(500)
+  })
+};
+
 exports.getStatus = {
   params: z.object({ id: objectId }),
   query: z.object({ token: z.string().trim().min(1, 'Tracking token is required').max(128) })

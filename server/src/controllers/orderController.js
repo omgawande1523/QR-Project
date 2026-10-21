@@ -8,6 +8,9 @@ const emit = require('../sockets/io');
 const safeEqual = require('../utils/safeEqual');
 const { priceOrder } = require('../services/pricing');
 
+// Once an order is completed or cancelled its status can no longer change.
+const FINAL_STATUSES = ['complete', 'cancelled'];
+
 exports.create = asyncHandler(async (req, res) => {
   const { restaurantId, tableNumber, customerName, customerPhone, items } = req.body;
 
@@ -37,11 +40,17 @@ exports.create = asyncHandler(async (req, res) => {
   res.status(201).json({ ...savedOrder.toJSON(), trackingToken });
 });
 
+// Newest first, capped (default 500). Items are snapshots, so no populate is needed.
 exports.listForOwner = asyncHandler(async (req, res) => {
-  const orders = await Order.find({ restaurantId: req.user.userId })
-    .populate('items.menuItem')
-    .sort({ createdAt: -1 });
-  res.json(orders);
+  const { from, to, status, limit } = req.query;
+  const filter = { restaurantId: req.user.userId };
+  if (status) filter.status = status;
+  if (from || to) {
+    filter.createdAt = {};
+    if (from) filter.createdAt.$gte = from;
+    if (to) filter.createdAt.$lte = to;
+  }
+  res.json(await Order.find(filter).sort({ createdAt: -1 }).limit(limit));
 });
 
 // Customer view of one order; needs the tracking token returned when the order was placed.
@@ -59,12 +68,14 @@ exports.updateStatus = asyncHandler(async (req, res) => {
   if (order.restaurantId?.toString() !== req.user.userId) {
     throw AppError.forbidden('Not authorized to update this order');
   }
+  if (FINAL_STATUSES.includes(order.status) && order.status !== req.body.status) {
+    throw AppError.conflict(`This order is already ${order.status === 'complete' ? 'completed' : 'cancelled'}`, 'ORDER_CLOSED');
+  }
 
   order.status = req.body.status;
   await order.save();
-  const updatedOrder = await order.populate('items.menuItem');
 
-  emit.toRestaurant(updatedOrder.restaurantId, 'orderUpdated', updatedOrder);
-  emit.toOrder(updatedOrder._id, 'orderUpdated', updatedOrder);
-  res.json(updatedOrder);
+  emit.toRestaurant(order.restaurantId, 'orderUpdated', order);
+  emit.toOrder(order._id, 'orderUpdated', order);
+  res.json(order);
 });

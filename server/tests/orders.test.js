@@ -200,3 +200,48 @@ describe('order ownership', () => {
     expect((await request(app).get('/api/orders')).status).toBe(401);
   });
 });
+
+describe('order lifecycle and listing', () => {
+  async function setup() {
+    const owner = await registerOwner(app);
+    const item = await createMenuItem(app, owner.token, { price: 100 });
+    const place = () => placeOrder({ restaurantId: owner.userId, tableNumber: 1, items: [{ menuItem: item._id, quantity: 1 }] });
+    return { owner, place };
+  }
+
+  test('completed and cancelled orders are final', async () => {
+    const { owner, place } = await setup();
+    const done = (await place()).body;
+    const dropped = (await place()).body;
+    const setStatus = (id, status) => request(app).put(`/api/orders/${id}`).set(auth(owner.token)).send({ status });
+
+    expect((await setStatus(done._id, 'complete')).status).toBe(200);
+    const reopen = await setStatus(done._id, 'pending');
+    expect(reopen.status).toBe(409);
+    expect(reopen.body.code).toBe('ORDER_CLOSED');
+
+    expect((await setStatus(dropped._id, 'cancelled')).status).toBe(200);
+    expect((await setStatus(dropped._id, 'complete')).status).toBe(409);
+  });
+
+  test('the owner list can be filtered and limited', async () => {
+    const { owner, place } = await setup();
+    const first = (await place()).body;
+    await place();
+    await place();
+    await request(app).put(`/api/orders/${first._id}`).set(auth(owner.token)).send({ status: 'process' });
+
+    const limited = await request(app).get('/api/orders?limit=2').set(auth(owner.token));
+    expect(limited.body).toHaveLength(2);
+
+    const processing = await request(app).get('/api/orders?status=process').set(auth(owner.token));
+    expect(processing.body.map((o) => o._id)).toEqual([first._id]);
+
+    const future = new Date(Date.now() + 60_000).toISOString();
+    const none = await request(app).get(`/api/orders?from=${future}`).set(auth(owner.token));
+    expect(none.body).toHaveLength(0);
+
+    const bad = await request(app).get('/api/orders?limit=5000').set(auth(owner.token));
+    expect(bad.status).toBe(400);
+  });
+});
