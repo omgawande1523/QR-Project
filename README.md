@@ -97,6 +97,24 @@ All colours, type, radii, shadows and spacing are tokens in `client/src/styles/t
 `--olive-500`, cream background, ink text). Filled buttons use `--olive-700` with white text so they pass WCAG AA;
 light olive is only used under dark text. Reusable components live in `client/src/components/ui`.
 
+### Images
+
+Every image field (dish photo, logo, banner, QR logo) uses one picker: upload or drag and drop, paste with
+Ctrl+V, or paste an image URL. Each image is then cropped in the browser (react-easy-crop) and the **server**
+applies the crop to the stored full-size original with sharp, so "Edit crop" works later without re-uploading.
+
+| Field | Crop ratio | Stored size |
+| --- | --- | --- |
+| Dish photo | 4:3 (the menu card) | 1200 x 900 WebP |
+| Restaurant logo | 1:1, shown round | 512 x 512 |
+| Banner | 1:1 (the customer welcome hero) | 1200 x 1200 |
+| QR logo | 1:1 | 512 x 512 |
+
+Pasted links are downloaded by the server (never hotlinked) through an SSRF guard: http/https on standard
+ports only, every DNS answer must be a public address (checked again on each of at most 3 redirects, with the
+connection pinned to the checked address), a 10 s deadline, an 8 MB limit enforced while streaming, and the bytes
+must decode as a raster image. The limit is 20 links per owner per 10 minutes.
+
 ## Environment variables
 
 **server/.env** (see `server/.env.example`)
