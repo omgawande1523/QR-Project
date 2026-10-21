@@ -1,76 +1,35 @@
 const MenuItem = require('../models/MenuItem');
+const AppError = require('../utils/AppError');
+const asyncHandler = require('../utils/asyncHandler');
 
-exports.listAll = async (req, res) => {
-  try {
-    const menuItems = await MenuItem.find();
-    res.json(menuItems);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+async function findOwnedItem(req, action) {
+  const item = await MenuItem.findById(req.params.id);
+  if (!item) throw AppError.notFound('Item not found');
+  if (item.owner?.toString() !== req.user.userId) throw AppError.forbidden(`Not authorized to ${action} this item`);
+  return item;
+}
 
-exports.listByRestaurant = async (req, res) => {
-  try {
-    const menuItems = await MenuItem.find({ owner: req.params.userId });
-    res.json(menuItems);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+exports.listAll = asyncHandler(async (req, res) => {
+  res.json(await MenuItem.find());
+});
 
-exports.create = async (req, res) => {
-  try {
-    const { name, description, price, category, image } = req.body;
-    const item = new MenuItem({
-      name,
-      description,
-      price,
-      category,
-      image,
-      owner: req.user.userId
-    });
-    const saved = await item.save();
-    res.json(saved);
-  } catch (err) {
-    console.error('Create menu error:', err);
-    res.status(500).json({ message: 'Failed to create menu item' });
-  }
-};
+exports.listByRestaurant = asyncHandler(async (req, res) => {
+  res.json(await MenuItem.find({ owner: req.params.userId }));
+});
 
-exports.update = async (req, res) => {
-  try {
-    const { name, description, price, category, image, available } = req.body;
-    const updateData = { name, description, price, category, image, available };
+exports.create = asyncHandler(async (req, res) => {
+  const item = await MenuItem.create({ ...req.body, owner: req.user.userId });
+  res.json(item);
+});
 
-    const item = await MenuItem.findById(req.params.id);
-    if (!item) return res.status(404).json({ message: 'Item not found' });
-    if (item.owner?.toString() !== req.user.userId) {
-      return res.status(403).json({ message: 'Not authorized to update this item' });
-    }
+exports.update = asyncHandler(async (req, res) => {
+  const item = await findOwnedItem(req, 'update');
+  item.set(req.body);
+  res.json(await item.save());
+});
 
-    // Remove undefined fields
-    Object.keys(updateData).forEach(key => updateData[key] === undefined && delete updateData[key]);
-
-    const updated = await MenuItem.findByIdAndUpdate(req.params.id, updateData, { new: true });
-    res.json(updated);
-  } catch (err) {
-    console.error('Update menu error:', err);
-    res.status(500).json({ message: 'Failed to update item' });
-  }
-};
-
-exports.remove = async (req, res) => {
-  try {
-    const item = await MenuItem.findById(req.params.id);
-    if (!item) return res.status(404).json({ message: 'Item not found' });
-    if (item.owner?.toString() !== req.user.userId) {
-      return res.status(403).json({ message: 'Not authorized to delete this item' });
-    }
-
-    await MenuItem.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Deleted' });
-  } catch (err) {
-    console.error('Delete menu error:', err);
-    res.status(500).json({ message: 'Failed to delete item' });
-  }
-};
+exports.remove = asyncHandler(async (req, res) => {
+  const item = await findOwnedItem(req, 'delete');
+  await item.deleteOne();
+  res.json({ message: 'Deleted' });
+});

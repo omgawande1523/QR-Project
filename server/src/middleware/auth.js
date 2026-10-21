@@ -1,16 +1,20 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config');
+const AppError = require('../utils/AppError');
 
 const verifyToken = (req, res, next) => {
-  const token = req.headers['authorization']?.split(' ')[1];
-  if (!token) return res.status(401).json({ message: 'Access denied. No token provided.' });
+  const header = req.headers.authorization || '';
+  const [scheme, token] = header.split(' ');
+  if (scheme !== 'Bearer' || !token) {
+    return next(AppError.unauthorized('Access denied. No token provided.', 'NO_TOKEN'));
+  }
 
   try {
     const decoded = jwt.verify(token, config.jwtSecret);
-    req.user = decoded;
+    req.user = { userId: String(decoded.userId) };
     next();
   } catch (ex) {
-    res.status(400).json({ message: 'Invalid token.' });
+    next(AppError.unauthorized('Your session has expired. Please log in again.', 'INVALID_TOKEN'));
   }
 };
 

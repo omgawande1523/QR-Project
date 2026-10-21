@@ -153,8 +153,8 @@ const Profile = () => {
       return;
     }
 
-    if (passwordChange.newPassword.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (passwordChange.newPassword.length < 8) {
+      setError('Password must be at least 8 characters');
       setSaving(false);
       return;
     }
