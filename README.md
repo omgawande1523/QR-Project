@@ -19,7 +19,10 @@ QR-Project/
 
 ## Requirements
 
-- Node.js 18 or newer, npm 9 or newer
+- Node.js 22 LTS (22.12 or newer) and npm 10 or newer. The repo has an `.nvmrc`, so `nvm use` (nvm-windows:
+  `nvm install 22` then `nvm use 22`) picks the right version. Node 18 and 20 are not supported.
+  On Render, set the environment variable `NODE_VERSION=22` (Render also reads `.nvmrc`); on Netlify/Vercel
+  set the Node version to 22 in the project settings.
 - MongoDB on `mongodb://localhost:27017`: MongoDB Community Server, a Docker container, or a MongoDB Atlas URI
 
 To run MongoDB in Docker:

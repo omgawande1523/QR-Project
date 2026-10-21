@@ -4,8 +4,8 @@
   "private": true,
   "description": "QR code digital menu and table ordering system for restaurants and cafés",
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
+    "node": ">=22.12",
+    "npm": ">=10"
   },
   "scripts": {
     "install:all": "npm install && npm --prefix server install && npm --prefix client install",
