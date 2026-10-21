@@ -15,6 +15,21 @@ const userSchema = new mongoose.Schema({
   taxPercent: { type: Number, default: 0, min: 0, max: 28 }, // GST %
   serviceChargePercent: { type: Number, default: 0, min: 0, max: 20 },
   acceptingOrders: { type: Boolean, default: true },
+  // Public profile shown on the customer welcome screen
+  tagline: String,
+  address: String,
+  gstin: String,
+  openingHours: [{
+    _id: false,
+    day: { type: Number, min: 0, max: 6 }, // 0 = Sunday
+    open: String, // "HH:MM", 24-hour
+    close: String,
+    closed: { type: Boolean, default: false }
+  }],
+  // Category names in the order the customer menu shows them
+  categories: { type: [String], default: [] },
+  // The seeded demo restaurant opened by "Try live demo"
+  isDemo: { type: Boolean, default: false },
   // Password reset: only a SHA-256 hash of the emailed code is stored
   resetCodeHash: { type: String, select: false },
   resetCodeExpiry: { type: Date, select: false },

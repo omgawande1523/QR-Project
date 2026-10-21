@@ -41,10 +41,33 @@ exports.scan = {
   params: z.object({ id: objectId, tableNumber })
 };
 
+const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
+// 15-character Indian GST number, e.g. 27ABCDE1234F1Z5
+const GSTIN = /^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
+
+const openingHours = z.array(z.object({
+  day: z.number().int().min(0).max(6),
+  open: z.string().regex(TIME, 'Use 24-hour HH:MM times'),
+  close: z.string().regex(TIME, 'Use 24-hour HH:MM times'),
+  closed: z.boolean().default(false)
+})).max(7).refine((days) => new Set(days.map((d) => d.day)).size === days.length, 'Each day can appear only once');
+
+const categoryName = z.string().trim().min(1, 'Category name is required').max(50, 'Category name must be at most 50 characters');
+const categories = z.array(categoryName).max(50, 'At most 50 categories')
+  .refine((list) => new Set(list.map((c) => c.toLowerCase())).size === list.length, 'Category names must be unique');
+
+exports.categoryName = categoryName;
+
 exports.updateProfile = {
   params: z.object({ id: objectId }),
   body: z.object({
-    restaurantName,
+    restaurantName: restaurantName.optional(),
+    tagline: z.string().trim().max(120, 'Tagline must be at most 120 characters').optional(),
+    address: z.string().trim().max(200, 'Address must be at most 200 characters').optional(),
+    gstin: z.string().trim().toUpperCase()
+      .refine((v) => v === '' || GSTIN.test(v), 'GSTIN must be 15 characters, e.g. 27ABCDE1234F1Z5').optional(),
+    openingHours: openingHours.optional(),
+    categories: categories.optional(),
     tables: tables.optional(),
     profilePicture: imageRef.optional(),
     bannerImage: imageRef.optional(),

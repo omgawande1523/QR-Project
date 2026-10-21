@@ -10,6 +10,9 @@ const { discardImage } = require('../services/storage');
 const { signToken } = require('../services/auth');
 
 const IMAGE_FIELDS = ['profilePicture', 'bannerImage', 'qrLogo'];
+// What customers see before ordering (logo = profilePicture).
+const PUBLIC_PROFILE_FIELDS = 'restaurantName tagline address profilePicture bannerImage tables categories openingHours '
+  + 'taxPercent serviceChargePercent acceptingOrders';
 // Never sent to clients (legacy resetToken fields may still exist on older documents).
 const PRIVATE_FIELDS = '-password -resetCodeHash -resetCodeExpiry -resetCodeAttempts -tokenVersion -resetToken -resetTokenExpiry';
 
@@ -118,7 +121,7 @@ exports.resetPassword = asyncHandler(async (req, res) => {
 
 // Public restaurant info for the customer menu (no token needed)
 exports.getPublicProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id).select('restaurantName profilePicture bannerImage tables taxPercent serviceChargePercent acceptingOrders');
+  const user = await User.findById(req.params.id).select(PUBLIC_PROFILE_FIELDS);
   if (!user) throw AppError.notFound('Restaurant not found');
   res.json(user);
 });
@@ -147,17 +150,8 @@ exports.getProfile = asyncHandler(async (req, res) => {
 
 exports.updateProfile = asyncHandler(async (req, res) => {
   assertSelf(req, 'Not authorized to update this profile');
-  const {
-    restaurantName, tables, profilePicture, bannerImage, qrColor, qrLogo,
-    taxPercent, serviceChargePercent, acceptingOrders
-  } = req.body;
-
-  const updateData = {
-    restaurantName, tables, profilePicture, bannerImage, qrColor, qrLogo,
-    taxPercent, serviceChargePercent, acceptingOrders
-  };
-  // Remove undefined fields to avoid overwriting existing data with null
-  Object.keys(updateData).forEach((key) => updateData[key] === undefined && delete updateData[key]);
+  // req.body holds only fields allowed by validators/users.js; skip the ones not sent.
+  const updateData = Object.fromEntries(Object.entries(req.body).filter(([, value]) => value !== undefined));
 
   const before = await User.findById(req.params.id).select('profilePicture bannerImage qrLogo');
   if (!before) throw AppError.notFound('User not found');

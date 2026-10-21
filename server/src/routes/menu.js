@@ -8,6 +8,7 @@ const router = express.Router();
 
 router.get('/:userId', validate(schemas.listByRestaurant), menu.listByRestaurant);
 router.post('/', verifyToken, validate(schemas.create), menu.create);
+router.post('/categories/rename', verifyToken, validate(schemas.renameCategory), menu.renameCategory);
 router.patch('/availability', verifyToken, validate(schemas.setAvailability), menu.setAvailability);
 router.put('/:id', verifyToken, validate(schemas.update), menu.update);
 router.delete('/:id', verifyToken, validate(schemas.remove), menu.remove);

@@ -1,5 +1,6 @@
 const { z, objectId, imageRef } = require('./common');
 const MenuItem = require('../models/MenuItem');
+const { categoryName } = require('./users');
 
 const price = z.coerce.number({ invalid_type_error: 'Price must be a number' })
   .min(0, 'Price cannot be negative')
@@ -40,6 +41,10 @@ exports.create = {
 exports.update = {
   params: z.object({ id: objectId }),
   body: z.object(itemFields).partial()
+};
+
+exports.renameCategory = {
+  body: z.object({ from: categoryName, to: categoryName })
 };
 
 exports.setAvailability = {
