@@ -1,7 +1,7 @@
 const express = require('express');
 const { z } = require('zod');
 const uploads = require('../controllers/uploadController');
-const { verifyToken } = require('../middleware/auth');
+const { verifyToken, requireRole, MANAGERS } = require('../middleware/auth');
 const { singleImage } = require('../middleware/upload');
 const { imageLimiter, imageUrlLimiter } = require('../middleware/rateLimit');
 const validate = require('../middleware/validate');
@@ -27,7 +27,7 @@ const schemas = {
   fromUrl: { body: z.object({ url: z.string({ required_error: 'Paste an image link' }).trim().min(1, 'Paste an image link').max(2048, 'That link is too long') }) }
 };
 
-router.use(verifyToken, imageLimiter);
+router.use(verifyToken, requireRole(...MANAGERS), imageLimiter);
 
 // Crop flow: original -> crop. Specific paths come before /:kind.
 router.post('/originals', singleImage, uploads.uploadOriginal);

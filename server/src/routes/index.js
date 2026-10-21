@@ -13,5 +13,6 @@ router.use('/api/orders', require('./orders'));
 router.use('/api/service-requests', require('./serviceRequests'));
 router.use('/api/uploads', require('./uploads'));
 router.use('/api/public', require('./public'));
+router.use('/api/staff', require('./staff'));
 
 module.exports = router;

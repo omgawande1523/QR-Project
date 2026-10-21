@@ -7,7 +7,8 @@ const asyncHandler = require('../utils/asyncHandler');
 const safeEqual = require('../utils/safeEqual');
 const { isEmailConfigured, sendPasswordResetEmail } = require('../services/mailer');
 const { discardImage } = require('../services/storage');
-const { signToken } = require('../services/auth');
+const { signToken, signStaffToken } = require('../services/auth');
+const Staff = require('../models/Staff');
 
 const IMAGE_FIELDS = ['profilePicture', 'bannerImage', 'qrLogo'];
 // What customers see before ordering (logo = profilePicture).
@@ -35,7 +36,7 @@ function assertSelf(req, message) {
 exports.register = asyncHandler(async (req, res) => {
   const { email, phoneNumber, password, restaurantName, tables } = req.body;
 
-  if (await User.exists({ email })) throw AppError.badRequest('Email already registered', 'EMAIL_TAKEN');
+  if (await User.exists({ email }) || await Staff.exists({ email })) throw AppError.badRequest('Email already registered', 'EMAIL_TAKEN');
   if (phoneNumber && await User.exists({ phoneNumber })) {
     throw AppError.badRequest('Phone number already registered', 'PHONE_TAKEN');
   }
@@ -47,7 +48,7 @@ exports.register = asyncHandler(async (req, res) => {
     restaurantName,
     tables: tables && tables.length > 0 ? tables : [1]
   });
-  res.json({ message: 'Registered', token: signToken(user), userId: user._id });
+  res.json({ message: 'Registered', token: signToken(user), userId: user._id, role: 'owner' });
 });
 
 exports.login = asyncHandler(async (req, res) => {
@@ -60,10 +61,30 @@ exports.login = asyncHandler(async (req, res) => {
       { phoneNumber: identifier.replace(/[\s-]/g, '') }
     ]
   }).select('+password');
-  const ok = user && await bcrypt.compare(password, user.password);
-  if (!ok) throw AppError.badRequest('Invalid credentials', 'INVALID_CREDENTIALS');
+  if (user) {
+    if (!await bcrypt.compare(password, user.password)) throw AppError.badRequest('Invalid credentials', 'INVALID_CREDENTIALS');
+    return res.json({ token: signToken(user), userId: user._id, role: 'owner' });
+  }
 
-  res.json({ token: signToken(user), userId: user._id });
+  // Staff log in on the same screen with their email.
+  const staff = await Staff.findOne({ email: identifier.toLowerCase(), active: true }).select('+password');
+  if (!staff || !await bcrypt.compare(password, staff.password)) throw AppError.badRequest('Invalid credentials', 'INVALID_CREDENTIALS');
+  staff.lastLoginAt = new Date();
+  await staff.save();
+  return res.json({ token: signStaffToken(staff), userId: staff.restaurant, role: staff.role, staffId: staff._id, name: staff.name });
+});
+
+// Who is logged in: the restaurant, the role, and for staff their name.
+exports.me = asyncHandler(async (req, res) => {
+  const restaurant = await User.findById(req.user.userId).select('restaurantName').lean();
+  if (!restaurant) throw AppError.notFound('Restaurant not found');
+  res.json({
+    userId: req.user.userId,
+    role: req.user.role,
+    staffId: req.user.staffId,
+    name: req.user.name || restaurant.restaurantName,
+    restaurantName: restaurant.restaurantName
+  });
 });
 
 // The reply is the same whether or not the email is registered, so it cannot be used to find accounts.

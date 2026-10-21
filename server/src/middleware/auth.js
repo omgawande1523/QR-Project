@@ -16,4 +16,18 @@ const verifyToken = (req, res, next) => {
     .catch(() => next(AppError.unauthorized('Your session has expired. Please log in again.', 'INVALID_TOKEN')));
 };
 
-module.exports = { verifyToken };
+// Use after verifyToken. requireRole('owner', 'manager') lets only those roles through.
+const requireRole = (...roles) => (req, res, next) => {
+  if (!roles.includes(req.user?.role)) {
+    return next(AppError.forbidden('Your role does not allow this', 'ROLE_FORBIDDEN'));
+  }
+  return next();
+};
+
+// Common groups
+const OWNER = ['owner'];
+const MANAGERS = ['owner', 'manager'];
+const FLOOR = ['owner', 'manager', 'waiter'];
+const EVERYONE = ['owner', 'manager', 'waiter', 'kitchen'];
+
+module.exports = { verifyToken, requireRole, OWNER, MANAGERS, FLOOR, EVERYONE };

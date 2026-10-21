@@ -147,3 +147,17 @@ describe('sockets', () => {
     expect(ok.body.trackingToken).toBeUndefined();
   });
 });
+
+describe('staff sockets', () => {
+  test('a kitchen login receives its restaurant orders live', async () => {
+    const a = await registerOwner(app);
+    const item = await createMenuItem(app, a.token);
+    await request(app).post('/api/staff').set(auth(a.token)).send({ name: 'Cook', email: 'cook@sockets.test', role: 'kitchen', password: 'Staff!2345' });
+    const login = await request(app).post('/api/users/login').send({ identifier: 'cook@sockets.test', password: 'Staff!2345' });
+
+    const cookSocket = await open({ auth: { token: login.body.token } });
+    const got = nextEvent(cookSocket, 'newOrder');
+    await placeOrder(a.userId, item);
+    expect((await got)?.tableNumber).toBe(1);
+  });
+});

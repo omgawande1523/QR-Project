@@ -10,6 +10,8 @@ const { priceOrder } = require('../services/pricing');
 
 // Once an order is completed or cancelled its status can no longer change.
 const FINAL_STATUSES = ['complete', 'cancelled'];
+// Kitchen staff only move orders between these (start, ready, recall).
+const KITCHEN_STATUSES = ['pending', 'process', 'ready'];
 
 exports.create = asyncHandler(async (req, res) => {
   const { restaurantId, tableNumber, customerName, customerPhone, items } = req.body;
@@ -67,6 +69,9 @@ exports.updateStatus = asyncHandler(async (req, res) => {
   if (!order) throw AppError.notFound('Order not found');
   if (order.restaurantId?.toString() !== req.user.userId) {
     throw AppError.forbidden('Not authorized to update this order');
+  }
+  if (req.user.role === 'kitchen' && !(KITCHEN_STATUSES.includes(order.status) && KITCHEN_STATUSES.includes(req.body.status))) {
+    throw AppError.forbidden('The kitchen can only move orders between New, Preparing and Ready', 'ROLE_FORBIDDEN');
   }
   if (FINAL_STATUSES.includes(order.status) && order.status !== req.body.status) {
     throw AppError.conflict(`This order is already ${order.status === 'complete' ? 'completed' : 'cancelled'}`, 'ORDER_CLOSED');

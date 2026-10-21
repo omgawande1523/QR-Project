@@ -1,6 +1,6 @@
 const express = require('express');
 const users = require('../controllers/userController');
-const { verifyToken } = require('../middleware/auth');
+const { verifyToken, requireRole, OWNER, MANAGERS, EVERYONE } = require('../middleware/auth');
 const { authLimiter, scanLimiter } = require('../middleware/rateLimit');
 const validate = require('../middleware/validate');
 const schemas = require('../validators/users');
@@ -16,8 +16,9 @@ router.post('/reset-password', authLimiter, validate(schemas.resetPassword), use
 router.get('/:id/public', validate(schemas.restaurantParam), users.getPublicProfile);
 router.post('/:id/scan/:tableNumber', scanLimiter, validate(schemas.scan), users.recordScan);
 
-router.get('/:id', verifyToken, validate(schemas.restaurantParam), users.getProfile);
-router.put('/:id', verifyToken, validate(schemas.updateProfile), users.updateProfile);
-router.post('/:id/change-password', verifyToken, validate(schemas.changePassword), users.changePassword);
+router.get('/me', verifyToken, users.me);
+router.get('/:id', verifyToken, requireRole(...EVERYONE), validate(schemas.restaurantParam), users.getProfile);
+router.put('/:id', verifyToken, requireRole(...MANAGERS), validate(schemas.updateProfile), users.updateProfile);
+router.post('/:id/change-password', verifyToken, requireRole(...OWNER), validate(schemas.changePassword), users.changePassword);
 
 module.exports = router;
