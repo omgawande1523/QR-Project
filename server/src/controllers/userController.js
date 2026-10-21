@@ -86,7 +86,7 @@ exports.resetPassword = asyncHandler(async (req, res) => {
 
 // Public restaurant info for the customer menu (no token needed)
 exports.getPublicProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id).select('restaurantName profilePicture bannerImage tables');
+  const user = await User.findById(req.params.id).select('restaurantName profilePicture bannerImage tables taxPercent serviceChargePercent acceptingOrders');
   if (!user) throw AppError.notFound('Restaurant not found');
   res.json(user);
 });
@@ -108,9 +108,15 @@ exports.getProfile = asyncHandler(async (req, res) => {
 
 exports.updateProfile = asyncHandler(async (req, res) => {
   assertSelf(req, 'Not authorized to update this profile');
-  const { restaurantName, tables, profilePicture, bannerImage, qrColor, qrLogo } = req.body;
+  const {
+    restaurantName, tables, profilePicture, bannerImage, qrColor, qrLogo,
+    taxPercent, serviceChargePercent, acceptingOrders
+  } = req.body;
 
-  const updateData = { restaurantName, tables, profilePicture, bannerImage, qrColor, qrLogo };
+  const updateData = {
+    restaurantName, tables, profilePicture, bannerImage, qrColor, qrLogo,
+    taxPercent, serviceChargePercent, acceptingOrders
+  };
   // Remove undefined fields to avoid overwriting existing data with null
   Object.keys(updateData).forEach((key) => updateData[key] === undefined && delete updateData[key]);
 

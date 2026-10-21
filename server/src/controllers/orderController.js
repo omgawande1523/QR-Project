@@ -1,30 +1,38 @@
 const crypto = require('crypto');
 const Order = require('../models/Order');
+const MenuItem = require('../models/MenuItem');
+const User = require('../models/User');
 const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
 const emit = require('../sockets/io');
 const safeEqual = require('../utils/safeEqual');
+const { priceOrder } = require('../services/pricing');
 
 exports.create = asyncHandler(async (req, res) => {
-  const raw = req.body;
-  const items = (raw.items || []).map(i => ({
-    menuItem: i.menuItem || null,
-    menuItemName: i.menuItemName || i.name || 'Unknown Item',
-    price: i.price !== undefined ? i.price : 0,
-    quantity: i.quantity || 1,
-    notes: i.notes || ''
-  }));
+  const { restaurantId, tableNumber, customerName, customerPhone, items } = req.body;
+
+  const restaurant = await User.findById(restaurantId).select('tables taxPercent serviceChargePercent acceptingOrders');
+  if (!restaurant) throw AppError.notFound('Restaurant not found');
+  if (restaurant.acceptingOrders === false) {
+    throw AppError.conflict('This restaurant is not accepting orders right now', 'NOT_ACCEPTING_ORDERS');
+  }
+  if (!restaurant.tables.includes(tableNumber)) throw AppError.badRequest('Unknown table number', 'UNKNOWN_TABLE');
+
+  // Only this restaurant's items are loaded, so ids from another menu are simply "not found".
+  const ids = [...new Set(items.map((line) => line.menuItem))];
+  const menuItems = await MenuItem.find({ _id: { $in: ids }, owner: restaurantId });
+  const pricing = priceOrder(restaurant, new Map(menuItems.map((m) => [String(m._id), m])), items);
 
   const trackingToken = crypto.randomBytes(24).toString('hex');
   const savedOrder = await Order.create({
-    items,
-    tableNumber: raw.tableNumber,
-    customerName: raw.customerName || '',
-    totalAmount: raw.totalAmount || 0,
-    restaurantId: raw.restaurantId || null,
+    ...pricing,
+    tableNumber,
+    customerName: customerName || '',
+    customerPhone,
+    restaurantId,
     trackingToken
   });
-  if (savedOrder.restaurantId) emit.toRestaurant(savedOrder.restaurantId, 'newOrder', savedOrder);
+  emit.toRestaurant(restaurantId, 'newOrder', savedOrder);
 
   res.status(201).json({ ...savedOrder.toJSON(), trackingToken });
 });

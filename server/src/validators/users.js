@@ -49,7 +49,10 @@ exports.updateProfile = {
     profilePicture: imageRef.optional(),
     bannerImage: imageRef.optional(),
     qrColor: hexColor.optional(),
-    qrLogo: imageRef.optional()
+    qrLogo: imageRef.optional(),
+    taxPercent: z.coerce.number().min(0).max(28, 'GST cannot exceed 28%').optional(),
+    serviceChargePercent: z.coerce.number().min(0).max(20, 'Service charge cannot exceed 20%').optional(),
+    acceptingOrders: z.boolean().optional()
   })
 };
 

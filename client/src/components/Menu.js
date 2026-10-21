@@ -323,17 +323,16 @@ const Menu = () => {
         itemsMap[key].quantity += 1;
       });
 
+      // Only ids, quantities and notes are sent; the server prices the order from the menu.
       const order = {
         items: Object.values(itemsMap).map(item => ({
-          menuItemName: item.name,
-          price: parseFloat(item.price),
+          menuItem: item._id,
           quantity: item.quantity,
-          notes: item.notes // Include kitchen notes
+          notes: item.notes || undefined // Include kitchen notes
         })),
         customerName: customerName.trim(),
         restaurantId: userId,
-        tableNumber: tableNumber.trim(),
-        totalAmount: cart.reduce((total, item) => total + item.price, 0)
+        tableNumber: tableNumber.trim()
       };
 
       const response = await axios.post(`${API_BASE_URL}/api/orders`, order);
