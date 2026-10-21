@@ -8,7 +8,7 @@
     "npm": ">=10"
   },
   "scripts": {
-    "install:all": "npm install && npm --prefix server install && npm --prefix client install",
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install",
     "dev": "concurrently --names server,client --prefix-colors green,cyan --kill-others-on-fail \"npm:dev:server\" \"npm:dev:client\"",
     "dev:server": "npm --prefix server run dev",
     "dev:client": "npm --prefix client run dev",
