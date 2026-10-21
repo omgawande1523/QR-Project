@@ -1,7 +1,8 @@
-// The logged-in owner's session. Keys match what the app stored before the redesign,
-// so existing logins keep working.
+// The logged-in session (owner or staff). Keys match what the app stored before the redesign,
+// so existing logins keep working. userId is always the restaurant; role says who is acting.
 const TOKEN_KEY = 'token';
 const USER_KEY = 'userId';
+const ROLE_KEY = 'role';
 
 const read = (key) => {
   try {
@@ -13,21 +14,23 @@ const read = (key) => {
 
 export const getToken = () => read(TOKEN_KEY);
 export const getUserId = () => read(USER_KEY);
+// Older sessions have no stored role: they were owner logins.
+export const getRole = () => read(ROLE_KEY) || 'owner';
 export const isLoggedIn = () => Boolean(getToken() && getUserId());
 
-export function setSession({ token, userId }) {
+export function setSession({ token, userId, role }) {
   try {
     window.localStorage.setItem(TOKEN_KEY, token);
     if (userId) window.localStorage.setItem(USER_KEY, userId);
+    if (role) window.localStorage.setItem(ROLE_KEY, role);
   } catch {
-    // storage blocked: the owner will need to log in again next visit
+    // storage blocked: the user will need to log in again next visit
   }
 }
 
 export function clearSession() {
   try {
-    window.localStorage.removeItem(TOKEN_KEY);
-    window.localStorage.removeItem(USER_KEY);
+    [TOKEN_KEY, USER_KEY, ROLE_KEY].forEach((key) => window.localStorage.removeItem(key));
   } catch {
     // ignore
   }

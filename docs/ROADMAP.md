@@ -6,7 +6,7 @@ In this order, one commit each:
 
 1. ~~Kitchen Display Screen (`/kitchen`)~~ done.
    Replaces the old dashboard's "kitchen mode", removed in Phase 3.
-2. Staff accounts with roles: Owner, Manager, Waiter, Kitchen (route and API guards).
+2. ~~Staff accounts with roles~~ done.
 3. Bill / invoice: printable GST invoice per order (PDF), mark paid (cash / UPI / card).
 4. Analytics: sales by day and week, by item, by category, peak hours, table usage (charts).
 5. Customer feedback: rate the meal after an order is served.

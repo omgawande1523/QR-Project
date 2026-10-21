@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, Navigate, useLocation } from 'react-router';
-import { Maximize, Minimize, Sun, SunDim, Undo2, Volume2, VolumeX, ArrowLeft, StickyNote, ChefHat } from 'lucide-react';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router';
+import { Maximize, Minimize, Sun, SunDim, Undo2, Volume2, VolumeX, ArrowLeft, StickyNote, ChefHat, LogOut } from 'lucide-react';
 import { OwnerProvider, useOwner } from '../owner/OwnerContext';
-import { isLoggedIn } from '../../lib/session';
+import { isLoggedIn, clearSession } from '../../lib/session';
+import { homeFor } from '../../lib/roles';
 import { useNow } from '../../lib/useNow';
 import './kitchen.css';
 
@@ -61,7 +62,8 @@ function Ticket({ order, now, onBump, busy }) {
 }
 
 function Kitchen() {
-  const { orders, ordersLoaded, setOrderStatus, profile, connected, alerts, setAlerts } = useOwner();
+  const { orders, ordersLoaded, setOrderStatus, profile, connected, alerts, setAlerts, role } = useOwner();
+  const navigate = useNavigate();
   const now = useNow(1000);
   const [filter, setFilter] = useState('all');
   const [busy, setBusy] = useState(null);
@@ -126,7 +128,11 @@ function Kitchen() {
   return (
     <div className="kitchen">
       <header className="kitchen-bar">
-        <Link to="/dashboard" className="kitchen-icon" aria-label="Back to the dashboard"><ArrowLeft size={22} /></Link>
+        {role === 'kitchen' ? (
+          <button type="button" className="kitchen-icon" aria-label="Log out" onClick={() => { clearSession(); navigate('/login', { replace: true }); }}><LogOut size={22} /></button>
+        ) : (
+          <Link to={homeFor(role)} className="kitchen-icon" aria-label="Back to the dashboard"><ArrowLeft size={22} /></Link>
+        )}
         <div className="kitchen-title">
           <strong><ChefHat size={22} aria-hidden="true" /> Kitchen</strong>
           <span>{profile?.restaurantName}</span>

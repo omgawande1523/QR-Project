@@ -290,3 +290,18 @@
   .hours-row .input { grid-column: span 1; }
   .hours-row > span[aria-hidden] { display: none; }
 }
+
+/* ---------- Sidebar user ---------- */
+.sidebar-user { display: flex; flex-direction: column; padding: var(--space-2) var(--space-3) var(--space-3); color: #fff; min-width: 0; }
+.sidebar-user span { color: var(--olive-300); font-size: var(--text-xs); font-weight: var(--weight-bold); text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* ---------- Staff ---------- */
+.role-legend { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-6); margin-bottom: var(--space-4); font-size: var(--text-sm); color: var(--muted); }
+.staff-card { padding: var(--space-2) var(--space-4); }
+.staff-list { list-style: none; margin: 0; padding: 0; }
+.staff-row { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3); padding: var(--space-3) 0; }
+.staff-row + .staff-row { border-top: 1px solid var(--cream-200); }
+.staff-row.is-inactive { opacity: 0.6; }
+.staff-avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--accent-soft); color: var(--olive-800); display: grid; place-items: center; font-weight: var(--weight-extrabold); flex-shrink: 0; }
+.staff-role { width: auto; min-width: 130px; min-height: 44px; padding: 8px 12px; }
+@media (max-width: 640px) { .staff-row .grow { flex-basis: calc(100% - 60px); } }

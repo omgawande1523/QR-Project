@@ -19,6 +19,7 @@ const Order = require('../src/models/Order');
 const ServiceRequest = require('../src/models/ServiceRequest');
 const { IMAGE_KINDS, saveOriginal, cropOriginal } = require('../src/services/images');
 const Upload = require('../src/models/Upload');
+const Staff = require('../src/models/Staff');
 const { discardImage } = require('../src/services/storage');
 const { priceOrder } = require('../src/services/pricing');
 
@@ -39,6 +40,13 @@ const DEMO = {
 };
 
 const ASSETS = path.join(__dirname, 'seed-assets');
+
+// Demo staff logins, one per role (same password as the owner).
+const DEMO_STAFF = [
+  { name: 'Asha (Manager)', email: 'manager@qrmenu.test', role: 'manager' },
+  { name: 'Ravi (Waiter)', email: 'waiter@qrmenu.test', role: 'waiter' },
+  { name: 'Meena (Kitchen)', email: 'kitchen@qrmenu.test', role: 'kitchen' }
+];
 
 // image: file in seed-assets/ (without .webp). Prices in rupees.
 const MENU = [
@@ -149,6 +157,7 @@ async function removeExistingDemo() {
     discardImage(existing.qrLogo)
   ]);
   await Upload.deleteMany({ owner: existing._id });
+  await Staff.deleteMany({ restaurant: existing._id });
   await Promise.all([
     MenuItem.deleteMany({ owner: existing._id }),
     Order.deleteMany({ restaurantId: existing._id }),
@@ -211,8 +220,13 @@ async function main() {
 
   await ServiceRequest.create({ restaurantId: restaurant._id, tableNumber: 3, type: 'Water', customerName: 'Meera' });
 
+  const staffPassword = await bcrypt.hash(DEMO.password, 10);
+  await Staff.deleteMany({ email: { $in: DEMO_STAFF.map((s) => s.email) } });
+  await Staff.insertMany(DEMO_STAFF.map((member) => ({ ...member, restaurant: restaurant._id, password: staffPassword })));
+
   console.log(`Created "${DEMO.restaurantName}": ${items.length} menu items, ${DEMO.tables.length} tables, ${SAMPLE_ORDERS.length} orders.`);
   console.log(`Login: ${DEMO.email} / ${DEMO.password}`);
+  console.log(`Staff logins (same password): ${DEMO_STAFF.map((m) => `${m.email} (${m.role})`).join(', ')}`);
   console.log(`Customer menu: ${config.frontendUrl || 'http://localhost:3000'}/menu/${restaurant._id}?table=1`);
   await mongoose.disconnect();
 }

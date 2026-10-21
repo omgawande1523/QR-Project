@@ -1,23 +1,25 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router';
-import { LayoutDashboard, ClipboardList, UtensilsCrossed, QrCode, Settings, LogOut, Menu as MenuIcon, X, ExternalLink, Bell, Wifi, WifiOff, ChefHat } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, UtensilsCrossed, QrCode, Settings, LogOut, Menu as MenuIcon, X, ExternalLink, Bell, Wifi, WifiOff, ChefHat, Users } from 'lucide-react';
 import { OwnerProvider, useOwner } from './OwnerContext';
 import { Brand } from '../auth/AuthLayout';
 import { BottomSheet, Button, EmptyState, IconButton, Switch } from '../../components/ui';
 import { isLoggedIn, clearSession } from '../../lib/session';
 import { timeAgo } from '../../lib/format';
+import { can, ROLE_LABEL } from '../../lib/roles';
 import './owner.css';
 
 const NAV = [
-  { to: '/dashboard', label: 'Home', Icon: LayoutDashboard, end: true },
-  { to: '/dashboard/orders', label: 'Orders', Icon: ClipboardList, badge: 'orders' },
-  { to: '/dashboard/menu', label: 'Menu', Icon: UtensilsCrossed },
-  { to: '/dashboard/tables', label: 'Tables & QR', Icon: QrCode },
-  { to: '/dashboard/settings', label: 'Settings', Icon: Settings }
+  { to: '/dashboard', label: 'Home', Icon: LayoutDashboard, end: true, area: 'home' },
+  { to: '/dashboard/orders', label: 'Orders', Icon: ClipboardList, badge: 'orders', area: 'orders' },
+  { to: '/dashboard/menu', label: 'Menu', Icon: UtensilsCrossed, area: 'menu' },
+  { to: '/dashboard/tables', label: 'Tables & QR', Icon: QrCode, area: 'tables' },
+  { to: '/dashboard/staff', label: 'Staff', Icon: Users, area: 'staff' },
+  { to: '/dashboard/settings', label: 'Settings', Icon: Settings, area: 'settings' }
 ];
 
 function Sidebar({ open, onClose }) {
-  const { userId, orders } = useOwner();
+  const { userId, orders, role, me } = useOwner();
   const navigate = useNavigate();
   const newOrders = orders.filter((o) => o.status === 'pending').length;
   const logout = () => {
@@ -33,7 +35,7 @@ function Sidebar({ open, onClose }) {
           <IconButton label="Close menu" className="sidebar-close" onClick={onClose}><X size={20} /></IconButton>
         </div>
         <nav className="sidebar-nav">
-          {NAV.map(({ to, label, Icon, end, badge }) => (
+          {NAV.filter((item) => can(role, item.area)).map(({ to, label, Icon, end, badge }) => (
             <NavLink key={to} to={to} end={end} className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`} onClick={onClose}>
               <Icon size={20} aria-hidden="true" />
               <span className="grow">{label}</span>
@@ -42,6 +44,7 @@ function Sidebar({ open, onClose }) {
           ))}
         </nav>
         <div className="sidebar-foot">
+          <p className="sidebar-user"><strong className="truncate">{me.name || ' '}</strong><span>{ROLE_LABEL[role]}</span></p>
           <NavLink to="/kitchen" className="sidebar-link">
             <ChefHat size={20} aria-hidden="true" /><span>Kitchen display</span>
           </NavLink>
@@ -82,7 +85,7 @@ function RequestsSheet({ open, onClose }) {
 }
 
 function Topbar({ onMenu }) {
-  const { profile, saveProfile, requests, connected } = useOwner();
+  const { profile, saveProfile, requests, connected, role } = useOwner();
   const [requestsOpen, setRequestsOpen] = useState(false);
   return (
     <header className="topbar no-print">
@@ -94,7 +97,7 @@ function Topbar({ onMenu }) {
           {connected ? 'Live' : 'Reconnecting'}
         </span>
       </div>
-      {profile && (
+      {profile && can(role, 'accepting') && (
         <div className="topbar-accepting">
           <Switch
             checked={profile.acceptingOrders !== false}
@@ -103,8 +106,12 @@ function Topbar({ onMenu }) {
           />
         </div>
       )}
-      <IconButton label="Table requests" count={requests.length} onClick={() => setRequestsOpen(true)}><Bell size={20} /></IconButton>
-      <RequestsSheet open={requestsOpen} onClose={() => setRequestsOpen(false)} />
+      {can(role, 'requests') && (
+        <>
+          <IconButton label="Table requests" count={requests.length} onClick={() => setRequestsOpen(true)}><Bell size={20} /></IconButton>
+          <RequestsSheet open={requestsOpen} onClose={() => setRequestsOpen(false)} />
+        </>
+      )}
     </header>
   );
 }

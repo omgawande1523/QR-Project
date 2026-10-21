@@ -1,7 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { api, errorMessage } from '../../lib/api';
 import { connectSocket } from '../../lib/socket';
-import { getToken, getUserId } from '../../lib/session';
+import { getToken, getUserId, getRole, setSession } from '../../lib/session';
+import { can } from '../../lib/roles';
 import { local } from '../../lib/storage';
 import { useToast } from '../../components/ui';
 
@@ -13,6 +14,8 @@ const DEFAULT_ALERTS = { sound: true, voice: false, browser: false };
 export function OwnerProvider({ children }) {
   const userId = getUserId();
   const toast = useToast();
+  // Who is logged in. Starts from the stored role and is confirmed by /api/users/me.
+  const [me, setMe] = useState(() => ({ role: getRole(), name: '' }));
   const [profile, setProfile] = useState(null);
   const [orders, setOrders] = useState([]);
   const [ordersLoaded, setOrdersLoaded] = useState(false);
@@ -23,6 +26,8 @@ export function OwnerProvider({ children }) {
   const listeners = useRef(new Map());
   const alertsRef = useRef(alerts);
   alertsRef.current = alerts;
+  const roleRef = useRef(me.role);
+  roleRef.current = me.role;
 
   const setAlerts = useCallback((patch) => {
     setAlertsState((current) => {
@@ -59,9 +64,13 @@ export function OwnerProvider({ children }) {
   }, []);
 
   useEffect(() => {
+    api.get('/api/users/me').then((res) => {
+      setMe(res.data);
+      setSession({ token: getToken(), role: res.data.role });
+      if (can(res.data.role, 'requests')) api.get('/api/service-requests').then((r) => setRequests(r.data)).catch(() => {});
+    }).catch(() => {});
     loadProfile().catch((err) => toast.error(errorMessage(err, 'Could not load your restaurant')));
     loadOrders().catch((err) => toast.error(errorMessage(err, 'Could not load orders')));
-    api.get('/api/service-requests').then((res) => setRequests(res.data)).catch(() => {});
   }, [loadProfile, loadOrders, toast]);
 
   // ---------- Live updates ----------
@@ -77,6 +86,7 @@ export function OwnerProvider({ children }) {
     });
     socket.on('orderUpdated', (order) => setOrders((list) => list.map((o) => (o._id === order._id ? order : o))));
     socket.on('serviceRequest', (request) => {
+      if (!can(roleRef.current, 'requests')) return; // the kitchen does not handle table requests
       setRequests((list) => [request, ...list.filter((r) => r._id !== request._id)]);
       toast.info(`${request.type} · Table ${request.tableNumber}`);
       announce(`${request.type} requested`, `Table ${request.tableNumber}`);
@@ -127,6 +137,8 @@ export function OwnerProvider({ children }) {
 
   const value = useMemo(() => ({
     userId,
+    me,
+    role: me.role,
     profile,
     loadProfile,
     saveProfile,
@@ -140,7 +152,7 @@ export function OwnerProvider({ children }) {
     alerts,
     setAlerts,
     subscribe
-  }), [userId, profile, loadProfile, saveProfile, orders, ordersLoaded, loadOrders, setOrderStatus, requests, markRequestHandled, connected, alerts, setAlerts, subscribe]);
+  }), [userId, me, profile, loadProfile, saveProfile, orders, ordersLoaded, loadOrders, setOrderStatus, requests, markRequestHandled, connected, alerts, setAlerts, subscribe]);
 
   return <OwnerContext.Provider value={value}>{children}</OwnerContext.Provider>;
 }

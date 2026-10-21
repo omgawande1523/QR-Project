@@ -77,7 +77,8 @@ npm run seed
 ```
 
 Creates the demo restaurant **Olive Leaf Café** (22 dishes with photos, 5 tables, sample orders and a pending
-waiter call) and prints its customer-menu link. Log in to the dashboard with **demo@qrmenu.test / Demo@1234**.
+waiter call) and prints its customer-menu link. Log in to the dashboard with **demo@qrmenu.test / Demo@1234** (owner).
+Staff logins with the same password: **manager@qrmenu.test**, **waiter@qrmenu.test**, **kitchen@qrmenu.test**.
 Re-running replaces only the demo account's own data. Image credits: `server/scripts/seed-assets/CREDITS.md`.
 
 ## Screens

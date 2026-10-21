@@ -4,7 +4,8 @@ import { AuthLayout } from './AuthLayout';
 import { PasswordField } from './PasswordField';
 import { Button, TextField } from '../../components/ui';
 import { api, errorMessage } from '../../lib/api';
-import { setSession, isLoggedIn } from '../../lib/session';
+import { setSession, isLoggedIn, getRole } from '../../lib/session';
+import { homeFor } from '../../lib/roles';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  if (isLoggedIn()) return <Navigate to="/dashboard" replace />;
+  if (isLoggedIn()) return <Navigate to={homeFor(getRole())} replace />;
 
   const submit = async (e) => {
     e.preventDefault();
@@ -24,7 +25,8 @@ export default function LoginPage() {
       const res = await api.post('/api/users/login', { identifier: identifier.trim(), password });
       setSession(res.data);
       const next = params.get('next') || '';
-      navigate(/^\/(dashboard|kitchen)(\/|$)/.test(next) ? next : '/dashboard', { replace: true });
+      // Pages a role cannot use send it on to its own start page (see RoleGate).
+      navigate(/^\/(dashboard|kitchen)(\/|$)/.test(next) ? next : homeFor(res.data.role), { replace: true });
     } catch (err) {
       setError(errorMessage(err, 'Could not log in'));
     } finally {

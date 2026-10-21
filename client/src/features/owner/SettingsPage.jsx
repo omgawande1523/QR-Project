@@ -10,6 +10,7 @@ import { ImagePicker } from '../../components/ImagePicker';
 import { computeBill } from '../../lib/pricing';
 import { formatPrice } from '../../lib/format';
 import { DAY_NAMES } from '../../lib/hours';
+import { can, ROLE_LABEL } from '../../lib/roles';
 
 const WEEK = [1, 2, 3, 4, 5, 6, 0]; // Monday first
 const defaultHours = () => WEEK.map((day) => ({ day, open: '09:00', close: '22:00', closed: false }));
@@ -32,7 +33,9 @@ function Section({ title, description, children, onSave, saving, dirty = true })
 }
 
 export default function SettingsPage() {
-  const { profile, saveProfile, alerts, setAlerts } = useOwner();
+  const { profile, saveProfile, alerts, setAlerts, role, me } = useOwner();
+  const isStaff = role !== 'owner';
+  const manages = can(role, 'restaurantSettings');
   const toast = useToast();
   const [info, setInfo] = useState(null);
   const [billing, setBilling] = useState(null);
@@ -83,7 +86,9 @@ export default function SettingsPage() {
     if (passwords.newPassword !== passwords.confirm) return toast.error('The new passwords do not match');
     setSaving('password');
     try {
-      const res = await api.post(`/api/users/${profile._id}/change-password`, { currentPassword: passwords.currentPassword, newPassword: passwords.newPassword });
+      // Staff change their own login; the owner changes the restaurant account's password.
+      const body = { currentPassword: passwords.currentPassword, newPassword: passwords.newPassword };
+      const res = isStaff ? await api.post('/api/staff/me/password', body) : await api.post(`/api/users/${profile._id}/change-password`, body);
       setSession({ token: res.data.token });
       setPasswords({ currentPassword: '', newPassword: '', confirm: '' });
       toast.success('Password changed. Other devices have been signed out.');
@@ -97,8 +102,10 @@ export default function SettingsPage() {
 
   return (
     <>
-      <PageHeader title="Settings" subtitle="What customers see, how bills are calculated, and your account." />
+      <PageHeader title="Settings" subtitle={manages ? 'What customers see, how bills are calculated, and your account.' : 'Alerts on this device and your password.'} />
       <div className="settings-grid">
+        {manages && (
+        <>
         <Section title="Restaurant profile" description="Shown on the welcome screen when customers scan a table QR code." onSave={() => save('info', { ...info, restaurantName: info.restaurantName.trim() })} saving={saving === 'info'}>
           <TextField label="Restaurant name" value={info.restaurantName} onChange={(e) => setInfo({ ...info, restaurantName: e.target.value })} maxLength={100} />
           <TextField label="Tagline" value={info.tagline} onChange={(e) => setInfo({ ...info, tagline: e.target.value })} maxLength={120} hint="One short line, e.g. Fresh South Indian breakfasts" />
@@ -145,9 +152,16 @@ export default function SettingsPage() {
           <Button variant="ghost" size="sm" icon={<Copy size={16} />} onClick={copyMonday}>Copy Monday to every day</Button>
         </Section>
 
-        <Section title="Orders and alerts">
-          <Switch checked={profile.acceptingOrders !== false} onChange={(on) => save('accepting', { acceptingOrders: on }, on ? 'Accepting orders' : 'Orders paused')} label={profile.acceptingOrders !== false ? 'Accepting orders' : 'Orders paused (customers can still browse)'} />
-          <hr className="divider" />
+        </>
+        )}
+
+        <Section title={manages ? 'Orders and alerts' : 'Alerts'}>
+          {manages && (
+            <>
+              <Switch checked={profile.acceptingOrders !== false} onChange={(on) => save('accepting', { acceptingOrders: on }, on ? 'Accepting orders' : 'Orders paused')} label={profile.acceptingOrders !== false ? 'Accepting orders' : 'Orders paused (customers can still browse)'} />
+              <hr className="divider" />
+            </>
+          )}
           <p className="muted text-sm">Alerts on this device:</p>
           <Switch checked={alerts.sound} onChange={(on) => setAlerts({ sound: on })} label="Sound for new orders and table requests" />
           <Switch checked={alerts.voice} onChange={(on) => setAlerts({ voice: on })} label="Read new orders aloud" />
@@ -155,7 +169,7 @@ export default function SettingsPage() {
           <Button variant="secondary" size="sm" onClick={() => new Audio('/notification.mp3').play().catch(() => toast.error('Click anywhere on the page first, then try again'))}>Play test sound</Button>
         </Section>
 
-        <Section title="Account" description={`Signed in as ${profile.email}${profile.phoneNumber ? ` · ${profile.phoneNumber}` : ''}`}>
+        <Section title={isStaff ? 'Your password' : 'Account'} description={isStaff ? `Signed in as ${me.name || 'staff'} (${ROLE_LABEL[role]})` : `Signed in as ${profile.email}${profile.phoneNumber ? ` · ${profile.phoneNumber}` : ''}`}>
           <PasswordField label="Current password" value={passwords.currentPassword} onChange={(e) => setPasswords({ ...passwords, currentPassword: e.target.value })} autoComplete="current-password" />
           <div className="form-grid">
             <PasswordField label="New password" hint="At least 8 characters" value={passwords.newPassword} onChange={(e) => setPasswords({ ...passwords, newPassword: e.target.value })} autoComplete="new-password" />
