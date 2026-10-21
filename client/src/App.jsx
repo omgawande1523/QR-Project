@@ -1,13 +1,11 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router';
-import Header from './components/Header';
-import Footer from './components/Footer';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router';
 import { ToastProvider, Spinner } from './components/ui';
-import './App.css';
 
-// Old pages (replaced during the redesign) are lazy so their global CSS only loads on those pages.
-const LandingPage = lazy(() => import('./components/LandingPage'));
-const Demo = lazy(() => import('./components/Demo'));
+// Every screen is a separate chunk: a scanned QR code downloads only what the customer menu needs.
+const LandingPage = lazy(() => import('./features/landing/LandingPage'));
+const DemoRedirect = lazy(() => import('./features/landing/DemoRedirect'));
+const NotFound = lazy(() => import('./features/landing/NotFound'));
 
 // Owner sign-in
 const LoginPage = lazy(() => import('./features/auth/LoginPage'));
@@ -23,7 +21,7 @@ const MenuManager = lazy(() => import('./features/owner/MenuManager'));
 const TablesPage = lazy(() => import('./features/owner/TablesPage'));
 const SettingsPage = lazy(() => import('./features/owner/SettingsPage'));
 
-// Customer screens load separately so a scanned QR code downloads only what the menu needs.
+// Customer (opened by scanning a table QR code)
 const CustomerApp = lazy(() => import('./features/customer/CustomerApp'));
 const WelcomeScreen = lazy(() => import('./features/customer/WelcomeScreen'));
 const MenuScreen = lazy(() => import('./features/customer/MenuScreen'));
@@ -40,29 +38,19 @@ function PageLoader() {
   );
 }
 
-// Header and footer of the pre-redesign pages that have not been replaced yet.
-function LegacyLayout() {
-  return (
-    <div className="App">
-      <Header />
-      <div className="main-content">
-        <div className="page-wrapper"><Outlet /></div>
-      </div>
-      <Footer />
-    </div>
-  );
-}
-
 function App() {
   return (
     <ToastProvider>
       <Router>
         <Suspense fallback={<PageLoader />}>
           <Routes>
-            <Route element={<LegacyLayout />}>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/demo" element={<Demo />} />
-            </Route>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/demo" element={<DemoRedirect />} />
+
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
 
             <Route path="/dashboard" element={<OwnerLayout />}>
               <Route index element={<DashboardHome />} />
@@ -71,13 +59,9 @@ function App() {
               <Route path="tables" element={<TablesPage />} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>
+            {/* Paths used by the previous version of the app */}
             <Route path="/orders" element={<Navigate to="/dashboard/orders" replace />} />
             <Route path="/profile" element={<Navigate to="/dashboard/settings" replace />} />
-
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
 
             <Route path="/menu/:restaurantId" element={<CustomerApp />}>
               <Route index element={<WelcomeScreen />} />
@@ -87,6 +71,8 @@ function App() {
               <Route path="orders" element={<OrdersScreen />} />
               <Route path="orders/:orderId" element={<OrderTrackingScreen />} />
             </Route>
+
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
       </Router>
