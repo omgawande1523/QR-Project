@@ -5,6 +5,7 @@ import { useCustomer } from './CustomerContext';
 import { IconButton, OptionGroup, OptionRow, QuantityStepper, ItemBadges, VegMark, Skeleton, EmptyState, Button, useToast } from '../../components/ui';
 import { formatPrice } from '../../lib/format';
 import { unitPricePaise, toRupees } from '../../lib/pricing';
+import { responsiveImage } from '../../lib/srcset';
 
 const SPICE = ['', 'Mild', 'Medium', 'Hot'];
 
@@ -82,7 +83,7 @@ export default function ItemDetailScreen() {
       </header>
 
       <div className="detail-media">
-        {item.image && <img src={item.image} alt={item.name} width="800" height="600" />}
+        {item.image && <img {...responsiveImage(item.image, { widths: [480, 640, 960], sizes: '(min-width: 480px) 448px, calc(100vw - 32px)' })} alt={item.name} width="800" height="600" />}
         <div className="detail-badges"><ItemBadges tags={item.tags} soldOut={soldOut} max={3} /></div>
       </div>
 

@@ -6,6 +6,7 @@ import { FoodCard } from '../../components/FoodCard';
 import { BottomSheet, Button, Chip, IconButton, SearchBar, Skeleton, EmptyState, Switch, Badge, useToast } from '../../components/ui';
 import { STATUS_LABEL } from '../../lib/orderStatus';
 import { searchText } from '../../lib/menuLanguage';
+import { responsiveImage } from '../../lib/srcset';
 import { LanguageSwitch } from './LanguageSwitch';
 
 const SORTS = [
@@ -95,12 +96,15 @@ export default function MenuScreen() {
     }
   };
 
+  // The first cards are on screen straight away: load their photos first instead of lazily.
+  let eagerCards = 4;
   const renderGrid = (items) => (
     <div className="menu-grid">
       {items.map((item) => (
         <FoodCard
           key={item._id}
           item={item}
+          priority={eagerCards-- > 0}
           quantity={plainQuantity(item._id)}
           favourite={favourites.has(item._id)}
           bump={bumped === item._id}
@@ -118,7 +122,7 @@ export default function MenuScreen() {
   return (
     <main className="customer-page menu-page page-enter">
       <header className="menu-header">
-        {restaurant?.profilePicture && <img className="menu-logo" src={restaurant.profilePicture} alt="" width="44" height="44" />}
+        {restaurant?.profilePicture && <img className="menu-logo" {...responsiveImage(restaurant.profilePicture, { widths: [160], sizes: '44px', fallback: 160 })} alt="" width="44" height="44" />}
         <div className="grow">
           <h1 className="menu-title truncate">{restaurant?.restaurantName || <Skeleton width={160} height={22} />}</h1>
           {table && <p className="menu-subtitle">Table {table}</p>}

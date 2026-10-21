@@ -45,9 +45,12 @@ async function customerCardImage(browser, restaurantId, dishName) {
   await phone.goto(`/menu/${restaurantId}/browse`);
   const img = phone.getByRole('article').filter({ hasText: dishName }).locator('img').first();
   await expect(img).toBeVisible();
+  // The card loads a resized copy (?w=) from srcset; it must actually decode (lazily, once on screen).
+  await img.scrollIntoViewIfNeeded();
+  await expect.poll(() => img.evaluate((el) => el.complete && el.naturalWidth)).toBeGreaterThan(0);
   const src = await img.getAttribute('src');
   await phone.close();
-  return src;
+  return src.replace(/\?w=\d+$/, '');
 }
 
 async function removeDish(request, token, restaurantId, name) {

@@ -6,6 +6,7 @@ import { Button, IconButton, QuantityStepper, EmptyState, TextField, SelectField
 import { formatPrice } from '../../lib/format';
 import { toRupees } from '../../lib/pricing';
 import { errorMessage } from '../../lib/api';
+import { responsiveImage } from '../../lib/srcset';
 
 function CartLine({ line, onQuantity, onNotes }) {
   const [editing, setEditing] = useState(false);
@@ -17,7 +18,7 @@ function CartLine({ line, onQuantity, onNotes }) {
   };
   return (
     <li className={`cart-line ${line.problem ? 'has-problem' : ''}`}>
-      {line.item?.image ? <img src={line.item.image} alt="" width="64" height="64" loading="lazy" /> : <span className="cart-line-thumb" />}
+      {line.item?.image ? <img {...responsiveImage(line.item.image, { widths: [160, 320], sizes: '64px', fallback: 160 })} alt="" width="64" height="64" loading="lazy" /> : <span className="cart-line-thumb" />}
       <div className="grow">
         <div className="row" style={{ gap: 6 }}>
           {line.item && <VegMark isVeg={line.item.isVeg !== false} />}

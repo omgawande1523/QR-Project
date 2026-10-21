@@ -7,6 +7,7 @@ import { api } from '../../lib/api';
 import { session } from '../../lib/storage';
 import { openStatus } from '../../lib/hours';
 import { APP_NAME } from '../../config';
+import { responsiveImage } from '../../lib/srcset';
 
 // First screen after scanning a table QR code: hero image, restaurant, table, "View Menu".
 export default function WelcomeScreen() {
@@ -45,14 +46,14 @@ export default function WelcomeScreen() {
         {restaurant.bannerImage
           // React 18 passes fetchpriority through only in lowercase; the camelCase prop arrives in React 19.
           // eslint-disable-next-line react/no-unknown-property
-          ? <img src={restaurant.bannerImage} alt="" fetchpriority="high" width="960" height="720" />
+          ? <img {...responsiveImage(restaurant.bannerImage, { widths: [480, 640, 960], sizes: '(min-width: 480px) 480px, 100vw' })} alt="" fetchpriority="high" width="960" height="720" />
           : <div className="welcome-hero-fallback" />}
         {shownTable && <Badge tone="accent" className="welcome-table">Table {shownTable}</Badge>}
       </div>
 
       <div className="welcome-body">
         {restaurant.profilePicture && (
-          <img className="welcome-logo" src={restaurant.profilePicture} alt={`${restaurant.restaurantName} logo`} width="88" height="88" />
+          <img className="welcome-logo" {...responsiveImage(restaurant.profilePicture, { widths: [160, 320], sizes: '88px' })} alt={`${restaurant.restaurantName} logo`} width="88" height="88" />
         )}
         <h1 className="welcome-title">{restaurant.restaurantName}</h1>
         {restaurant.tagline && <p className="welcome-tagline">{restaurant.tagline}</p>}

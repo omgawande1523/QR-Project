@@ -58,7 +58,7 @@ test('availability toggle in the menu manager reaches open customer menus instan
   await page.goto('/dashboard/menu');
   const toggle = page.getByRole('switch', { name: 'Kanda Poha available' });
   await toggle.uncheck();
-  await expect(poha.getByRole('button', { name: 'Kanda Poha is sold out' })).toBeDisabled();
+  await expect(poha.getByRole('button', { name: 'Sold out Kanda Poha' })).toBeDisabled();
 
   await toggle.check();
   await expect(poha.getByRole('button', { name: 'Add Kanda Poha', exact: true })).toBeEnabled();
