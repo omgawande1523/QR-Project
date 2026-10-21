@@ -63,10 +63,15 @@ a:hover {
   text-decoration: underline;
 }
 
+/* An outline, not a box-shadow: many components use box-shadow for borders and elevation, which would
+   silently replace the ring. Dark surfaces switch to a light ring colour. */
 :focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
+  outline: 3px solid var(--focus-color);
+  outline-offset: 1px;
   border-radius: var(--radius-sm);
+}
+.sidebar, .bottom-nav, .toast, .order-banner, .kitchen, .crop-area, .section-ink, .demo-band-inner, .landing-footer {
+  --focus-color: var(--olive-300);
 }
 
 ::selection {

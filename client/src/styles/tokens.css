@@ -49,7 +49,9 @@
   --accent: var(--olive-500);
   --accent-soft: var(--olive-100);
   --on-accent: var(--ink);
-  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--olive-600) 45%, transparent);
+  /* Two-tone, so it shows on cream, white cards, olive buttons and the dark nav alike (WCAG 1.4.11) */
+  --focus-ring: 0 0 0 2px var(--surface), 0 0 0 4px var(--olive-800);
+  --focus-color: var(--olive-800); /* outline ring on buttons and links; --olive-300 on dark surfaces */
   --scrim: color-mix(in srgb, var(--ink) 45%, transparent); /* behind dialogs and the mobile sidebar */
 
   /* Type */

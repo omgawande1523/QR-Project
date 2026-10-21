@@ -165,6 +165,7 @@
   font-size: var(--text-md);
 }
 .search-bar input::placeholder { color: var(--muted); }
+.search-bar input:focus-visible { outline: none; } /* the whole bar shows the ring */
 .search-bar:focus-within { box-shadow: var(--focus-ring); }
 
 /* ---------- Quantity stepper ---------- */
