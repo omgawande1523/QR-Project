@@ -91,3 +91,24 @@ test('table QR downloads: PNG decodes to the table URL and the A4 PDF has a page
   expect(bytes.startsWith('%PDF')).toBe(true);
   expect((bytes.match(/\/Type\s*\/Page[^s]/g) || []).length).toBe(2); // 5 tables, 4 per A4 page
 });
+
+test('settings: changing the GST rate is used for customer pricing', async ({ page, request }) => {
+  const { restaurantId } = await demo(request);
+  const owner = await ownerLogin(request);
+  await page.addInitScript(([token, userId]) => {
+    localStorage.setItem('token', token);
+    localStorage.setItem('userId', userId);
+  }, [owner.token, owner.userId]);
+
+  await page.goto('/dashboard/settings');
+  const billing = page.locator('section').filter({ hasText: 'Billing and tax' });
+  await billing.getByLabel('GST rate').selectOption('12');
+  await expect(billing.getByText('₹1,120')).toBeVisible(); // live example bill
+  await billing.getByRole('button', { name: 'Save' }).click();
+  await expect(page.getByText('Saved')).toBeVisible();
+  expect((await (await request.get(`${API}/api/users/${restaurantId}/public`)).json()).taxPercent).toBe(12);
+
+  await billing.getByLabel('GST rate').selectOption('5');
+  await billing.getByRole('button', { name: 'Save' }).click();
+  await expect.poll(async () => (await (await request.get(`${API}/api/users/${restaurantId}/public`)).json()).taxPercent).toBe(5);
+});

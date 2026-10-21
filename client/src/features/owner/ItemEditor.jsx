@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ImagePlus, Trash2, Plus, X } from 'lucide-react';
 import { Button, Chip, Modal, Switch, TextField, IconButton, useToast } from '../../components/ui';
 import { api, errorMessage } from '../../lib/api';
-import { uploadImage } from '../../utils/uploadImage';
+import { uploadImage } from '../../lib/uploadImage';
 
 const TAGS = [
   { value: 'bestseller', label: 'Bestseller' },

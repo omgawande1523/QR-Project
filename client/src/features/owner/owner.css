@@ -272,3 +272,21 @@
 .table-card { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); text-align: center; padding: var(--space-4); }
 .table-card .row-between { width: 100%; }
 .table-card-title { font-size: var(--text-lg); }
+
+/* ---------- Settings ---------- */
+.settings-grid { display: grid; gap: var(--space-4); grid-template-columns: 1fr; align-items: start; }
+@media (min-width: 1200px) { .settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.settings-section { display: flex; flex-direction: column; gap: var(--space-4); }
+.settings-head { display: flex; flex-direction: column; gap: 4px; }
+.settings-foot { display: flex; justify-content: flex-end; border-top: 1px solid var(--cream-200); padding-top: var(--space-4); }
+.bill-preview { padding: var(--space-4); border-radius: var(--radius-md); background: var(--cream-bg); }
+.hours-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.hours-row { display: grid; grid-template-columns: 96px 110px minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: var(--space-2); }
+.hours-row .input { min-height: 44px; padding: 8px 10px; }
+.hours-row .input:disabled { opacity: 0.45; }
+.hours-day { font-weight: var(--weight-semibold); font-size: var(--text-sm); }
+@media (max-width: 560px) {
+  .hours-row { grid-template-columns: 1fr auto; }
+  .hours-row .input { grid-column: span 1; }
+  .hours-row > span[aria-hidden] { display: none; }
+}

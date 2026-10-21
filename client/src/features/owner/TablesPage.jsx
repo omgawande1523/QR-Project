@@ -4,7 +4,7 @@ import { useOwner } from './OwnerContext';
 import { PageHeader } from './OwnerLayout';
 import { Button, Card, EmptyState, IconButton, Skeleton, useToast } from '../../components/ui';
 import { errorMessage } from '../../lib/api';
-import { uploadImage } from '../../utils/uploadImage';
+import { uploadImage } from '../../lib/uploadImage';
 import { isActiveOrder } from '../../lib/orderStatus';
 import { tableUrl, qrCanvas, tableCardCanvas, downloadCanvas, downloadTablesPdf, isDarkEnough, loadImage } from '../../lib/tableCards';
 
