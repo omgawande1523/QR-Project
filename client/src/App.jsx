@@ -23,6 +23,7 @@ const OwnerLayout = lazy(() => import('./features/owner/OwnerLayout'));
 const DashboardHome = lazy(() => import('./features/owner/DashboardHome'));
 const OrdersBoard = lazy(() => import('./features/owner/OrdersBoard'));
 const MenuManager = lazy(() => import('./features/owner/MenuManager'));
+const TablesPage = lazy(() => import('./features/owner/TablesPage'));
 
 // Customer screens load separately so a scanned QR code downloads only what the menu needs.
 const CustomerApp = lazy(() => import('./features/customer/CustomerApp'));
@@ -76,7 +77,7 @@ function App() {
               <Route index element={<DashboardHome />} />
               <Route path="orders" element={<OrdersBoard />} />
               <Route path="menu" element={<MenuManager />} />
-              <Route path="tables" element={<Navigate to="/dashboard/classic" replace />} />
+              <Route path="tables" element={<TablesPage />} />
               <Route path="settings" element={<Navigate to="/profile" replace />} />
             </Route>
             <Route path="/orders" element={<Navigate to="/dashboard/orders" replace />} />

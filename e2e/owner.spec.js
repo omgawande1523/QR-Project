@@ -64,3 +64,30 @@ test('availability toggle in the menu manager reaches open customer menus instan
   await expect(poha.getByRole('button', { name: 'Add Kanda Poha', exact: true })).toBeEnabled();
   await phone.close();
 });
+
+test('table QR downloads: PNG decodes to the table URL and the A4 PDF has a page per four tables', async ({ page, request }) => {
+  const fs = require('fs');
+  const { PNG } = require('pngjs');
+  const jsQR = require('jsqr');
+  const { restaurantId } = await demo(request);
+  const owner = await ownerLogin(request);
+  await page.addInitScript(([token, userId]) => {
+    localStorage.setItem('token', token);
+    localStorage.setItem('userId', userId);
+  }, [owner.token, owner.userId]);
+
+  await page.goto('/dashboard/tables');
+  const card = page.locator('.table-card').filter({ hasText: 'Table 2' });
+  await expect(card.locator('img.qr-img')).toBeVisible();
+
+  const [png] = await Promise.all([page.waitForEvent('download'), card.getByRole('button', { name: 'PNG' }).click()]);
+  expect(png.suggestedFilename()).toBe('table-2-qr.png');
+  const image = PNG.sync.read(fs.readFileSync(await png.path()));
+  const code = jsQR(new Uint8ClampedArray(image.data), image.width, image.height);
+  expect(code?.data).toBe(`http://localhost:3000/menu/${restaurantId}?table=2`);
+
+  const [pdf] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: /Download all/ }).click()]);
+  const bytes = fs.readFileSync(await pdf.path()).toString('latin1');
+  expect(bytes.startsWith('%PDF')).toBe(true);
+  expect((bytes.match(/\/Type\s*\/Page[^s]/g) || []).length).toBe(2); // 5 tables, 4 per A4 page
+});
