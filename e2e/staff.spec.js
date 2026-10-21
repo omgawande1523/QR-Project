@@ -66,6 +66,7 @@ test('a manager sees the menu and settings but not staff', async ({ page }) => {
   const nav = page.getByRole('complementary', { name: 'Dashboard navigation' });
   await expect(nav.getByRole('link', { name: 'Menu', exact: true })).toHaveCount(1);
   await expect(nav.getByRole('link', { name: 'Staff', exact: true })).toHaveCount(0);
+  await expect(nav.getByRole('link', { name: 'Analytics', exact: true })).toHaveCount(1);
   await page.goto('/dashboard/staff');
   await expect(page).toHaveURL(/\/dashboard$/);
 });

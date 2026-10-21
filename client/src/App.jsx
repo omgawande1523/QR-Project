@@ -21,6 +21,7 @@ const MenuManager = lazy(() => import('./features/owner/MenuManager'));
 const TablesPage = lazy(() => import('./features/owner/TablesPage'));
 const SettingsPage = lazy(() => import('./features/owner/SettingsPage'));
 const StaffPage = lazy(() => import('./features/owner/StaffPage'));
+const AnalyticsPage = lazy(() => import('./features/owner/AnalyticsPage'));
 const KitchenScreen = lazy(() => import('./features/kitchen/KitchenScreen'));
 const RoleGate = lazy(() => import('./features/owner/RoleGate'));
 
@@ -60,6 +61,7 @@ function App() {
               <Route path="orders" element={<RoleGate area="orders"><OrdersBoard /></RoleGate>} />
               <Route path="menu" element={<RoleGate area="menu"><MenuManager /></RoleGate>} />
               <Route path="tables" element={<RoleGate area="tables"><TablesPage /></RoleGate>} />
+              <Route path="analytics" element={<RoleGate area="analytics"><AnalyticsPage /></RoleGate>} />
               <Route path="staff" element={<RoleGate area="staff"><StaffPage /></RoleGate>} />
               <Route path="settings" element={<RoleGate area="settings"><SettingsPage /></RoleGate>} />
             </Route>

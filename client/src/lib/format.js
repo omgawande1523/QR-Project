@@ -24,3 +24,10 @@ export function formatTime(date) {
 export function formatDateTime(date) {
   return new Date(date).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
 }
+
+const compact = new Intl.NumberFormat('en-IN', { notation: 'compact', maximumFractionDigits: 1 });
+
+// Axis and chart labels: ₹950, ₹12.5K, ₹1.2L, ₹3.4Cr (Indian units)
+export function formatCompactPrice(rupees) {
+  return `₹${compact.format(Number(rupees) || 0)}`;
+}

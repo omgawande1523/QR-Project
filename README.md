@@ -87,7 +87,7 @@ Re-running replaces only the demo account's own data. Image credits: `server/scr
 | --- | --- |
 | Marketing | `/` landing page, `/demo` opens the demo café |
 | Customer (from a table QR code) | `/menu/:restaurantId?table=N` welcome, `/browse` menu, `/item/:id`, `/cart`, `/orders`, `/orders/:id` live tracking |
-| Owner and staff | `/login`, `/register`, `/dashboard` home, `/dashboard/orders`, `/dashboard/menu`, `/dashboard/tables`, `/dashboard/staff`, `/dashboard/settings`, `/kitchen` kitchen display |
+| Owner and staff | `/login`, `/register`, `/dashboard` home, `/dashboard/orders`, `/dashboard/menu`, `/dashboard/tables`, `/dashboard/analytics`, `/dashboard/staff`, `/dashboard/settings`, `/kitchen` kitchen display |
 
 Screenshots at 375px and 1440px are in [docs/screenshots](docs/screenshots). The planned next steps are in
 [docs/ROADMAP.md](docs/ROADMAP.md).
@@ -108,6 +108,15 @@ If the restaurant sets a UPI ID in Settings, unpaid bills carry a UPI QR code wi
 "Mark paid" records cash, UPI or card (with an optional reference) and closes the order. Payment taken before
 the food is served keeps the order on the kitchen display. Owners, managers and waiters can bill; the kitchen
 cannot.
+
+### Analytics
+
+`/dashboard/analytics` (owner and manager) shows sales for today, 7, 30 or 90 days or a custom range, in India
+time and excluding cancelled orders: sales, orders, average order and dishes sold against the previous period;
+sales by day (or by week for ranges over a month); top dishes; sales by category; a weekday x hour heatmap of
+orders; orders, sales and QR scans per table; and the payment mix. Charts are plain SVG/HTML in the olive palette
+(colours checked for contrast and lightness steps), with hover and keyboard tooltips and a table view for each.
+The demo seed includes eight weeks of order history so the page has data.
 
 ### Images
 

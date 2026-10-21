@@ -7,6 +7,7 @@ const ACCESS = {
   orders: ['owner', 'manager', 'waiter'],
   menu: ['owner', 'manager'],
   tables: ['owner', 'manager'],
+  analytics: ['owner', 'manager'],
   staff: ['owner'],
   settings: ['owner', 'manager', 'waiter', 'kitchen'], // staff only see their own password
   restaurantSettings: ['owner', 'manager'],
