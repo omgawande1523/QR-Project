@@ -33,6 +33,8 @@ exports.listForOwner = {
     from: z.coerce.date({ invalid_type_error: 'from must be a date' }).optional(),
     to: z.coerce.date({ invalid_type_error: 'to must be a date' }).optional(),
     status: z.enum(ORDER_STATUSES).optional(),
+    // Live view: orders placed since this time plus every order still open, however old.
+    openSince: z.coerce.date({ invalid_type_error: 'openSince must be a date' }).optional(),
     limit: z.coerce.number().int().min(1).max(1000).default(500)
   })
 };

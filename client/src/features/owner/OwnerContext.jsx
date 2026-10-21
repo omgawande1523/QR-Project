@@ -58,7 +58,10 @@ export function OwnerProvider({ children }) {
   }, [userId]);
 
   const loadOrders = useCallback(async () => {
-    const res = await api.get('/api/orders', { params: { limit: 500 } });
+    // Today's orders (for the home stats) plus anything still open from earlier days.
+    const midnight = new Date();
+    midnight.setHours(0, 0, 0, 0);
+    const res = await api.get('/api/orders', { params: { openSince: midnight.toISOString(), limit: 1000 } });
     setOrders(res.data);
     setOrdersLoaded(true);
   }, []);

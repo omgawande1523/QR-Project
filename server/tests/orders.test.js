@@ -244,6 +244,21 @@ describe('order lifecycle and listing', () => {
     const bad = await request(app).get('/api/orders?limit=5000').set(auth(owner.token));
     expect(bad.status).toBe(400);
   });
+
+  test('the live view returns recent orders plus older ones that are still open', async () => {
+    const { owner, place } = await setup();
+    const Order = require('../src/models/Order');
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const [oldOpen, oldDone, oldCancelled, recentDone] = [(await place()).body, (await place()).body, (await place()).body, (await place()).body];
+    await Order.updateOne({ _id: oldOpen._id }, { createdAt: yesterday, status: 'billed' });
+    await Order.updateOne({ _id: oldDone._id }, { createdAt: yesterday, status: 'complete' });
+    await Order.updateOne({ _id: oldCancelled._id }, { createdAt: yesterday, status: 'cancelled' });
+    await Order.updateOne({ _id: recentDone._id }, { status: 'complete' });
+
+    const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const live = await request(app).get('/api/orders').query({ openSince: since }).set(auth(owner.token));
+    expect(live.body.map((o) => o._id).sort()).toEqual([oldOpen._id, recentDone._id].sort());
+  });
 });
 
 describe('served status', () => {

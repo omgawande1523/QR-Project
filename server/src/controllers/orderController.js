@@ -45,7 +45,7 @@ exports.create = asyncHandler(async (req, res) => {
 
 // Newest first, capped (default 500). Items are snapshots, so no populate is needed.
 exports.listForOwner = asyncHandler(async (req, res) => {
-  const { from, to, status, limit } = req.query;
+  const { from, to, status, openSince, limit } = req.query;
   const filter = { restaurantId: req.user.userId };
   if (status) filter.status = status;
   if (from || to) {
@@ -53,6 +53,7 @@ exports.listForOwner = asyncHandler(async (req, res) => {
     if (from) filter.createdAt.$gte = from;
     if (to) filter.createdAt.$lte = to;
   }
+  if (openSince) filter.$or = [{ createdAt: { $gte: openSince } }, { status: { $nin: FINAL_STATUSES } }];
   res.json(await Order.find(filter).sort({ createdAt: -1 }).limit(limit));
 });
 
