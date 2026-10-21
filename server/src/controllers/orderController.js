@@ -66,6 +66,19 @@ exports.getStatus = asyncHandler(async (req, res) => {
   res.json(order);
 });
 
+// The guest rates their meal once it has been served; the tracking token proves it is their order.
+exports.feedback = asyncHandler(async (req, res) => {
+  const order = await Order.findById(req.params.id).select('+trackingToken');
+  if (!order || !order.trackingToken || !safeEqual(order.trackingToken, req.body.token)) throw AppError.notFound('Order not found');
+  if (!['served', 'billed', 'complete'].includes(order.status)) throw AppError.conflict('You can rate your meal once it has been served', 'NOT_SERVED');
+  if (order.feedback?.rating) throw AppError.conflict('Thanks, you have already rated this meal', 'FEEDBACK_EXISTS');
+  const { rating, tags, comment } = req.body;
+  order.feedback = { rating, tags: [...new Set(tags || [])], comment: comment || undefined, createdAt: new Date() };
+  await order.save();
+  broadcastOrder(order);
+  res.status(201).json(order);
+});
+
 async function findOwnOrder(req) {
   const order = await Order.findById(req.params.id);
   if (!order) throw AppError.notFound('Order not found');

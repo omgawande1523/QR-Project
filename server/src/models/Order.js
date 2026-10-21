@@ -33,6 +33,13 @@ const orderSchema = new mongoose.Schema({
     reference: String,
     paidAt: Date
   },
+  // The customer's rating once the meal is served (one per order).
+  feedback: {
+    rating: { type: Number, min: 1, max: 5 },
+    tags: { type: [String], default: undefined },
+    comment: String,
+    createdAt: Date
+  },
   // Secret handed to the customer who placed the order; required to read or follow it.
   trackingToken: { type: String, select: false },
   createdAt: { type: Date, default: Date.now }

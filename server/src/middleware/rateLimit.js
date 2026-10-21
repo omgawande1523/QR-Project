@@ -20,9 +20,10 @@ const orderLimiter = limiter(5, 60, 'Too many orders from this network, please w
 const serviceRequestLimiter = limiter(5, 30, 'Too many requests, please wait a moment');
 const scanLimiter = limiter(5, 120, 'Too many requests, please slow down');
 const contactLimiter = limiter(15, 5, 'Too many messages, please try again later');
+const feedbackLimiter = limiter(15, 20, 'Too many ratings from this network, please try again later');
 // Image uploads and crops are counted per logged-in owner (these routes run after verifyToken).
 const perOwner = (req) => `owner:${req.user.userId}`;
 const imageLimiter = limiter(10, 120, 'Too many image uploads, please wait a few minutes', perOwner);
 const imageUrlLimiter = limiter(10, 20, 'Too many image links, please wait a few minutes', perOwner);
 
-module.exports = { authLimiter, orderLimiter, serviceRequestLimiter, scanLimiter, contactLimiter, imageLimiter, imageUrlLimiter };
+module.exports = { authLimiter, orderLimiter, serviceRequestLimiter, scanLimiter, contactLimiter, feedbackLimiter, imageLimiter, imageUrlLimiter };

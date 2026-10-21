@@ -53,6 +53,19 @@ exports.pay = {
   })
 };
 
+// Quick tags a guest can add to a rating.
+exports.FEEDBACK_TAGS = ['tasty', 'quick', 'friendly', 'value', 'slow', 'cold', 'wrong'];
+
+exports.feedback = {
+  params: z.object({ id: objectId }),
+  body: z.object({
+    token: z.string().trim().min(1, 'Tracking token is required').max(128),
+    rating: z.number({ invalid_type_error: 'Choose 1 to 5 stars' }).int().min(1, 'Choose 1 to 5 stars').max(5, 'Choose 1 to 5 stars'),
+    tags: z.array(z.enum(exports.FEEDBACK_TAGS)).max(exports.FEEDBACK_TAGS.length).optional(),
+    comment: z.string().trim().max(500, 'Keep it under 500 characters').optional()
+  })
+};
+
 exports.getStatus = {
   params: z.object({ id: objectId }),
   query: z.object({ token: z.string().trim().min(1, 'Tracking token is required').max(128) })

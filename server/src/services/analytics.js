@@ -150,4 +150,40 @@ async function salesReport(restaurantIdString, { from, to }) {
   };
 }
 
-module.exports = { salesReport, indiaToday, addDays, daysBetween, TIME_ZONE };
+/** Guest ratings for orders placed between two India dates (inclusive), newest first. */
+async function feedbackReport(restaurantIdString, { from, to }, { limit = 200 } = {}) {
+  const restaurantId = new mongoose.Types.ObjectId(restaurantIdString);
+  const match = { restaurantId, createdAt: { $gte: startOfIndiaDay(from), $lt: startOfIndiaDay(addDays(to, 1)) }, 'feedback.rating': { $exists: true } };
+  const [summary] = await Order.aggregate([
+    { $match: match },
+    {
+      $facet: {
+        ratings: [{ $group: { _id: '$feedback.rating', n: { $sum: 1 } } }],
+        tags: [{ $unwind: '$feedback.tags' }, { $group: { _id: '$feedback.tags', n: { $sum: 1 } } }]
+      }
+    }
+  ]);
+  const distribution = Object.fromEntries([1, 2, 3, 4, 5].map((r) => [r, summary.ratings.find((x) => x._id === r)?.n || 0]));
+  const count = Object.values(distribution).reduce((s, n) => s + n, 0);
+  const total = Object.entries(distribution).reduce((s, [r, n]) => s + Number(r) * n, 0);
+  const entries = await Order.find(match).sort({ 'feedback.createdAt': -1 }).limit(limit)
+    .select('tableNumber customerName items.menuItemName items.quantity totalAmount feedback createdAt').lean();
+  return {
+    range: { from, to },
+    count,
+    average: count ? Math.round((total / count) * 10) / 10 : 0,
+    distribution,
+    tags: Object.fromEntries(summary.tags.sort((a, b) => b.n - a.n).map((t) => [t._id, t.n])),
+    entries: entries.map((o) => ({
+      orderId: o._id,
+      tableNumber: o.tableNumber,
+      customerName: o.customerName,
+      items: o.items.map((i) => `${i.quantity} × ${i.menuItemName}`),
+      totalAmount: o.totalAmount,
+      orderedAt: o.createdAt,
+      ...o.feedback
+    }))
+  };
+}
+
+module.exports = { salesReport, feedbackReport, indiaToday, addDays, daysBetween, TIME_ZONE };

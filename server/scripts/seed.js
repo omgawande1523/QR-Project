@@ -138,6 +138,13 @@ const MEALS = [
 ];
 const GUESTS = ['Aarav', 'Diya', 'Ishaan', 'Kavya', 'Rohan', 'Sneha', 'Vikram', 'Neha', 'Aditya', 'Pooja', 'Siddharth', 'Tanvi'];
 const IST_OFFSET_MS = 330 * 60 * 1000;
+const FEEDBACK_COMMENTS = {
+  5: ['Best dosa in Pune!', 'Lovely food and very friendly staff.', 'The biryani was outstanding.', 'Quick service even on a busy night.'],
+  4: ['Really good, will come again.', 'Tasty food, slightly slow at the start.', 'Paneer tikka was great.'],
+  3: ['Food was fine, service could be faster.', 'Okay overall, naan was a bit cold.'],
+  2: ['Waited almost 40 minutes for mains.', 'Curry was too salty today.'],
+  1: ['Wrong order and it took ages to fix.']
+};
 
 function mulberry32(seed) {
   let state = seed;
@@ -192,6 +199,17 @@ function historyOrders(restaurant, pricingMenu, itemsByName) {
         createdAt
       });
     }
+  }
+  // About a third of guests leave a rating, mostly happy ones.
+  const rate = mulberry32(77);
+  for (const order of orders.filter((o) => o.status === 'complete')) {
+    if (rate() > 0.35) continue;
+    const roll = rate();
+    const rating = roll < 0.45 ? 5 : roll < 0.8 ? 4 : roll < 0.92 ? 3 : roll < 0.97 ? 2 : 1;
+    const pool = rating >= 4 ? ['tasty', 'quick', 'friendly', 'value'] : ['slow', 'cold', 'wrong', 'tasty'];
+    const tags = pool.filter(() => rate() < 0.4);
+    const comments = FEEDBACK_COMMENTS[rating];
+    order.feedback = { rating, tags, comment: rate() < 0.4 ? comments[Math.floor(rate() * comments.length)] : undefined, createdAt: new Date(order.createdAt.getTime() + 55 * 60 * 1000) };
   }
   // Invoice numbers in date order, per financial year.
   orders.sort((a, b) => a.createdAt - b.createdAt);
@@ -306,6 +324,7 @@ async function main() {
       ? { invoiceNumber: await nextInvoiceNumber(restaurant._id, billedAt), invoicedAt: billedAt }
       : {};
     if (status === 'complete') billing.payment = { method: PAYMENT_METHODS[index % 3], paidAt: new Date(billedAt.getTime() + 5 * 60 * 1000) };
+    if (customerName === 'Meera') billing.feedback = { rating: 5, tags: ['tasty', 'quick'], comment: 'Soft idlis and perfect chai. Thank you!', createdAt: billedAt };
     await Order.create({
       ...pricing,
       ...billing,

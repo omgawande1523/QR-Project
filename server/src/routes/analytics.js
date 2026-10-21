@@ -8,5 +8,6 @@ const router = express.Router();
 
 // Sales figures are for the owner and managers.
 router.get('/', verifyToken, requireRole(...MANAGERS), validate(schemas.sales), analytics.sales);
+router.get('/feedback', verifyToken, requireRole(...MANAGERS), validate(schemas.sales), analytics.feedback);
 
 module.exports = router;
