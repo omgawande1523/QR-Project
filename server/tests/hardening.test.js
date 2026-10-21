@@ -2,7 +2,7 @@ const request = require('supertest');
 const db = require('./helpers/db');
 const createApp = require('../src/app');
 const config = require('../src/config');
-const { registerOwner } = require('./helpers/factory');
+const { registerOwner, createMenuItem } = require('./helpers/factory');
 
 const app = createApp();
 
@@ -52,5 +52,18 @@ describe('scan tracking', () => {
   test('returns 404 for an unknown restaurant', async () => {
     const res = await request(app).post('/api/users/0123456789abcdef01234567/scan/1');
     expect(res.status).toBe(404);
+  });
+});
+
+describe('compression', () => {
+  test('JSON responses are gzipped for clients that accept it', async () => {
+    const owner = await registerOwner(app);
+    for (let i = 0; i < 12; i += 1) {
+      await createMenuItem(app, owner.token, { name: `Dish number ${i}`, description: 'A long enough description to make the menu bigger than a kilobyte.' });
+    }
+    const res = await request(app).get(`/api/menu/${owner.userId}`).set('Accept-Encoding', 'gzip');
+    expect(res.status).toBe(200);
+    expect(res.headers['content-encoding']).toBe('gzip');
+    expect(res.body).toHaveLength(12);
   });
 });

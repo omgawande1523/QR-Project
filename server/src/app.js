@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const compression = require('compression');
 const config = require('./config');
 const { storage } = require('./services/storage');
 const { imageVariants } = require('./services/storage/imageVariants');
@@ -17,6 +18,8 @@ function createApp() {
   app.use(cors({
     origin: config.allowedOrigins
   }));
+  // gzip JSON (a menu is ~20 KB, ~5 KB compressed); images are already compressed and are skipped.
+  app.use(compression());
   // Images go through /api/uploads as multipart, so JSON bodies stay small.
   app.use(express.json({ limit: '100kb' }));
   app.use(express.urlencoded({ limit: '100kb', extended: false }));
