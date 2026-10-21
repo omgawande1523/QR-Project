@@ -37,6 +37,16 @@ exports.update = asyncHandler(async (req, res) => {
   res.json(item);
 });
 
+// Bulk "mark sold out" / "mark available"; only the owner's own items are touched.
+exports.setAvailability = asyncHandler(async (req, res) => {
+  const { ids, available } = req.body;
+  const filter = { _id: { $in: ids }, owner: req.user.userId };
+  await MenuItem.updateMany(filter, { $set: { available } });
+  const items = await MenuItem.find(filter);
+  items.forEach((item) => broadcast(req.user.userId, 'menuUpdated', item));
+  res.json({ updated: items.length, items });
+});
+
 exports.remove = asyncHandler(async (req, res) => {
   const item = await findOwnedItem(req, 'delete');
   await item.deleteOne();

@@ -1,4 +1,5 @@
 const { z, objectId, imageRef } = require('./common');
+const MenuItem = require('../models/MenuItem');
 
 const price = z.coerce.number({ invalid_type_error: 'Price must be a number' })
   .min(0, 'Price cannot be negative')
@@ -20,6 +21,10 @@ const itemFields = {
   image: imageRef.optional(),
   available: z.boolean().optional(),
   isVeg: z.boolean().optional(),
+  tags: z.array(z.enum(MenuItem.TAGS, { errorMap: () => ({ message: 'Unknown badge' }) }))
+    .max(3).transform((list) => [...new Set(list)]).optional(),
+  spiceLevel: z.coerce.number().int().min(0).max(3).optional(),
+  calories: z.coerce.number().int().min(0).max(5000).nullable().optional(),
   variants: z.array(option).max(10, 'At most 10 sizes').refine(uniqueNames, 'Size names must be unique').optional(),
   addOns: z.array(option).max(20, 'At most 20 add-ons').refine(uniqueNames, 'Add-on names must be unique').optional()
 };
@@ -35,6 +40,13 @@ exports.create = {
 exports.update = {
   params: z.object({ id: objectId }),
   body: z.object(itemFields).partial()
+};
+
+exports.setAvailability = {
+  body: z.object({
+    ids: z.array(objectId).min(1, 'Choose at least one item').max(500),
+    available: z.boolean({ required_error: 'available is required' })
+  })
 };
 
 exports.remove = {
