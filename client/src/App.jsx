@@ -1,21 +1,24 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import { ToastProvider, Spinner } from './components/ui';
+import { isLoggedIn } from './lib/session';
 import './App.css';
 
+// Old pages (replaced during the redesign) are lazy so their global CSS only loads on those pages.
 const LandingPage = lazy(() => import('./components/LandingPage'));
-const Login = lazy(() => import('./components/Login'));
-const Register = lazy(() => import('./components/Register'));
-const ForgotPassword = lazy(() => import('./components/ForgotPassword'));
-const ResetPassword = lazy(() => import('./components/ResetPassword'));
 const Dashboard = lazy(() => import('./components/Dashboard'));
 const Order = lazy(() => import('./components/Order'));
 const Demo = lazy(() => import('./components/Demo'));
 const Profile = lazy(() => import('./components/Profile'));
 
-// Old pages (replaced during the redesign) are lazy so their global CSS only loads on those pages.
+// Owner sign-in
+const LoginPage = lazy(() => import('./features/auth/LoginPage'));
+const RegisterPage = lazy(() => import('./features/auth/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('./features/auth/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./features/auth/ResetPasswordPage'));
+
 // Customer screens load separately so a scanned QR code downloads only what the menu needs.
 const CustomerApp = lazy(() => import('./features/customer/CustomerApp'));
 const WelcomeScreen = lazy(() => import('./features/customer/WelcomeScreen'));
@@ -25,10 +28,9 @@ const CartScreen = lazy(() => import('./features/customer/CartScreen'));
 const OrdersScreen = lazy(() => import('./features/customer/OrdersScreen'));
 const OrderTrackingScreen = lazy(() => import('./features/customer/OrderTrackingScreen'));
 
-const PrivateRoute = ({ children }) => {
-  const token = localStorage.getItem('token');
-  return token ? children : <Navigate to="/login" />;
-};
+function PrivateRoute({ children }) {
+  return isLoggedIn() ? children : <Navigate to="/login" replace />;
+}
 
 function PageLoader() {
   return (
@@ -38,49 +40,15 @@ function PageLoader() {
   );
 }
 
-function AppContent() {
-  const location = useLocation();
-  const isCustomerMenu = location.pathname.startsWith('/menu/');
-
+// Header and footer of the pre-redesign pages that have not been replaced yet.
+function LegacyLayout() {
   return (
     <div className="App">
-      {!isCustomerMenu && <Header />}
+      <Header />
       <div className="main-content">
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            <Route path="/" element={<div className="page-wrapper"><LandingPage /></div>} />
-            <Route path="/login" element={<div className="page-wrapper"><Login /></div>} />
-            <Route path="/register" element={<div className="page-wrapper"><Register /></div>} />
-            <Route path="/forgot-password" element={<div className="page-wrapper"><ForgotPassword /></div>} />
-            <Route path="/reset-password" element={<div className="page-wrapper"><ResetPassword /></div>} />
-            <Route path="/dashboard" element={
-              <PrivateRoute>
-                <div className="page-wrapper"><Dashboard /></div>
-              </PrivateRoute>
-            } />
-            <Route path="/profile" element={
-              <PrivateRoute>
-                <div className="page-wrapper"><Profile /></div>
-              </PrivateRoute>
-            } />
-            <Route path="/orders" element={
-              <PrivateRoute>
-                <div className="page-wrapper"><Order /></div>
-              </PrivateRoute>
-            } />
-            <Route path="/menu/:restaurantId" element={<CustomerApp />}>
-              <Route index element={<WelcomeScreen />} />
-              <Route path="browse" element={<MenuScreen />} />
-              <Route path="item/:itemId" element={<ItemDetailScreen />} />
-              <Route path="cart" element={<CartScreen />} />
-              <Route path="orders" element={<OrdersScreen />} />
-              <Route path="orders/:orderId" element={<OrderTrackingScreen />} />
-            </Route>
-            <Route path="/demo" element={<div className="page-wrapper"><Demo /></div>} />
-          </Routes>
-        </Suspense>
+        <div className="page-wrapper"><Outlet /></div>
       </div>
-      {!isCustomerMenu && <Footer />}
+      <Footer />
     </div>
   );
 }
@@ -89,7 +57,31 @@ function App() {
   return (
     <ToastProvider>
       <Router>
-        <AppContent />
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route element={<LegacyLayout />}>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+              <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+              <Route path="/orders" element={<PrivateRoute><Order /></PrivateRoute>} />
+              <Route path="/demo" element={<Demo />} />
+            </Route>
+
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+            <Route path="/menu/:restaurantId" element={<CustomerApp />}>
+              <Route index element={<WelcomeScreen />} />
+              <Route path="browse" element={<MenuScreen />} />
+              <Route path="item/:itemId" element={<ItemDetailScreen />} />
+              <Route path="cart" element={<CartScreen />} />
+              <Route path="orders" element={<OrdersScreen />} />
+              <Route path="orders/:orderId" element={<OrderTrackingScreen />} />
+            </Route>
+          </Routes>
+        </Suspense>
       </Router>
     </ToastProvider>
   );
