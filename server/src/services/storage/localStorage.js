@@ -1,6 +1,7 @@
 const fs = require('fs/promises');
 const path = require('path');
 const crypto = require('crypto');
+const { removeVariants } = require('./imageVariants');
 
 const PUBLIC_PREFIX = '/uploads';
 
@@ -33,6 +34,7 @@ function createLocalStorage({ uploadDir, publicUrl }) {
 
     async remove(key) {
       await fs.rm(resolveKey(key), { force: true });
+      await removeVariants(uploadDir, key);
     },
 
     // Returns the storage key for a URL this adapter produced, or null for anything else.

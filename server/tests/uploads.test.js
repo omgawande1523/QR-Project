@@ -110,3 +110,60 @@ describe('image uploads', () => {
     expect(res.body.code).toBe('NOT_FOUND');
   });
 });
+
+describe('resized copies for srcset (?w=)', () => {
+  const getImage = (url) => request(app).get(url).buffer(true).parse((r, cb) => {
+    const chunks = [];
+    r.on('data', (c) => chunks.push(c));
+    r.on('end', () => cb(null, Buffer.concat(chunks)));
+  });
+
+  test('serves the image scaled to an allowed width, cached for a year', async () => {
+    const owner = await registerOwner(app);
+    const { body } = await upload(owner.token, 'menu', await png(1200, 900));
+
+    const res = await getImage(`${pathOf(body.url)}?w=320`);
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toBe('image/webp');
+    expect(res.headers['cache-control']).toMatch(/max-age=31536000/);
+    const meta = await sharp(res.body).metadata();
+    expect([meta.format, meta.width, meta.height]).toEqual(['webp', 320, 240]);
+
+    // Served again from the saved copy.
+    const again = await getImage(`${pathOf(body.url)}?w=320`);
+    expect(again.body.equals(res.body)).toBe(true);
+  });
+
+  test('other widths get the original, and small images are never enlarged', async () => {
+    const owner = await registerOwner(app);
+    const { body } = await upload(owner.token, 'menu', await png(200, 150));
+
+    const odd = await getImage(`${pathOf(body.url)}?w=333`);
+    expect((await sharp(odd.body).metadata()).width).toBe(200);
+    const big = await getImage(`${pathOf(body.url)}?w=960`);
+    expect((await sharp(big.body).metadata()).width).toBe(200);
+  });
+
+  test('a missing image is a 404 and the copies folder is not reachable directly', async () => {
+    const missing = await request(app).get('/uploads/menu/00000000-0000-0000-0000-000000000000.webp?w=320');
+    expect(missing.status).toBe(404);
+    const owner = await registerOwner(app);
+    const { body } = await upload(owner.token, 'menu', await png(800, 600));
+    await getImage(`${pathOf(body.url)}?w=320`);
+    const direct = await request(app).get(`/uploads/.variants/w320/${pathOf(body.url).replace('/uploads/', '')}`);
+    expect(direct.status).toBe(404);
+  });
+
+  test('removing an image removes its resized copies', async () => {
+    const owner = await registerOwner(app);
+    const first = await upload(owner.token, 'menu', await png(800, 600));
+    const second = await upload(owner.token, 'menu', await png(800, 600));
+    const item = await createMenuItem(app, owner.token, { image: first.body.url });
+    await getImage(`${pathOf(first.body.url)}?w=480`);
+    const copy = path.join(config.storage.uploadDir, '.variants', 'w480', pathOf(first.body.url).replace('/uploads/', ''));
+    expect(fs.existsSync(copy)).toBe(true);
+
+    await request(app).put(`/api/menu/${item._id}`).set(auth(owner.token)).send({ image: second.body.url });
+    expect(fs.existsSync(copy)).toBe(false);
+  });
+});

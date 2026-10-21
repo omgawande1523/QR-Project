@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const config = require('./config');
 const { storage } = require('./services/storage');
+const { imageVariants } = require('./services/storage/imageVariants');
 const { notFound, errorHandler } = require('./middleware/error');
 
 function createApp() {
@@ -21,11 +22,13 @@ function createApp() {
   app.use(express.urlencoded({ limit: '100kb', extended: false }));
 
   if (config.storage.driver === 'local') {
-    // File names are random UUIDs, so they can be cached forever.
+    // ?w=320 etc.: resized copies for srcset. File names are random UUIDs, so they can be cached forever.
+    app.use(storage.publicPrefix, imageVariants(storage.uploadDir));
     app.use(storage.publicPrefix, express.static(storage.uploadDir, {
       immutable: true,
       maxAge: '365d',
       index: false,
+      dotfiles: 'ignore', // also inside dot-folders such as .variants (not the default)
       fallthrough: false
     }));
   }
