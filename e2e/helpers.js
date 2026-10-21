@@ -6,9 +6,14 @@ async function demo(request) {
   return res.json();
 }
 
+// Log in once per test run: the login endpoint is rate limited (20 attempts / 15 min per IP).
+let cachedLogin = null;
 async function ownerLogin(request) {
+  if (cachedLogin) return cachedLogin;
   const res = await request.post(`${API}/api/users/login`, { data: { identifier: 'demo@qrmenu.test', password: 'Demo@1234' } });
-  return res.json();
+  if (!res.ok()) throw new Error(`Demo login failed (${res.status()}): ${await res.text()}`);
+  cachedLogin = await res.json();
+  return cachedLogin;
 }
 
 async function setOrderStatus(request, token, orderId, status) {

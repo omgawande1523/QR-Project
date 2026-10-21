@@ -15,7 +15,7 @@ test('new order appears live on the board and moves with one tap', async ({ page
 
   await page.goto('/dashboard/orders');
   await expect(page.getByRole('heading', { name: 'Orders', exact: true })).toBeVisible();
-  await expect(page.getByText('Live')).toBeVisible();
+  await expect(page.getByText('Live', { exact: true })).toBeVisible();
 
   // A customer orders while the board is open
   const menu = await (await request.get(`${API}/api/menu/${restaurantId}`)).json();
@@ -40,4 +40,27 @@ test('new order appears live on the board and moves with one tap', async ({ page
   await request.post(`${API}/api/service-requests`, { data: { restaurantId, tableNumber: 4, type: 'Water' } });
   await page.getByRole('button', { name: /Table requests \(\d+\)/ }).click();
   await expect(page.getByRole('dialog', { name: 'Table requests' }).getByText('T4').first()).toBeVisible();
+});
+
+test('availability toggle in the menu manager reaches open customer menus instantly', async ({ page, browser, request }) => {
+  const { restaurantId } = await demo(request);
+  const owner = await ownerLogin(request);
+  await page.addInitScript(([token, userId]) => {
+    localStorage.setItem('token', token);
+    localStorage.setItem('userId', userId);
+  }, [owner.token, owner.userId]);
+
+  const phone = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  await phone.goto(`/menu/${restaurantId}/browse`);
+  const poha = phone.getByRole('article').filter({ hasText: 'Kanda Poha' });
+  await expect(poha.getByRole('button', { name: 'Add Kanda Poha', exact: true })).toBeEnabled();
+
+  await page.goto('/dashboard/menu');
+  const toggle = page.getByRole('switch', { name: 'Kanda Poha available' });
+  await toggle.uncheck();
+  await expect(poha.getByRole('button', { name: 'Kanda Poha is sold out' })).toBeDisabled();
+
+  await toggle.check();
+  await expect(poha.getByRole('button', { name: 'Add Kanda Poha', exact: true })).toBeEnabled();
+  await phone.close();
 });
