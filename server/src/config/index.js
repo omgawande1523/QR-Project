@@ -1,5 +1,6 @@
 const path = require('path');
 const { z } = require('zod');
+const { parseCloudinaryUrl } = require('../services/storage/cloudinaryStorage');
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
 
 const envSchema = z.object({
@@ -17,8 +18,22 @@ const envSchema = z.object({
   EMAIL_PASS: z.string().optional(),
   // Public base URL of this API, used to build links to uploaded images
   PUBLIC_URL: z.string().url().optional(),
-  STORAGE_DRIVER: z.enum(['local']).default('local'),
-  UPLOAD_DIR: z.string().optional()
+  STORAGE_DRIVER: z.enum(['local', 'cloudinary']).default('local'),
+  UPLOAD_DIR: z.string().optional(),
+  // cloudinary://<api_key>:<api_secret>@<cloud_name> (Cloudinary console > API Keys), for STORAGE_DRIVER=cloudinary
+  CLOUDINARY_URL: z.string().optional(),
+  CLOUDINARY_FOLDER: z.preprocess((v) => v || undefined, z.string()
+    .regex(/^[a-z0-9_-]+(\/[a-z0-9_-]+)*$/i, 'may only contain letters, digits, - _ and /')
+    .default('qr-menu')),
+  UPLOAD_CLEANUP: z.string().optional()
+}).superRefine((env, ctx) => {
+  if (env.STORAGE_DRIVER === 'cloudinary' && !parseCloudinaryUrl(env.CLOUDINARY_URL || '')) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['CLOUDINARY_URL'],
+      message: 'set it to cloudinary://<api_key>:<api_secret>@<cloud_name> when STORAGE_DRIVER=cloudinary'
+    });
+  }
 });
 
 function loadEnv() {
@@ -46,7 +61,10 @@ const config = {
   publicUrl: (env.PUBLIC_URL || `http://localhost:${env.PORT}`).replace(/\/+$/, ''),
   storage: {
     driver: env.STORAGE_DRIVER,
-    uploadDir: path.resolve(env.UPLOAD_DIR || path.join(__dirname, '..', '..', 'uploads'))
+    uploadDir: path.resolve(env.UPLOAD_DIR || path.join(__dirname, '..', '..', 'uploads')),
+    cloudinary: env.STORAGE_DRIVER === 'cloudinary'
+      ? { ...parseCloudinaryUrl(env.CLOUDINARY_URL), folder: env.CLOUDINARY_FOLDER }
+      : null
   },
   // Removes images that were added but never used (see services/uploadCleanup.js); UPLOAD_CLEANUP=off disables it.
   uploadCleanup: env.UPLOAD_CLEANUP !== 'off'

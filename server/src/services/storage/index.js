@@ -1,8 +1,9 @@
 const config = require('../../config');
 const createLocalStorage = require('./localStorage');
+const { createCloudinaryStorage } = require('./cloudinaryStorage');
 
 /*
- * Storage adapter interface. A Cloudinary or S3 adapter only needs to implement:
+ * Storage adapter interface. An adapter (local disk, Cloudinary, or later S3) implements:
  *   save(buffer, { folder, extension, contentType }) -> Promise<{ key, url }>   (url is public)
  *   read(key) -> Promise<Buffer>
  *   remove(key) -> Promise<void>
@@ -13,6 +14,8 @@ function createStorage() {
   switch (config.storage.driver) {
     case 'local':
       return createLocalStorage({ uploadDir: config.storage.uploadDir, publicUrl: config.publicUrl });
+    case 'cloudinary':
+      return createCloudinaryStorage(config.storage.cloudinary);
     default:
       throw new Error(`Unknown STORAGE_DRIVER: ${config.storage.driver}`);
   }

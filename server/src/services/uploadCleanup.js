@@ -7,8 +7,8 @@ const HOUR_MS = 60 * 60 * 1000;
 const DEFAULT_AGE_MS = 24 * HOUR_MS;
 const DEFAULT_INTERVAL_MS = 6 * HOUR_MS;
 
-// The storage key at the end of an uploaded image URL, whatever host it was served from, so a changed
-// PUBLIC_URL can never make an image in use look abandoned.
+// The storage key at the end of a local image URL, whatever host it was served from, so a changed
+// PUBLIC_URL can never make an image in use look abandoned. Other drivers' URLs go through keyFromUrl.
 const KEY_IN_URL = /\/uploads\/([a-z]+\/[0-9a-f-]{36}\.[a-z]+)$/;
 
 async function imagesInUse() {
@@ -17,7 +17,7 @@ async function imagesInUse() {
     User.find({}, 'profilePicture bannerImage qrLogo').lean()
   ]);
   const urls = new Set([...menuImages, ...profiles.flatMap((u) => [u.profilePicture, u.bannerImage, u.qrLogo])].filter(Boolean));
-  const keys = new Set([...urls].map((url) => url.match(KEY_IN_URL)?.[1]).filter(Boolean));
+  const keys = new Set([...urls].map((url) => url.match(KEY_IN_URL)?.[1] || storage.keyFromUrl(url)).filter(Boolean));
   return (upload) => urls.has(upload.url) || keys.has(upload.key);
 }
 
