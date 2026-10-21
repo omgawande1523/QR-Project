@@ -17,7 +17,8 @@
     "seed": "npm --prefix server run seed",
     "test": "npm --prefix server test && npm --prefix client test",
     "lint": "npm --prefix client run lint",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "e2e:prod": "npm run build && playwright test --config playwright.prod.config.js"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
