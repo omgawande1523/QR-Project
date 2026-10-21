@@ -7,6 +7,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const emit = require('../sockets/io');
 const safeEqual = require('../utils/safeEqual');
 const { priceOrder } = require('../services/pricing');
+const { nextInvoiceNumber } = require('../services/invoices');
 
 // Once an order is completed or cancelled its status can no longer change.
 const FINAL_STATUSES = ['complete', 'cancelled'];
@@ -61,6 +62,48 @@ exports.getStatus = asyncHandler(async (req, res) => {
   if (!order || !order.trackingToken || !safeEqual(order.trackingToken, req.query.token)) {
     throw AppError.notFound('Order not found');
   }
+  res.json(order);
+});
+
+async function findOwnOrder(req) {
+  const order = await Order.findById(req.params.id);
+  if (!order) throw AppError.notFound('Order not found');
+  if (order.restaurantId?.toString() !== req.user.userId) throw AppError.forbidden('Not authorized to update this order');
+  if (order.status === 'cancelled') throw AppError.conflict('This order was cancelled', 'ORDER_CANCELLED');
+  return order;
+}
+
+async function ensureInvoiceNumber(order) {
+  if (order.invoiceNumber) return;
+  order.invoiceNumber = await nextInvoiceNumber(order.restaurantId);
+  order.invoicedAt = new Date();
+}
+
+function broadcastOrder(order) {
+  emit.toRestaurant(order.restaurantId, 'orderUpdated', order);
+  emit.toOrder(order._id, 'orderUpdated', order);
+}
+
+// Makes the bill: assigns the invoice number once (calling again returns the same one) and marks
+// the order billed unless it is already paid.
+exports.invoice = asyncHandler(async (req, res) => {
+  const order = await findOwnOrder(req);
+  await ensureInvoiceNumber(order);
+  if (order.status !== 'complete') order.status = 'billed';
+  await order.save();
+  broadcastOrder(order);
+  res.json(order);
+});
+
+// Settles the bill (cash, UPI or card) and closes the order.
+exports.pay = asyncHandler(async (req, res) => {
+  const order = await findOwnOrder(req);
+  if (order.payment?.paidAt) throw AppError.conflict('This bill is already paid', 'ALREADY_PAID');
+  await ensureInvoiceNumber(order);
+  order.payment = { method: req.body.method, reference: req.body.reference, paidAt: new Date() };
+  order.status = 'complete';
+  await order.save();
+  broadcastOrder(order);
   res.json(order);
 });
 

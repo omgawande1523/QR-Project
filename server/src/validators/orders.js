@@ -37,6 +37,20 @@ exports.listForOwner = {
   })
 };
 
+exports.PAYMENT_METHODS = ['cash', 'upi', 'card'];
+
+exports.invoice = {
+  params: z.object({ id: objectId })
+};
+
+exports.pay = {
+  params: z.object({ id: objectId }),
+  body: z.object({
+    method: z.enum(exports.PAYMENT_METHODS, { errorMap: () => ({ message: 'Choose cash, UPI or card' }) }),
+    reference: z.string().trim().max(60, 'Reference must be at most 60 characters').optional()
+  })
+};
+
 exports.getStatus = {
   params: z.object({ id: objectId }),
   query: z.object({ token: z.string().trim().min(1, 'Tracking token is required').max(128) })

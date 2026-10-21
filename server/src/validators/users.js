@@ -66,6 +66,8 @@ exports.updateProfile = {
     address: z.string().trim().max(200, 'Address must be at most 200 characters').optional(),
     gstin: z.string().trim().toUpperCase()
       .refine((v) => v === '' || GSTIN.test(v), 'GSTIN must be 15 characters, e.g. 27ABCDE1234F1Z5').optional(),
+    upiId: z.string().trim().toLowerCase().max(60)
+      .refine((v) => v === '' || /^[a-z0-9._-]{2,49}@[a-z][a-z0-9.-]{1,30}$/.test(v), 'UPI ID looks like name@bank').optional(),
     openingHours: openingHours.optional(),
     categories: categories.optional(),
     tables: tables.optional(),

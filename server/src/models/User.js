@@ -19,6 +19,7 @@ const userSchema = new mongoose.Schema({
   tagline: String,
   address: String,
   gstin: String,
+  upiId: String, // shown as a UPI QR code on unpaid bills
   openingHours: [{
     _id: false,
     day: { type: Number, min: 0, max: 6 }, // 0 = Sunday
