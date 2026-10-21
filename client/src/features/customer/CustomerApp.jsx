@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Navigate, Outlet, useLocation, useParams } from 'react-router';
 import { QrCode } from 'lucide-react';
 import { local } from '../../lib/storage';
@@ -10,11 +10,24 @@ import { BottomNav, Button, EmptyState } from '../../components/ui';
 import { CallWaiterSheet } from './CallWaiterSheet';
 import './customer.css';
 
+// Screen readers hear "Cart: 2 items" whenever the cart changes (adding from the grid has no other message).
+function useCartAnnouncement(cartCount) {
+  const [text, setText] = useState('');
+  const previous = useRef(cartCount);
+  useEffect(() => {
+    if (previous.current === cartCount) return;
+    previous.current = cartCount;
+    setText(cartCount ? `Cart: ${cartCount} ${cartCount === 1 ? 'item' : 'items'}` : 'Cart is empty');
+  }, [cartCount]);
+  return text;
+}
+
 function CustomerShell() {
   const { restaurantId, restaurant, status, error, reload, cartCount, activeOrders } = useCustomer();
   usePageTitle(restaurant?.restaurantName);
   const location = useLocation();
   const [waiterOpen, setWaiterOpen] = useState(false);
+  const cartAnnouncement = useCartAnnouncement(cartCount);
   const base = `/menu/${restaurantId}`;
   const path = location.pathname.replace(/\/+$/, '');
   // The welcome screen and item detail have their own bottom actions instead of the nav.
@@ -32,6 +45,7 @@ function CustomerShell() {
 
   return (
     <div className={`customer-app ${showNav ? 'has-nav' : ''}`}>
+      <p className="sr-only" role="status">{cartAnnouncement}</p>
       <Outlet context={{ openWaiter: () => setWaiterOpen(true) }} />
       {showNav && (
         <BottomNav

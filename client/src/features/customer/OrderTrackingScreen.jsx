@@ -93,8 +93,11 @@ export default function OrderTrackingScreen() {
         </EmptyState>
       ) : (
         <Card className="tracking-card">
-          <p className="tracking-status">{current.label}</p>
-          <p className="muted">{current.hint}</p>
+          {/* Read out by screen readers when the kitchen moves the order along */}
+          <div role="status">
+            <p className="tracking-status">{current.label}</p>
+            <p className="muted">{current.hint}</p>
+          </div>
           <ol className="timeline">
             {CUSTOMER_STEPS.map((s, i) => {
               const Icon = STEP_ICONS[i];

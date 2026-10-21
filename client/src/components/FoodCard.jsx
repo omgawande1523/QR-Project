@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from 'react';
 import { Heart, Plus } from 'lucide-react';
 import { Button, IconButton, QuantityStepper, ItemBadges, VegMark } from './ui';
 import { formatPrice } from '../lib/format';
@@ -13,6 +14,19 @@ export function FoodCard({ item, quantity = 0, favourite = false, priority = fal
   const soldOut = !item.available;
   const customisable = (item.variants?.length || 0) > 0 || (item.addOns?.length || 0) > 0;
   const fromPrice = item.variants?.length ? Math.min(...item.variants.map((v) => v.price)) : item.price;
+  const showStepper = quantity > 0 && !customisable;
+
+  // Adding swaps the Add button for a stepper, and removing the last one swaps it back: keep keyboard
+  // focus on the new control instead of losing it to the page.
+  const actionRef = useRef(null);
+  const keepFocus = useRef(false);
+  const rememberFocus = () => { keepFocus.current = actionRef.current?.contains(document.activeElement) || false; };
+  useLayoutEffect(() => {
+    if (!keepFocus.current) return;
+    keepFocus.current = false;
+    const buttons = actionRef.current?.querySelectorAll('button') || [];
+    buttons[showStepper ? buttons.length - 1 : 0]?.focus();
+  }, [showStepper]);
 
   return (
     <article className={`food-card ${soldOut ? 'is-sold-out' : ''}`}>
@@ -56,15 +70,15 @@ export function FoodCard({ item, quantity = 0, favourite = false, priority = fal
           {formatPrice(fromPrice)}
         </p>
       </div>
-      <div className="food-card-action">
-        {quantity > 0 && !customisable ? (
-          <QuantityStepper value={quantity} onChange={onQuantityChange} removable min={0} size="sm" label={`${item.name} quantity`} />
+      <div className="food-card-action" ref={actionRef}>
+        {showStepper ? (
+          <QuantityStepper value={quantity} onChange={(q) => { if (q === 0) rememberFocus(); onQuantityChange(q); }} removable min={0} size="sm" label={`${item.name} quantity`} />
         ) : (
           <Button
             size="sm"
             block
             disabled={soldOut}
-            onClick={customisable ? onOpen : onAdd}
+            onClick={customisable ? onOpen : () => { rememberFocus(); onAdd(); }}
             icon={<Plus size={16} />}
             className={bump ? 'bounce' : ''}
           >
