@@ -57,4 +57,5 @@ test('the owner adds a Marathi name in the dish editor', async ({ page, request 
   const created = menu.find((i) => i.name === name);
   expect(created.translations.mr).toEqual({ name: 'साबुदाणा खिचडी' });
   expect(created.translations.hi?.name).toBeUndefined();
+  await request.delete(`${API}/api/menu/${created._id}`, { headers: { Authorization: `Bearer ${owner.token}` } });
 });
