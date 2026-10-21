@@ -35,3 +35,6 @@ body {
 }
 .pull-indicator.is-ready svg { transform: rotate(180deg); transition: transform var(--duration-fast); }
 .kitchen .pull-indicator { color: var(--olive-300); }
+
+/* Behind the status bar on the kitchen display: its dark background, not the page cream. */
+body:has(.kitchen) { background: var(--ink); }

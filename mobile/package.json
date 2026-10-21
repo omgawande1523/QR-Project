@@ -1,0 +1,35 @@
+{
+  "name": "qr-menu-staff",
+  "private": true,
+  "description": "QR Menu Staff: the Android app for restaurant staff (Capacitor). The screens come from client/ (vite build --mode app).",
+  "scripts": {
+    "doctor": "node scripts/app.mjs doctor",
+    "build": "node scripts/app.mjs build",
+    "sync": "node scripts/app.mjs sync",
+    "apk": "node scripts/app.mjs apk",
+    "aab": "node scripts/app.mjs aab",
+    "run": "node scripts/app.mjs run",
+    "open": "node scripts/app.mjs open"
+  },
+  "dependencies": {
+    "@aparajita/capacitor-secure-storage": "8.0.1",
+    "@capacitor-community/keep-awake": "8.0.1",
+    "@capacitor/android": "8.5.3",
+    "@capacitor/app": "8.1.2",
+    "@capacitor/browser": "8.0.5",
+    "@capacitor/camera": "8.2.6",
+    "@capacitor/core": "8.5.3",
+    "@capacitor/device": "8.0.3",
+    "@capacitor/filesystem": "8.1.5",
+    "@capacitor/haptics": "8.0.2",
+    "@capacitor/network": "8.0.1",
+    "@capacitor/push-notifications": "8.1.3",
+    "@capacitor/share": "8.0.3",
+    "@capacitor/splash-screen": "8.0.2",
+    "@capacitor/status-bar": "8.0.4"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.3",
+    "typescript": "5.9.3"
+  }
+}

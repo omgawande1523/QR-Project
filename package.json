@@ -8,7 +8,7 @@
     "npm": ">=10"
   },
   "scripts": {
-    "install:all": "npm install && cd server && npm install && cd ../client && npm install",
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install && cd ../mobile && npm install",
     "dev": "concurrently --names server,client --prefix-colors green,cyan --kill-others-on-fail \"npm:dev:server\" \"npm:dev:client\"",
     "dev:server": "npm --prefix server run dev",
     "dev:client": "npm --prefix client run dev",
@@ -18,7 +18,15 @@
     "test": "npm --prefix server test && npm --prefix client test",
     "lint": "npm --prefix client run lint",
     "e2e": "playwright test",
-    "e2e:prod": "npm run build && playwright test --config playwright.prod.config.js"
+    "e2e:prod": "npm run build && playwright test --config playwright.prod.config.js",
+    "app:doctor": "node mobile/scripts/app.mjs doctor",
+    "app:build": "node mobile/scripts/app.mjs build",
+    "app:sync": "node mobile/scripts/app.mjs sync",
+    "app:open": "node mobile/scripts/app.mjs open",
+    "app:run": "node mobile/scripts/app.mjs run",
+    "app:apk": "node mobile/scripts/app.mjs apk",
+    "app:aab": "node mobile/scripts/app.mjs aab",
+    "e2e:app": "playwright test --config playwright.app.config.js"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",

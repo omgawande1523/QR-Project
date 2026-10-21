@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Brand colours from client/src/styles/tokens.css -->
+<resources>
+    <color name="colorPrimary">#656c1c</color>
+    <color name="colorPrimaryDark">#484e0a</color>
+    <color name="colorAccent">#a3ad4f</color>
+    <color name="splash_background">#faf6ee</color>
+    <color name="notification">#656c1c</color>
+</resources>

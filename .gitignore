@@ -10,6 +10,7 @@ node_modules/
 build/
 dist/
 dist-app/
+dist-app-test/
 
 # Test coverage
 coverage/
