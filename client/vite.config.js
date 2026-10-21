@@ -2,6 +2,19 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { sitePlugin } from './site/assets.js';
 
+// Every screen is lazy-loaded (src/App.jsx), so modules shared between screens would otherwise end up as
+// dozens of sub-kilobyte chunks (one per icon, Button, format helpers...) that a phone requests one by one.
+// Group them: React and the router in "vendor", icons, UI components and small helpers in "ui" (about
+// 20 KB gzipped). Heavy code (PDF, QR, cropping, charts, axios, socket.io) keeps its own lazy chunks.
+const UI_MODULES = /\/src\/(components\/ui\/|lib\/(config|session|storage|format|pricing|orderStatus|srcset|usePageTitle|useNow|feedback|hours|menuLanguage|roles|tokens)\.js|config\.js)/;
+
+function sharedChunk(id) {
+  const path = id.replace(/\\/g, '/');
+  if (/\/node_modules\/(react|react-dom|react-router|scheduler|cookie|set-cookie-parser)\//.test(path)) return 'vendor';
+  if (path.includes('/node_modules/lucide-react/') || UI_MODULES.test(path)) return 'ui';
+  return undefined;
+}
+
 export default defineConfig({
   plugins: [react(), sitePlugin()],
   server: {
@@ -12,7 +25,12 @@ export default defineConfig({
     port: 3000
   },
   build: {
-    outDir: 'build'
+    outDir: 'build',
+    rollupOptions: {
+      output: {
+        manualChunks: sharedChunk
+      }
+    }
   },
   test: {
     environment: 'jsdom',
