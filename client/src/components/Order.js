@@ -11,11 +11,8 @@ const Order = () => {
   const [dateFilter, setDateFilter] = useState(new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
-    const userId = localStorage.getItem('userId');
-
-    // Connect WebSocket for real-time updates
-    const socket = io(SOCKET_URL);
-    socket.emit('join', userId);
+    // Connect WebSocket for real-time updates; the token puts this socket in the restaurant room
+    const socket = io(SOCKET_URL, { auth: { token: localStorage.getItem('token') } });
 
     socket.on('newOrder', (order) => {
       setOrders(prev => [order, ...prev]);

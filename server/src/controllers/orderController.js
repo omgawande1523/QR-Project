@@ -1,21 +1,9 @@
+const crypto = require('crypto');
 const Order = require('../models/Order');
 const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
-const { getIo } = require('../sockets/io');
-
-function emitToRestaurant(restaurantId, event, payload) {
-  const io = getIo();
-  if (!io) return;
-  try {
-    if (restaurantId) {
-      io.to(restaurantId.toString()).emit(event, payload);
-    } else {
-      io.emit(event, payload);
-    }
-  } catch (emitErr) {
-    console.error('Socket emit error:', emitErr);
-  }
-}
+const emit = require('../sockets/io');
+const safeEqual = require('../utils/safeEqual');
 
 exports.create = asyncHandler(async (req, res) => {
   const raw = req.body;
@@ -27,16 +15,18 @@ exports.create = asyncHandler(async (req, res) => {
     notes: i.notes || ''
   }));
 
+  const trackingToken = crypto.randomBytes(24).toString('hex');
   const savedOrder = await Order.create({
     items,
     tableNumber: raw.tableNumber,
     customerName: raw.customerName || '',
     totalAmount: raw.totalAmount || 0,
-    restaurantId: raw.restaurantId || null
+    restaurantId: raw.restaurantId || null,
+    trackingToken
   });
-  emitToRestaurant(raw.restaurantId, 'newOrder', savedOrder);
+  if (savedOrder.restaurantId) emit.toRestaurant(savedOrder.restaurantId, 'newOrder', savedOrder);
 
-  res.status(201).json(savedOrder);
+  res.status(201).json({ ...savedOrder.toJSON(), trackingToken });
 });
 
 exports.listForOwner = asyncHandler(async (req, res) => {
@@ -46,9 +36,12 @@ exports.listForOwner = asyncHandler(async (req, res) => {
   res.json(orders);
 });
 
+// Customer view of one order; needs the tracking token returned when the order was placed.
 exports.getStatus = asyncHandler(async (req, res) => {
-  const order = await Order.findById(req.params.id);
-  if (!order) throw AppError.notFound('Order not found');
+  const order = await Order.findById(req.params.id).select('+trackingToken');
+  if (!order || !order.trackingToken || !safeEqual(order.trackingToken, req.query.token)) {
+    throw AppError.notFound('Order not found');
+  }
   res.json(order);
 });
 
@@ -63,6 +56,7 @@ exports.updateStatus = asyncHandler(async (req, res) => {
   await order.save();
   const updatedOrder = await order.populate('items.menuItem');
 
-  emitToRestaurant(updatedOrder.restaurantId, 'orderUpdated', updatedOrder);
+  emit.toRestaurant(updatedOrder.restaurantId, 'orderUpdated', updatedOrder);
+  emit.toOrder(updatedOrder._id, 'orderUpdated', updatedOrder);
   res.json(updatedOrder);
 });

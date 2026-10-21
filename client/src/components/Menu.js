@@ -1,10 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import OrderSuccessModal from './OrderSuccessModal';
 import API_BASE_URL, { SOCKET_URL } from '../config';
 import './Menu.css';
+
+// Orders placed from this browser, saved as [{ id, token }]. The tracking token returned when an
+// order is placed is required to read its status or follow it live.
+const TRACKED_ORDERS_KEY = 'trackedOrders';
+
+const loadTrackedOrders = () => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(TRACKED_ORDERS_KEY) || '[]');
+    return Array.isArray(saved) ? saved.filter(o => o && o.id && o.token) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveTrackedOrders = (orders) => {
+  localStorage.setItem(TRACKED_ORDERS_KEY, JSON.stringify(orders.map(o => ({ id: o._id, token: o.trackingToken }))));
+};
 
 const Menu = () => {
   const { userId } = useParams();
@@ -99,24 +116,57 @@ const Menu = () => {
     }
   };
 
+  const socketRef = useRef(null);
+  const activeOrdersRef = useRef(activeOrders);
+  activeOrdersRef.current = activeOrders;
+
   useEffect(() => {
     const s = io(SOCKET_URL);
-    s.emit('join', userId);
+    socketRef.current = s;
+
+    const trackOrder = (order) => s.emit('trackOrder', { orderId: order._id, token: order.trackingToken });
+
+    // Rooms are lost on reconnect, so join them on every (re)connection.
+    s.on('connect', () => {
+      s.emit('joinMenu', userId);
+      activeOrdersRef.current.forEach(trackOrder);
+    });
 
     s.on('menuUpdated', (updatedItem) => {
-      setMenuItems(prevItems =>
-        prevItems.map(item => item._id === updatedItem._id ? updatedItem : item)
-      );
+      setMenuItems(prevItems => prevItems.some(item => item._id === updatedItem._id)
+        ? prevItems.map(item => item._id === updatedItem._id ? updatedItem : item)
+        : [...prevItems, updatedItem]);
+      if (updatedItem.category) {
+        setCategories(prev => prev.includes(updatedItem.category) ? prev : [...prev, updatedItem.category]);
+      }
+    });
+
+    s.on('menuItemDeleted', ({ _id }) => {
+      setMenuItems(prevItems => prevItems.filter(item => item._id !== _id));
     });
 
     s.on('orderUpdated', (updatedOrder) => {
+      // Updates never carry the tracking token; keep the one we already have.
       setActiveOrders(prevOrders =>
-        prevOrders.map(order => order._id === updatedOrder._id ? updatedOrder : order)
+        prevOrders.map(order => order._id === updatedOrder._id
+          ? { ...updatedOrder, trackingToken: order.trackingToken }
+          : order)
       );
     });
 
-    return () => s.disconnect();
+    return () => {
+      s.disconnect();
+      socketRef.current = null;
+    };
   }, [userId]);
+
+  // Follow orders placed or restored after the socket connected.
+  const trackedOrderIds = activeOrders.map(o => o._id).join(',');
+  useEffect(() => {
+    const s = socketRef.current;
+    if (!s || !s.connected) return;
+    activeOrdersRef.current.forEach(order => s.emit('trackOrder', { orderId: order._id, token: order.trackingToken }));
+  }, [trackedOrderIds]);
 
   const fetchMenu = async () => {
     try {
@@ -167,23 +217,27 @@ const Menu = () => {
     const savedName = localStorage.getItem('customerName');
     if (savedName) setCustomerName(savedName);
 
-    // Check for active orders in localStorage
-    const savedOrderIds = JSON.parse(localStorage.getItem('activeOrderIds') || '[]');
-    if (savedOrderIds.length > 0) {
-      fetchActiveOrders(savedOrderIds);
+    // Check for active orders in localStorage (the old id-only list cannot be read any more)
+    localStorage.removeItem('activeOrderIds');
+    const savedOrders = loadTrackedOrders();
+    if (savedOrders.length > 0) {
+      fetchActiveOrders(savedOrders);
     }
   }, [userId, location]);
 
-  const fetchActiveOrders = async (orderIds) => {
+  const fetchActiveOrders = async (trackedOrders) => {
     try {
       const orders = await Promise.all(
-        orderIds.map(id => axios.get(`${API_BASE_URL}/api/orders/status/${id}`).then(res => res.data))
+        trackedOrders.map(({ id, token }) =>
+          axios.get(`${API_BASE_URL}/api/orders/status/${id}`, { params: { token } })
+            .then(res => ({ ...res.data, trackingToken: token }))
+            .catch(() => null))
       );
       const liveOrders = orders.filter(order => order && order.status !== 'complete' && order.status !== 'cancelled');
       setActiveOrders(liveOrders);
 
       // Update storage with only live orders
-      localStorage.setItem('activeOrderIds', JSON.stringify(liveOrders.map(o => o._id)));
+      saveTrackedOrders(liveOrders);
 
       if (liveOrders.length > 0) {
         setShowOrderModal(false); // keep it minimized on refresh
@@ -293,14 +347,12 @@ const Menu = () => {
       setCustomerName('');
 
       const newOrder = response.data;
-      setActiveOrders(prev => [...prev, newOrder]);
+      setActiveOrders(prev => {
+        const updated = [...prev.filter(o => o._id !== newOrder._id), newOrder];
+        saveTrackedOrders(updated);
+        return updated;
+      });
       setShowOrderModal(true);
-
-      // Save order IDs to localStorage for persistence
-      const currentIds = JSON.parse(localStorage.getItem('activeOrderIds') || '[]');
-      if (!currentIds.includes(newOrder._id)) {
-        localStorage.setItem('activeOrderIds', JSON.stringify([...currentIds, newOrder._id]));
-      }
 
     } catch (error) {
       console.error('Error placing order:', error);
@@ -774,7 +826,7 @@ const Menu = () => {
           onClearOrder={(id) => {
             const updated = activeOrders.filter(o => o._id !== id);
             setActiveOrders(updated);
-            localStorage.setItem('activeOrderIds', JSON.stringify(updated.map(o => o._id)));
+            saveTrackedOrders(updated);
             if (updated.length === 0) setShowOrderModal(false);
           }}
         />

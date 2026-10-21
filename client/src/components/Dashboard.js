@@ -44,9 +44,8 @@ const Dashboard = () => {
   useEffect(() => {
     const userId = localStorage.getItem('userId');
 
-    // Socket Setup
-    const socket = io(SOCKET_URL);
-    socket.emit('join', userId);
+    // Socket Setup: the token authenticates this socket and joins the restaurant room
+    const socket = io(SOCKET_URL, { auth: { token: localStorage.getItem('token') } });
 
     socket.on('newOrder', (order) => {
       addNotification(`🎉 New Order! Table ${order.tableNumber}`, 'success');

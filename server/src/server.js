@@ -6,7 +6,8 @@ const createApp = require('./app');
 const registerSocketHandlers = require('./sockets');
 const { setIo } = require('./sockets/io');
 
-function start() {
+// Builds the HTTP + Socket.io server without connecting to MongoDB or listening (used by tests).
+function createServer() {
   const app = createApp();
   const server = http.createServer(app);
 
@@ -19,6 +20,12 @@ function start() {
   setIo(io);
   registerSocketHandlers(io);
 
+  return { app, server, io };
+}
+
+function start() {
+  const { server } = createServer();
+
   connectDB();
 
   server.listen(config.port, () => {
@@ -29,4 +36,4 @@ function start() {
   return server;
 }
 
-module.exports = { start };
+module.exports = { createServer, start };

@@ -33,15 +33,16 @@ const OrderSuccessModal = ({ orders, onClose, restaurantInfo, onClearOrder, menu
     if (activeOrders.length === 0) return;
 
     const socket = io(SOCKET_URL);
-    // Join rooms for all active orders (they might have different restaurant IDs, though unlikely in one visit)
-    const restaurantIds = [...new Set(activeOrders.map(o => o.restaurantId))];
-    restaurantIds.forEach(id => socket.emit('join', id));
+    // Follow each order with the tracking token it was placed with
+    socket.on('connect', () => {
+      activeOrders.forEach(o => socket.emit('trackOrder', { orderId: o._id, token: o.trackingToken }));
+    });
 
     socket.on('orderUpdated', (updatedOrder) => {
       const prevOrder = activeOrders.find(o => o._id === updatedOrder._id);
 
       setActiveOrders(prev =>
-        prev.map(o => o._id === updatedOrder._id ? updatedOrder : o)
+        prev.map(o => o._id === updatedOrder._id ? { ...updatedOrder, trackingToken: o.trackingToken } : o)
       );
 
       // Celebration & Haptics on status change
