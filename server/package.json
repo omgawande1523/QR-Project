@@ -7,7 +7,7 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "seed": "node scripts/seed.js",
-    "test": "jest --passWithNoTests"
+    "test": "jest --runInBand"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
@@ -23,9 +23,19 @@
   },
   "devDependencies": {
     "jest": "^29.7.0",
-    "nodemon": "^3.0.1"
+    "mongodb-memory-server": "^10.4.3",
+    "nodemon": "^3.0.1",
+    "socket.io-client": "^4.8.4",
+    "supertest": "^7.3.1"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "setupFiles": [
+      "<rootDir>/tests/helpers/env.js"
+    ],
+    "testTimeout": 30000
   }
 }
