@@ -35,6 +35,9 @@ services:
         value: cloudinary
       - key: CLOUDINARY_URL
         sync: false
+      # Push notifications to the staff app: the Firebase service-account JSON (see README > Android staff app)
+      - key: FIREBASE_SERVICE_ACCOUNT
+        sync: false
       - key: EMAIL_USER
         sync: false
       - key: EMAIL_PASS

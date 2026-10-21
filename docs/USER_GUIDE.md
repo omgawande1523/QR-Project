@@ -17,7 +17,8 @@ knowledge. Words in **bold** are the buttons and labels you see on screen.
 10. [Analytics](#10-analytics)
 11. [Guest feedback](#11-guest-feedback)
 12. [What your guests see](#12-what-your-guests-see)
-13. [Tips and common questions](#13-tips-and-common-questions)
+13. [The QR Menu Staff app](#13-the-qr-menu-staff-app)
+14. [Tips and common questions](#14-tips-and-common-questions)
 
 ## 1. How QR Menu works
 
@@ -238,7 +239,81 @@ the latest comments. Filter to low ratings (**Needs attention**) to see what to 
 
 Guests can also add the menu to their home screen like an app.
 
-## 13. Tips and common questions
+## 13. The QR Menu Staff app
+
+QR Menu Staff is the app for you and your staff on Android phones and tablets. It has everything from the
+dashboard on the website, and adds alerts that ring even when the phone is in a pocket. Your guests do not need
+it: they keep ordering by scanning the table QR code.
+
+<p>
+  <img src="screenshots/app/orders.png" alt="Orders board in the app" width="200">
+  <img src="screenshots/app/menu-editor-camera.png" alt="Take photo and Choose from gallery in the dish editor" width="200">
+  <img src="screenshots/app/settings-devices.png" alt="Signed-in devices in Settings" width="200">
+</p>
+
+### Installing the app
+
+- Search for **QR Menu Staff** on Google Play and tap **Install**. (While the app is being tested you may get it
+  as a file instead: open the file on the phone and allow the install when Android asks.)
+- Open it and sign in with the **same email and password** you use on the website. Staff use their own logins.
+  New restaurants can tap **Create your restaurant** in the app.
+- The app opens on the right screen for each person: the kitchen display for Kitchen staff, the orders board for
+  waiters, and the dashboard home for owners and managers.
+
+### Order alerts
+
+The first time you sign in, Android asks whether QR Menu Staff may send notifications: tap **Allow**.
+
+| Alert | Who gets it | Sound |
+| --- | --- | --- |
+| New order | Owner, Manager, Kitchen | Three rising chimes |
+| Waiter called, or water, cutlery or the bill asked for | Owner, Manager, Waiter | A two-note bell |
+| Order ready to serve | Waiter | Two short high beeps |
+
+- Alerts arrive when the app is closed and the phone is locked. Tap one to go straight to that order.
+- To stop a kind of alert on one phone: **Settings > Notifications on this phone**, and turn that switch off.
+- If alerts stopped completely: Android **Settings > Apps > QR Menu Staff > Notifications**, and turn them on.
+  Some phones (Xiaomi, Oppo, Vivo, Realme) also need **Battery > No restrictions** for the app, or they hold back
+  alerts to save battery.
+
+### The kitchen tablet
+
+- Sign in on the kitchen tablet with a **Kitchen** login. The screen stays on while the kitchen display is open,
+  so it does not go dark in the middle of service.
+- Turn the tablet sideways for more tickets on screen. Tap the full-screen button to hide the status bar.
+- Pull down from the top of the screen to refresh.
+
+### Things the app does that the website cannot
+
+- **Take photo** and **Choose from gallery** when adding a dish photo or your logo.
+- **PNG** and **Download all (A4 PDF)** on Tables & QR, and **Share PDF** on a bill, open the share menu: send
+  them on WhatsApp, save them to Drive, or print them.
+- **Print** on a bill prints through Android's printing (any printer set up on the phone, or "Save as PDF").
+- If the internet drops, a black bar says so; orders update by themselves when you are back online.
+- When a new version is needed, the app asks you to update. Tap **Update** to go to the Play Store.
+
+### Signed-in devices and signing out
+
+**Settings > Signed-in devices** lists every browser and phone signed in to your login, with when it was last
+used.
+
+- **Sign out** next to a device signs it out at once. Use it for a lost phone or a staff member's old phone.
+- **Sign out everywhere else** signs out every other browser and phone; the one you are using stays signed in.
+- Changing your password also signs out all your other devices.
+- To sign out of the app: open the menu (☰) and tap **Log out** (on the kitchen display: the exit button at the
+  top left). Signing out stops that phone's alerts.
+
+### Deleting your account
+
+**Settings > Delete account** asks for your password, then deletes:
+
+- for an owner, the whole restaurant: menu, photos, orders and bills, guest ratings, staff logins and devices.
+  This cannot be undone, so download any bills you need first.
+- for a staff member, only their own login.
+
+The same is possible on the website at **/delete-account**.
+
+## 14. Tips and common questions
 
 **The internet goes down.** Guests see a page saying they are offline, and the menu comes back by itself when the
 connection returns. Keep your counter device on a stable connection; a mobile hotspot is a good backup.
@@ -256,8 +331,8 @@ bill. Online payment inside the menu is planned.
 
 **Where do I find old orders?** **Orders** > **History**, and pick a date.
 
-**Can I use QR Menu on my phone?** Yes. Open the website, log in, and choose "Install app" or "Add to Home
-screen" in your browser menu to get an app icon.
+**Can I use QR Menu on my phone?** Yes: install the **QR Menu Staff** app on Android (see chapter 13), or open
+the website, log in, and choose "Install app" or "Add to Home screen" in your browser menu.
 
 **I forgot my password.** Tap **Forgot password?** on the login page. Staff can ask the owner, who can remove
 and re-add them with a new temporary password.

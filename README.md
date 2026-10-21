@@ -3,7 +3,7 @@
 QR code menu and table ordering for restaurants and cafés, built for India. Guests scan the QR code on their
 table, browse the menu in English, Hindi or Marathi, order and follow their food live. The restaurant gets a
 live orders board, a kitchen display, staff logins, GST bills with a UPI QR code, sales analytics and guest
-feedback.
+feedback, on the website and in the **QR Menu Staff** Android app with push notifications.
 
 <p>
   <img src="docs/screenshots/customer-menu-375.png" alt="Customer menu on a phone" width="220">
@@ -11,7 +11,7 @@ feedback.
 </p>
 
 Restaurant owners: the plain-language guide is [docs/USER_GUIDE.md](docs/USER_GUIDE.md). Planned work is in
-[docs/ROADMAP.md](docs/ROADMAP.md).
+[docs/ROADMAP.md](docs/ROADMAP.md). Publishing the app: [docs/PLAY_STORE.md](docs/PLAY_STORE.md).
 
 ## Contents
 
@@ -24,6 +24,7 @@ Restaurant owners: the plain-language guide is [docs/USER_GUIDE.md](docs/USER_GU
 - [Demo data and logins](#demo-data-and-logins)
 - [Scripts and tests](#scripts-and-tests)
 - [Deployment](#deployment)
+- [Android staff app](#android-staff-app)
 - [How it works](#how-it-works)
 - [Resetting the database](#resetting-the-database)
 
@@ -49,6 +50,16 @@ Restaurant owners: the plain-language guide is [docs/USER_GUIDE.md](docs/USER_GU
 - Guest feedback with ratings, tags and comments
 - Staff accounts: Owner, Manager, Waiter and Kitchen, each seeing only what they need
 - Kitchen display (`/kitchen`) for a tablet or TV, with timers, Start / Bump and Recall
+- Signed-in devices in Settings: sign out one browser or phone, or everywhere; account deletion
+
+**QR Menu Staff (Android app)**
+- Every dashboard screen of the website, the same login and the same role rules; no guest screens
+- Push notifications with their own sounds: new orders (owner, manager, kitchen), waiter calls and bill
+  requests (owner, manager, waiter), orders ready to serve (waiter); tapping one opens the order
+- Take dish photos with the camera or pick them from the gallery; share QR codes and invoice PDFs to
+  WhatsApp or Drive; print receipts through Android's print service
+- Kitchen display keeps the screen on; reconnects and catches up after the phone sleeps or the network drops;
+  pull to refresh, back button, haptics, offline banner and update prompt
 
 **Quality**
 - Every screen is checked at 375, 768 and 1440 px: no sideways scrolling, 44 px tap targets, no WCAG 2.1 AA
@@ -73,6 +84,7 @@ All screens at 375 px and 1440 px are in [docs/screenshots](docs/screenshots).
 | Server | Node.js 22, Express 4, Mongoose 7 (MongoDB), Socket.io 4, zod validation, helmet, express-rate-limit, compression, sharp (images), nodemailer, JWT |
 | Image storage | Local disk (development) or Cloudinary (production) |
 | Tests | Jest + Supertest + mongodb-memory-server (server), Vitest + React Testing Library (client), Playwright + axe-core (end to end) |
+| Staff app | Capacitor 8 (Android, iOS-ready) packaging the same React screens; Keystore-backed secure storage, Firebase Cloud Messaging, camera, share, print |
 | Hosting | Client on Vercel or Netlify, API on Render, database on MongoDB Atlas |
 
 ## Folder structure
@@ -82,11 +94,14 @@ QR-Project/
 ├── client/                    React app (Vite)
 │   ├── public/                icons, service worker (sw.js), Netlify _redirects
 │   ├── site/assets.js         generated manifests, offline page, robots.txt, SEO tags, menu prefetch
+│   ├── site/app.js            staff app build settings (vite --mode app)
 │   ├── scripts/               icon, Open Graph image and chime generators; colour contrast check
 │   ├── src/
 │   │   ├── components/        FoodCard, ImagePicker, CropModal and ui/ (buttons, dialogs, fields...)
 │   │   ├── features/          customer/, owner/, kitchen/, auth/, landing/
-│   │   ├── lib/               API client, pricing, invoices, sockets, storage, helpers
+│   │   ├── lib/               API client, pricing, invoices, sockets, storage, platform layer, helpers
+│   │   ├── native/, app/      staff app only: secure storage, push, camera, share, print, app shell
+│   │   ├── App.jsx            the website's routes; StaffApp.jsx the app's; staffRoutes.jsx shared
 │   │   └── styles/            tokens.css (colours, type, spacing), base.css, components.css
 │   ├── vercel.json, netlify.toml
 │   └── vite.config.js
@@ -95,16 +110,19 @@ QR-Project/
 │   │   ├── config/            environment validation, MongoDB connection
 │   │   ├── controllers/, routes/, validators/, middleware/
 │   │   ├── models/            User (restaurant), MenuItem, Order, Staff, Upload, ServiceRequest...
-│   │   ├── services/          pricing, invoices, analytics, images, storage (local, Cloudinary), mailer
+│   │   ├── services/          pricing, invoices, analytics, images, storage (local, Cloudinary), mailer,
+│   │   │                      sessions, push (FCM)
 │   │   └── sockets/           live orders, menus and order tracking
 │   ├── scripts/               seed, upload cleanup, base64 image migration, guarded database reset
 │   └── tests/                 Jest test suites
-├── e2e/                       Playwright tests (flows, responsive and accessibility audit, keyboard)
-├── docs/                      USER_GUIDE.md, ROADMAP.md, screenshots/
+├── mobile/                    QR Menu Staff: Capacitor project (android/), app.config.json, build scripts
+├── e2e/                       Playwright tests (flows, responsive and accessibility audit, keyboard; app/)
+├── docs/                      USER_GUIDE.md, ROADMAP.md, PLAY_STORE.md, screenshots/
 ├── design-reference/          UI reference image
 ├── render.yaml                Render Blueprint for the API
 ├── playwright.config.js       end-to-end tests against the dev servers
 ├── playwright.prod.config.js  the same tests against a production build
+├── playwright.app.config.js   the staff app build at phone and tablet sizes
 └── package.json               scripts that drive both apps
 ```
 
@@ -179,6 +197,10 @@ Never commit `server\.env` or `client\.env`; `.gitignore` already excludes them.
 | `CLOUDINARY_FOLDER` | no | Cloudinary folder for this site's images. Default `qr-menu`. Use a different one per environment (e.g. `qr-menu-staging`). |
 | `UPLOAD_CLEANUP` | no | Set to `off` to stop the automatic removal of images that were uploaded but never used. On by default. |
 | `EMAIL_USER`, `EMAIL_PASS` | no | Gmail address and app password (Google account > Security > App passwords) for password-reset codes and landing-page enquiries. Leave blank to turn email off; password reset is then disabled. |
+| `FIREBASE_SERVICE_ACCOUNT` | for app push notifications | The Firebase service-account key (Project settings > Service accounts > Generate new private key): the JSON on one line, or the path to the `.json` file kept outside the repository. Empty: no push notifications. |
+| `APP_MIN_VERSION` | no | Staff app versions below this (e.g. `1.2.0`) must update before they can be used. Default `1.0.0`. |
+| `APP_LATEST_VERSION` | no | Staff app versions below this see a dismissible "Update available". Defaults to `APP_MIN_VERSION`. |
+| `APP_UPDATE_URL` | no | Where the app's Update button goes. Default: the Play Store page of `com.qrmenu.staff`. |
 
 ### client/.env
 
@@ -190,6 +212,10 @@ built**: after changing one on Vercel or Netlify, redeploy.
 | `VITE_API_URL` | Address of the API, no trailing slash. Default `http://localhost:5000`; in production e.g. `https://api.example.com`. |
 | `VITE_SOCKET_URL` | Socket.io address if it differs from the API (normally leave empty). |
 | `VITE_SITE_URL` | Public address of the client site, e.g. `https://menu.example.com`. Needed in production for link previews (Open Graph image), the canonical link and `sitemap.xml`. Empty in development. |
+| `VITE_CONTACT_EMAIL` | Support address shown on `/privacy` and `/delete-account` (must match the Play Store listing). Empty: those pages point to the contact form. |
+
+The staff app has its own file, `client/.env.app.local` (see `client/.env.app.example`): `VITE_API_URL`, `VITE_SITE_URL` and
+`VITE_CONTACT_EMAIL` for the app build. It does not read `client/.env`. See [Android staff app](#android-staff-app).
 
 ## Demo data and logins
 
@@ -216,15 +242,23 @@ Run from the repository root:
 
 | Script | What it does |
 | --- | --- |
-| `npm run install:all` | Installs root, server and client dependencies |
+| `npm run install:all` | Installs root, server, client and mobile dependencies |
 | `npm run dev` | API (nodemon) and client (Vite) together |
 | `npm run seed` | Loads the demo restaurant |
-| `npm test` | Server tests (Jest, 251 tests on an in-memory MongoDB) and client tests (Vitest, 41 tests) |
+| `npm test` | Server tests (Jest, 283 tests on an in-memory MongoDB) and client tests (Vitest) |
 | `npm run lint` | ESLint on the client |
 | `npm run build` | Production build of the client into `client/build` |
 | `npm start` | Starts the API (as Render does) |
 | `npm run e2e` | Playwright end-to-end tests against the dev servers (starts them if needed; run `npm run seed` first) |
 | `npm run e2e:prod` | Builds the client, starts the API with `NODE_ENV=production` and the built client as static files, then runs the same tests. Ports 3000 and 5000 must be free. |
+| `npm run e2e:app` | The staff app build in a browser at phone and tablet sizes: every role's screens, an order from the website menu to the app and back (ports 3000, 3001 and 5000) |
+| `npm run app:doctor` | Checks JDK 21, the Android SDK, plugin versions, Firebase and signing files |
+| `npm run app:build` | Builds the staff screens into `client/dist-app` and checks no guest code is in them |
+| `npm run app:sync` | `app:build`, then copies the screens and plugins into the Android project |
+| `npm run app:apk` | `app:sync`, then a debug APK for testing: `mobile/dist/qr-menu-staff-<version>-debug.apk` |
+| `npm run app:aab` | `app:sync`, then the signed release bundle for the Play Store: `mobile/dist/qr-menu-staff-<version>.aab` |
+| `npm run app:run` | `app:sync`, then installs and starts the app on a connected phone or running emulator |
+| `npm run app:open` | Opens the Android project in Android Studio |
 
 Other tools:
 
@@ -307,6 +341,7 @@ Switching drivers does not move existing images; set the driver before owners up
 | `PUBLIC_URL` | the API address, e.g. `https://qr-menu-api.onrender.com` |
 | `CLOUDINARY_URL` | from step 2 |
 | `EMAIL_USER`, `EMAIL_PASS` | Gmail address and app password, or leave empty |
+| `FIREBASE_SERVICE_ACCOUNT` | the Firebase service-account JSON for staff app notifications, or leave empty |
 
 **By hand**: New > Web Service > this repository, Root Directory `server`, Build Command `npm ci`, Start
 Command `node server.js`, Health Check Path `/health`, and the environment variables above plus
@@ -363,6 +398,112 @@ HTTPS certificates are issued automatically by all three hosts.
   it arrive on the dashboard
 - Upload a dish photo, redeploy the API, and check the photo is still there (it is in Cloudinary)
 - Locally, `npm run e2e:prod` runs the whole end-to-end suite against a production build before you deploy
+
+## Android staff app
+
+**QR Menu Staff** (`com.qrmenu.staff`) is the restaurant side of QR Menu as an Android app: the same React
+dashboard screens packaged with [Capacitor](https://capacitorjs.com), the same accounts and passwords as the
+website (sign in, sign up, reset), and exactly the same role rules. Guests never use it: the landing page,
+customer menu, cart and order tracking are not in the app, and the build fails if any of their code gets in.
+
+<p>
+  <img src="docs/screenshots/app/orders.png" alt="Orders board in the app" width="220">
+  <img src="docs/screenshots/app/kitchen-landscape.png" alt="Kitchen display in landscape" width="488">
+</p>
+
+### What the app adds
+
+| | |
+| --- | --- |
+| Push notifications | New order → owner, manager, kitchen. Waiter call, water, cutlery or bill → owner, manager, waiter. Order ready → waiter. Delivered with the app closed or the phone locked, each type on its own high-priority Android channel with its own sound; tapping opens the order (the kitchen opens its display). Each phone switches types on and off in Settings. |
+| Camera | Take photo / Choose from gallery in every image field, then the usual crop screen |
+| Share and print | Table QR codes and invoice PDFs open the share sheet (WhatsApp, Drive, Gmail...); Print uses Android's print service |
+| Kitchen display | Keeps the screen on while open; full screen hides the status bar; works in landscape on tablets |
+| Reliable live updates | Reconnects and refetches open orders when the app returns to the foreground or the network comes back; offline banner |
+| Phone basics | Back button closes dialogs and the menu first, then goes back, then leaves the app from the start screen; pull to refresh; haptics on status changes; status bar and splash in the brand colours; adaptive icon with a themed-icon layer |
+| Accounts | Login kept in Keystore-backed secure storage (not localStorage), renewed while in use (30 days); Settings shows signed-in devices; update prompt when the server asks for a newer version |
+
+### Requirements
+
+- **JDK 21**: [Eclipse Temurin 21](https://adoptium.net) or the one inside Android Studio. `JAVA_HOME` may stay on an
+  older JDK: the scripts look for 21 in the usual folders (or set `QRMENU_JAVA_HOME`).
+- **Android SDK** with Platform 36 and Build-Tools 36: [Android Studio](https://developer.android.com/studio) >
+  SDK Manager, or the command-line tools. Set `ANDROID_HOME` (usually `%LOCALAPPDATA%\Android\Sdk`).
+- Optional: the Android Emulator with an Android 36 Google Play system image.
+- `npm run install:all` installs `mobile/` too. `npm run app:doctor` checks everything.
+
+### Try it on the emulator
+
+1. Start the website and API as usual: `npm run seed`, then `npm run dev`.
+2. Start an emulator (Android Studio > Device Manager, or
+   `%LOCALAPPDATA%\Android\Sdk\emulator\emulator -avd <name>`).
+3. `npm run app:run` builds, installs and opens the app. It talks to `http://10.0.2.2:5000`, which is the PC as
+   seen from the emulator, and needs no settings.
+4. Sign in with a demo login, e.g. `demo@qrmenu.test` / `Demo@1234`.
+
+Dish photos you upload get their address from the server's `PUBLIC_URL`, which defaults to
+`http://localhost:5000`: on the emulator or a phone that is the device itself, so new photos would not show. Set
+`PUBLIC_URL=http://<PC address>:5000` in `server/.env` (the PC's IPv4 address from `ipconfig`; the website on
+the PC and the emulator reach it too) and restart the API. Not needed with Cloudinary or in production.
+
+### On your phone (same Wi-Fi as the PC)
+
+1. Find the PC's address with `ipconfig` (IPv4 Address, e.g. `192.168.1.20`).
+2. Create `client\.env.app.local`:
+   ```
+   VITE_API_URL=http://192.168.1.20:5000
+   VITE_SITE_URL=http://192.168.1.20:3000
+   ```
+3. `npm run app:apk`, then copy `mobile\dist\qr-menu-staff-<version>-debug.apk` to the phone (USB, Drive, or
+   WhatsApp to yourself) and open it; allow installing from that source when Android asks. Or connect the phone
+   with USB debugging on and run `npm run app:run`.
+4. Set `PUBLIC_URL=http://192.168.1.20:5000` in `server/.env` and restart the API, so photos you upload load
+   on the phone (see above).
+5. If the phone cannot reach the PC, allow Node.js through Windows Defender Firewall for private networks.
+
+Debug builds allow plain `http` to such a local address; release builds only talk `https`.
+
+### Push notifications (Firebase)
+
+1. In the [Firebase console](https://console.firebase.google.com) create a project and add an Android app with
+   the package name `com.qrmenu.staff`.
+2. Download `google-services.json` into `mobile/android/app/` (never committed). The next `app:apk` / `app:aab`
+   turns push on in the app.
+3. Project settings > Service accounts > Generate new private key. Put the file outside the repository and set
+   `FIREBASE_SERVICE_ACCOUNT` on the server to its path, or to the JSON itself on one line (on Render: the JSON).
+
+Without these files the app works the same, just without notifications.
+
+### Release
+
+Versions live in `mobile/app.config.json` (`versionName`, and `versionCode`, which must go up for every
+upload). `npm run app:aab` writes the signed bundle to `mobile/dist/`. The upload key is
+`D:\keys\qrmenu-staff.jks` with its passwords in `D:\keys\qrmenu-staff.properties` (and in
+`mobile/android/keystore.properties`, which git ignores); back both up. Listing text, Data safety answers and
+the Play Console steps: [docs/PLAY_STORE.md](docs/PLAY_STORE.md).
+
+### How it works
+
+- `vite build --mode app` builds `client/dist-app` from `src/main.app.jsx` and `StaffApp.jsx`, which share the
+  staff routes with the website through `src/staffRoutes.jsx`. A build plugin fails if a customer or landing
+  module is bundled, and `client/scripts/check-bundles.mjs` checks both outputs: no guest screens in the app, no
+  Capacitor code on the website.
+- `src/lib/platform.js` is the only switch: `IS_APP` is a build-time constant (the website build drops every
+  app branch), `isNative()` is true inside the installed app. App-only code sits in `src/native/` (secure
+  storage, push, camera, share, print, start-up) and `src/app/` (back button, notifications, offline banner,
+  update prompt). The app build opened in a normal browser falls back to web behaviour, which is how
+  `npm run e2e:app` tests it at phone and tablet sizes.
+- Logins are server-side sessions (`server/src/models/Session.js`): each token carries its session id, a phone's
+  push token belongs to its session, and signing out, changing or resetting a password, a staff role change or
+  deactivation ends the sessions concerned, the app's included, and drops their live connections.
+- Push messages are sent by the server through the FCM HTTP v1 API (`server/src/services/push`) right after the
+  database write, like the socket events.
+- The API allows the app's origins (`https://localhost` on Android, `capacitor://localhost` on iOS) for CORS and
+  Socket.io, exact matches only. Nothing needs adding on Render.
+- `GET /api/app-version` tells the app the minimum and latest versions (`APP_MIN_VERSION`,
+  `APP_LATEST_VERSION`).
+- iOS: the code is iOS-ready (no Android-only assumptions in the web code); adding it needs a Mac with Xcode:
+  `npx cap add ios` in `mobile/`.
 
 ## How it works
 

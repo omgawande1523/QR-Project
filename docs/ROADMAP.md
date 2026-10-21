@@ -34,12 +34,27 @@
   shutdown, JSON logs without sensitive data, `render.yaml`, Vercel and Netlify config, `npm run e2e:prod`.
 - ~~Full README, deployment guide and a user guide for restaurant owners~~ done.
 
-## Phase 6: next steps
+## Phase 6: QR Menu Staff, the Android app (done, 21 Oct 2026)
+
+- ~~Capacitor 8 app in `mobile/` packaging the dashboard screens (`vite build --mode app`), no guest code~~ done.
+- ~~Same accounts and role rules; signed-in device sessions with sign out per device and everywhere; password
+  changes end app sessions too; app origins allowed for CORS and Socket.io~~ done.
+- ~~Feature parity, plus camera photos, share sheet for QR codes and invoices, Android printing, kitchen screen
+  kept awake~~ done.
+- ~~Push notifications per role (FCM HTTP v1, mock sender in tests), per-device switches, reconnect and refetch on
+  foreground and network return, offline banner, back button, pull to refresh, haptics, icon and splash~~ done;
+  live push needs the Firebase project (`google-services.json` and `FIREBASE_SERVICE_ACCOUNT`).
+- ~~Debug APK, signed release AAB, versions in `mobile/app.config.json`, `/privacy`, `/delete-account`, account
+  deletion, `/api/app-version` update prompt, docs/PLAY_STORE.md~~ done.
+- Not done (optional): Bluetooth thermal printer receipts (ESC/POS, 58/80 mm) behind a setting.
+
+## Phase 7: next steps
 
 Suggested order. The first three turn the product into something that can be sold and run as a business.
 
 1. **Go live**: create the Atlas, Cloudinary, Render and Vercel/Netlify accounts, deploy with `render.yaml`,
-   connect the domain, then print QR codes from the final address. Add uptime monitoring on `/health`
+   connect the domain, then print QR codes from the final address. Set up Firebase and publish QR Menu Staff
+   (docs/PLAY_STORE.md). Add uptime monitoring on `/health`
    (UptimeRobot or Better Stack) and error alerts (Sentry for the client and the API).
 2. **Subscriptions and billing for selling the product**: the plans on the landing page (Starter, Growth,
    Business) become real. Razorpay Subscriptions with a free trial, plan limits enforced on the server (tables,
@@ -52,9 +67,10 @@ Suggested order. The first three turn the product into something that can be sol
    per-branch prices and availability), tables, staff and kitchen screen; analytics per branch and combined;
    staff who work at more than one branch.
 5. **Operations**: daily sales report by email or WhatsApp, simple stock tracking that marks dishes sold out
-   automatically, a print server for kitchen tickets on thermal printers, table merge and transfer, and split
-   bills.
+   automatically, Bluetooth thermal printers for receipts and kitchen tickets from the app, table merge and
+   transfer, and split bills.
 6. **Guests**: WhatsApp order updates, a loyalty stamp card, and dish recommendations ("goes well with").
 7. **Platform**: automated backups with a tested restore, a staging environment (`CLOUDINARY_FOLDER` and a
    second Atlas database), CI running `npm test`, `npm run lint` and `npm run e2e` on every pull request, and the
    rest of the interface (not just dish names) in Hindi and Marathi.
+8. **Staff app on iOS**: `npx cap add ios` on a Mac with Xcode, APNs key in Firebase, App Store listing.
