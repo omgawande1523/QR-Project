@@ -15,12 +15,14 @@ exports.root = (req, res) => {
   });
 };
 
+// 503 while the database is unreachable, so hosting health checks can restart or hold traffic.
 exports.health = (req, res) => {
-  res.json({
-    status: 'healthy',
+  const connected = mongoose.connection.readyState === 1;
+  res.status(connected ? 200 : 503).json({
+    status: connected ? 'healthy' : 'unhealthy',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+    mongodb: connected ? 'connected' : 'disconnected'
   });
 };
 

@@ -1,10 +1,13 @@
 const mongoose = require('mongoose');
 const config = require('./index');
 
-function connectDB() {
-  return mongoose.connect(config.mongoUri)
-    .then(() => console.log('Connected to MongoDB'))
-    .catch(err => console.error('MongoDB connection error:', err));
+// Rejects if MongoDB cannot be reached, so the server never starts without a database.
+async function connectDB() {
+  await mongoose.connect(config.mongoUri, { serverSelectionTimeoutMS: 10000 });
+  console.log(`Connected to MongoDB (${mongoose.connection.name})`);
+
+  mongoose.connection.on('disconnected', () => console.warn('MongoDB disconnected'));
+  mongoose.connection.on('reconnected', () => console.log('MongoDB reconnected'));
 }
 
 module.exports = connectDB;
