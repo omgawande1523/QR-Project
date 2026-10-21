@@ -9,6 +9,10 @@ const envSchema = z.object({
   JWT_SECRET: z.string({ required_error: 'JWT_SECRET is required' })
     .min(32, 'JWT_SECRET must be at least 32 characters'),
   FRONTEND_URL: z.string().optional(),
+  // Extra allowed browser origins, comma separated (FRONTEND_URL is always allowed)
+  CORS_ORIGINS: z.string().optional(),
+  // Number of reverse proxies in front of the app (1 on Render/Railway/Heroku), so rate limits see real IPs
+  TRUST_PROXY: z.coerce.number().int().min(0).default(0),
   EMAIL_USER: z.string().optional(),
   EMAIL_PASS: z.string().optional(),
   // Public base URL of this API, used to build links to uploaded images
@@ -46,12 +50,14 @@ const config = {
   }
 };
 
-config.allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'https://qrmenusystem.netlify.app',
-  'https://qrmenusystem.netlify.app/',
-  config.frontendUrl
-].filter(Boolean);
+const splitList = (value) => (value || '').split(',').map((s) => s.trim().replace(/\/+$/, '')).filter(Boolean);
+const DEV_ORIGINS = ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000'];
+
+config.trustProxy = env.TRUST_PROXY;
+config.allowedOrigins = [...new Set([
+  ...splitList(env.FRONTEND_URL),
+  ...splitList(env.CORS_ORIGINS),
+  ...(env.NODE_ENV === 'development' ? DEV_ORIGINS : [])
+])];
 
 module.exports = config;

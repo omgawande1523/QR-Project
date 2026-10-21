@@ -1,7 +1,7 @@
 const express = require('express');
 const users = require('../controllers/userController');
 const { verifyToken } = require('../middleware/auth');
-const { authLimiter } = require('../middleware/rateLimit');
+const { authLimiter, scanLimiter } = require('../middleware/rateLimit');
 const validate = require('../middleware/validate');
 const schemas = require('../validators/users');
 
@@ -14,7 +14,7 @@ router.post('/reset-password', authLimiter, validate(schemas.resetPassword), use
 
 // Public routes (no token) must come before the generic /:id routes
 router.get('/:id/public', validate(schemas.restaurantParam), users.getPublicProfile);
-router.post('/:id/scan/:tableNumber', validate(schemas.scan), users.recordScan);
+router.post('/:id/scan/:tableNumber', scanLimiter, validate(schemas.scan), users.recordScan);
 
 router.get('/:id', verifyToken, validate(schemas.restaurantParam), users.getProfile);
 router.put('/:id', verifyToken, validate(schemas.updateProfile), users.updateProfile);

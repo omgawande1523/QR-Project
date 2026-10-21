@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const config = require('../config');
 
 exports.root = (req, res) => {
   res.json({
@@ -28,7 +27,6 @@ exports.health = (req, res) => {
 exports.apiInfo = (req, res) => {
   res.json({
     message: 'QR Menu API v1.0.0',
-    documentation: 'Available endpoints: /api/users, /api/menu, /api/orders',
-    cors: config.allowedOrigins
+    documentation: 'Available endpoints: /api/users, /api/menu, /api/orders'
   });
 };

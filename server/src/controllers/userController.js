@@ -126,9 +126,16 @@ exports.getPublicProfile = asyncHandler(async (req, res) => {
 // Scan analytics: increment the scan count for a table
 exports.recordScan = asyncHandler(async (req, res) => {
   const { id, tableNumber } = req.params;
-  const user = await User.findByIdAndUpdate(id, { $inc: { [`tableStats.${tableNumber}`]: 1 } }, { new: true });
-  if (!user) throw AppError.notFound('Restaurant not found');
-  res.json({ message: 'Scan recorded', stats: user.tableStats });
+  // Count only real tables; the stats themselves are for the owner, not the public.
+  const updated = await User.findOneAndUpdate(
+    { _id: id, tables: tableNumber },
+    { $inc: { [`tableStats.${tableNumber}`]: 1 } }
+  ).select('_id');
+  if (!updated) {
+    if (!await User.exists({ _id: id })) throw AppError.notFound('Restaurant not found');
+    throw AppError.badRequest('Unknown table number', 'UNKNOWN_TABLE');
+  }
+  res.json({ message: 'Scan recorded' });
 });
 
 exports.getProfile = asyncHandler(async (req, res) => {

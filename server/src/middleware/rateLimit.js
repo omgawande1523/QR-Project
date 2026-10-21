@@ -1,25 +1,22 @@
 const rateLimit = require('express-rate-limit');
 const config = require('../config');
 
-const skipInTests = () => config.env === 'test';
+// Limits are per client IP. Behind a reverse proxy set TRUST_PROXY, or every customer shares one IP.
+// Customers at one restaurant may share its Wi-Fi IP, so the public limits leave room for a busy venue.
+function limiter(windowMinutes, max, message) {
+  return rateLimit({
+    windowMs: windowMinutes * 60 * 1000,
+    max,
+    message: { message, code: 'RATE_LIMITED' },
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: () => config.env === 'test'
+  });
+}
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // Limit each IP to 20 requests per windowMs
-  message: { message: 'Too many attempts, please try again later', code: 'RATE_LIMITED' },
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: skipInTests
-});
+const authLimiter = limiter(15, 20, 'Too many attempts, please try again later');
+const orderLimiter = limiter(5, 60, 'Too many orders from this network, please wait a moment');
+const serviceRequestLimiter = limiter(5, 30, 'Too many requests, please wait a moment');
+const scanLimiter = limiter(5, 120, 'Too many requests, please slow down');
 
-// Unauthenticated writes from customer phones (orders, waiter calls, scan counts).
-const publicWriteLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000, // 5 minutes
-  max: 30,
-  message: { message: 'Too many requests, please slow down', code: 'RATE_LIMITED' },
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: skipInTests
-});
-
-module.exports = { authLimiter, publicWriteLimiter };
+module.exports = { authLimiter, orderLimiter, serviceRequestLimiter, scanLimiter };
