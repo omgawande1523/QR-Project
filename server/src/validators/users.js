@@ -21,6 +21,10 @@ exports.login = {
   })
 };
 
+exports.deleteAccount = {
+  body: z.object({ password: z.string().min(1, 'Enter your password').max(128) })
+};
+
 exports.forgotPassword = {
   body: z.object({ email })
 };
