@@ -23,17 +23,20 @@ export function Button({ variant = 'primary', size = 'md', block = false, loadin
 // Round icon button; `label` is required because there is no visible text.
 export function IconButton({ label, variant, count, className = '', children, to, ...rest }) {
   const classes = ['icon-btn', variant, className].filter(Boolean).join(' ');
-  const badge = count > 0 ? <span className="count" aria-hidden="true">{count > 99 ? '99+' : count}</span> : null;
+  const shown = count > 99 ? '99+' : count;
+  const badge = count > 0 ? <span className="count" aria-hidden="true">{shown}</span> : null;
+  // "Table requests, 3": the name contains the visible badge (no parentheses; WCAG 2.5.3).
+  const name = count > 0 ? `${label}, ${shown}` : label;
   if (to) {
     return (
-      <Link to={to} className={classes} aria-label={count > 0 ? `${label} (${count})` : label} {...rest}>
+      <Link to={to} className={classes} aria-label={name} {...rest}>
         {children}
         {badge}
       </Link>
     );
   }
   return (
-    <button type="button" className={classes} aria-label={count > 0 ? `${label} (${count})` : label} title={label} {...rest}>
+    <button type="button" className={classes} aria-label={name} title={label} {...rest}>
       {children}
       {badge}
     </button>

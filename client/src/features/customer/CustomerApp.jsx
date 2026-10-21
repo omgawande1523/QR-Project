@@ -23,7 +23,7 @@ function CustomerShell() {
   if (status === 'error') {
     return (
       <main className="customer-app">
-        <EmptyState icon={<RefreshCw size={28} />} title="Menu unavailable" action={<Button onClick={reload}>Try again</Button>}>
+        <EmptyState heading="h1" icon={<RefreshCw size={28} />} title="Menu unavailable" action={<Button onClick={reload}>Try again</Button>}>
           {error}
         </EmptyState>
       </main>
@@ -70,7 +70,7 @@ export function MenuLauncher() {
   if (last) return <Navigate to={`/menu/${last}/browse`} replace />;
   return (
     <main className="customer-app">
-      <EmptyState icon={<QrCode size={28} />} title="Scan the QR code on your table" action={<Button to="/">About {APP_NAME}</Button>}>
+      <EmptyState heading="h1" icon={<QrCode size={28} />} title="Scan the QR code on your table" action={<Button to="/">About {APP_NAME}</Button>}>
         Each table has a QR code that opens the restaurant's menu.
       </EmptyState>
     </main>

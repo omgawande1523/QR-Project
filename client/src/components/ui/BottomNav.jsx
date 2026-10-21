@@ -23,7 +23,11 @@ export function BottomNav({ items, center, label = 'Main' }) {
   return (
     <nav className="bottom-nav no-print" aria-label={label}>
       {items.slice(0, half).map(renderItem)}
-      <NavLink to={center.to} className="bottom-nav-center" aria-label={center.count ? `${center.label} (${center.count})` : center.label}>
+      <NavLink
+        to={center.to}
+        className="bottom-nav-center"
+        aria-label={center.count ? `${center.label}, ${center.count} ${center.count === 1 ? 'item' : 'items'}` : center.label}
+      >
         {center.icon}
         {center.count > 0 && <span key={center.count} className="count pop" aria-hidden="true">{center.count}</span>}
       </NavLink>

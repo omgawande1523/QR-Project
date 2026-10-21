@@ -24,13 +24,14 @@ export function AuthLayout({ title, subtitle, children, footer }) {
   usePageTitle(title);
   return (
     <div className="auth">
-      <aside className="auth-aside" aria-hidden="true">
+      {/* On wide screens this holds the only link home, so it stays visible to screen readers. */}
+      <aside className="auth-aside" aria-label={`About ${APP_NAME}`}>
         <Brand light />
         <div>
           <h2 className="auth-aside-title">Run your restaurant from one screen.</h2>
           <ul className="auth-points">
             {POINTS.map(({ Icon, text }) => (
-              <li key={text}><span><Icon size={18} /></span>{text}</li>
+              <li key={text}><span aria-hidden="true"><Icon size={18} /></span>{text}</li>
             ))}
           </ul>
         </div>

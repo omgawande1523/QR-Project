@@ -38,7 +38,7 @@ test('new order appears live on the board and moves with one tap', async ({ page
 
   // A waiter call reaches the bell in the top bar
   await request.post(`${API}/api/service-requests`, { data: { restaurantId, tableNumber: 4, type: 'Water' } });
-  await page.getByRole('button', { name: /Table requests \(\d+\)/ }).click();
+  await page.getByRole('button', { name: /^Table requests, \d+$/ }).click();
   await expect(page.getByRole('dialog', { name: 'Table requests' }).getByText('T4').first()).toBeVisible();
 });
 

@@ -38,11 +38,12 @@ export function Skeleton({ width = '100%', height = 16, radius, style, className
   return <span className={`skeleton ${className}`} aria-hidden="true" style={{ display: 'block', width, height, borderRadius: radius, ...style }} />;
 }
 
-export function EmptyState({ icon, title, children, action }) {
+// `heading`: "h1" when the empty state is the whole page (404, menu unavailable), so the page has a title.
+export function EmptyState({ icon, title, children, action, heading: Heading = 'h3' }) {
   return (
     <div className="empty-state">
       {icon && <div className="empty-state-icon" aria-hidden="true">{icon}</div>}
-      <h3>{title}</h3>
+      <Heading className="empty-state-title">{title}</Heading>
       {children && <p>{children}</p>}
       {action}
     </div>

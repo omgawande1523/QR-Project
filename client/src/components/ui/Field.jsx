@@ -43,10 +43,11 @@ export function SelectField({ label, hint, error, options, className, ...selectP
   );
 }
 
-export function Switch({ checked, onChange, label, disabled }) {
+// `ariaLabel` names the switch when the visible label can be hidden (e.g. on small screens).
+export function Switch({ checked, onChange, label, disabled, ariaLabel }) {
   return (
     <label className="switch">
-      <input type="checkbox" role="switch" checked={checked} onChange={(e) => onChange(e.target.checked)} disabled={disabled} />
+      <input type="checkbox" role="switch" checked={checked} onChange={(e) => onChange(e.target.checked)} disabled={disabled} aria-label={ariaLabel} />
       <span className="switch-track" aria-hidden="true" />
       {label}
     </label>

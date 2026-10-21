@@ -90,6 +90,7 @@ function RequestsSheet({ open, onClose }) {
 function Topbar({ onMenu }) {
   const { profile, saveProfile, requests, connected, role } = useOwner();
   const [requestsOpen, setRequestsOpen] = useState(false);
+  const acceptingText = profile?.acceptingOrders !== false ? 'Accepting orders' : 'Orders paused';
   return (
     <header className="topbar no-print">
       <IconButton label="Open menu" className="topbar-menu" onClick={onMenu}><MenuIcon size={20} /></IconButton>
@@ -105,7 +106,8 @@ function Topbar({ onMenu }) {
           <Switch
             checked={profile.acceptingOrders !== false}
             onChange={(on) => saveProfile({ acceptingOrders: on }, { silent: true })}
-            label={<span className="hide-sm">{profile.acceptingOrders !== false ? 'Accepting orders' : 'Orders paused'}</span>}
+            label={<span className="hide-sm">{acceptingText}</span>}
+            ariaLabel={acceptingText}
           />
         </div>
       )}
