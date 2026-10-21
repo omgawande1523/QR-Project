@@ -11,9 +11,12 @@ their table, browse the menu, and place orders; the restaurant sees orders live 
 ```
 QR-Project/
 ├── client/            React 18 app (Vite)
+│   └── src/           features/{customer,owner,auth,landing}, components/ui, lib, styles
 ├── server/            Express + Mongoose + Socket.io API
 │   └── scripts/       maintenance scripts (seed, guarded reset)
 ├── design-reference/  brand colour and UI references
+├── docs/              screenshots, roadmap
+├── e2e/               Playwright end-to-end tests
 └── package.json       root scripts that drive both apps
 ```
 
@@ -65,6 +68,7 @@ is taken, Vite uses the next free port (3001 is already allowed by the API in de
 | `npm run seed` | Loads demo data |
 | `npm test` | Runs server tests (Jest + Supertest) and client tests (Vitest) |
 | `npm run lint` | Lints the client |
+| `npm run e2e` | Playwright end-to-end tests (run `npm run seed` first; starts the dev servers if needed) |
 
 ## Demo data
 
@@ -75,6 +79,23 @@ npm run seed
 Creates the demo restaurant **Olive Leaf Café** (22 dishes with photos, 5 tables, sample orders and a pending
 waiter call) and prints its customer-menu link. Log in to the dashboard with **demo@qrmenu.test / Demo@1234**.
 Re-running replaces only the demo account's own data. Image credits: `server/scripts/seed-assets/CREDITS.md`.
+
+## Screens
+
+| Area | Routes |
+| --- | --- |
+| Marketing | `/` landing page, `/demo` opens the demo café |
+| Customer (from a table QR code) | `/menu/:restaurantId?table=N` welcome, `/browse` menu, `/item/:id`, `/cart`, `/orders`, `/orders/:id` live tracking |
+| Owner | `/login`, `/register`, `/dashboard` home, `/dashboard/orders`, `/dashboard/menu`, `/dashboard/tables`, `/dashboard/settings` |
+
+Screenshots at 375px and 1440px are in [docs/screenshots](docs/screenshots). The planned next steps are in
+[docs/ROADMAP.md](docs/ROADMAP.md).
+
+### Design system
+
+All colours, type, radii, shadows and spacing are tokens in `client/src/styles/tokens.css` (olive scale around
+`--olive-500`, cream background, ink text). Filled buttons use `--olive-700` with white text so they pass WCAG AA;
+light olive is only used under dark text. Reusable components live in `client/src/components/ui`.
 
 ## Environment variables
 
