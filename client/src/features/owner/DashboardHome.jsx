@@ -111,7 +111,7 @@ export default function DashboardHome() {
         <Card className="stack">
           <div className="row-between">
             <h2 className="card-title">Live orders</h2>
-            <Link to="/dashboard/orders" className="text-sm bold">All orders <ArrowRight size={14} style={{ display: 'inline', verticalAlign: '-2px' }} /></Link>
+            <Link to="/dashboard/orders" className="text-sm bold tap-link">All orders <ArrowRight size={14} aria-hidden="true" /></Link>
           </div>
           {stats.active.length === 0 ? (
             <EmptyState icon={<ShoppingBag size={28} />} title="No active orders">New orders appear here instantly.</EmptyState>

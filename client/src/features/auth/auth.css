@@ -7,7 +7,7 @@
 .auth-footer { font-size: var(--text-sm); color: var(--muted); }
 .auth-footer a { font-weight: var(--weight-bold); }
 
-.brand { display: inline-flex; align-items: center; gap: var(--space-2); font-weight: var(--weight-extrabold); font-size: var(--text-lg); color: var(--ink); }
+.brand { display: inline-flex; align-items: center; min-height: var(--tap); gap: var(--space-2); font-weight: var(--weight-extrabold); font-size: var(--text-lg); color: var(--ink); }
 .brand:hover { text-decoration: none; }
 .brand-mark { width: 36px; height: 36px; border-radius: 12px; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; }
 .brand-light { color: #fff; }

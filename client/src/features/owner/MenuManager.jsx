@@ -219,7 +219,9 @@ export default function MenuManager() {
               <ul className="item-rows">
                 {visible.map((item) => (
                   <li key={item._id} className={`item-row ${item.available ? '' : 'is-sold-out'}`}>
-                    <input type="checkbox" checked={selected.has(item._id)} onChange={() => toggleSelect(item._id)} aria-label={`Select ${item.name}`} />
+                    <label className="item-check">
+                      <input type="checkbox" checked={selected.has(item._id)} onChange={() => toggleSelect(item._id)} aria-label={`Select ${item.name}`} />
+                    </label>
                     {item.image ? <img src={item.image} alt="" width="56" height="56" loading="lazy" /> : <span className="item-thumb" />}
                     <div className="grow" style={{ minWidth: 0 }}>
                       <div className="row" style={{ gap: 6 }}>

@@ -47,7 +47,7 @@ export default function LoginPage() {
         <PasswordField value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
         <div className="row-between">
           <span />
-          <Link to="/forgot-password" className="text-sm bold">Forgot password?</Link>
+          <Link to="/forgot-password" className="text-sm bold tap-link">Forgot password?</Link>
         </div>
         {error && <div className="notice notice-danger" role="alert">{error}</div>}
         <Button type="submit" size="lg" block loading={loading} disabled={!identifier || !password}>Log in</Button>

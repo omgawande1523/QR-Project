@@ -4,7 +4,8 @@ import { Minus, Plus, Trash2 } from 'lucide-react';
 export function QuantityStepper({ value, onChange, min = 1, max = 50, size = 'md', tone, removable = false, label = 'Quantity', className = '' }) {
   const atMin = value <= min;
   const showBin = removable && value <= 1;
-  const classes = ['stepper', size === 'sm' && 'stepper-sm', tone === 'on-primary' && 'stepper-on-primary', className].filter(Boolean).join(' ');
+  // Both sizes keep 44 px tap targets; "sm" only uses smaller icons.
+  const classes = ['stepper', tone === 'on-primary' && 'stepper-on-primary', className].filter(Boolean).join(' ');
   const iconSize = size === 'sm' ? 16 : 18;
   return (
     <div className={classes} role="group" aria-label={label}>

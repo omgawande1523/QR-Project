@@ -95,6 +95,8 @@ a:hover {
 .price { font-weight: var(--weight-extrabold); font-variant-numeric: tabular-nums; }
 .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+/* A text link on its own line, still a 44 px tap target ("Forgot password?") */
+.tap-link { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--tap); }
 
 .sr-only {
   position: absolute;

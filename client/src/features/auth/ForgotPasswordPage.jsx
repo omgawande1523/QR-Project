@@ -40,7 +40,7 @@ export default function ForgotPasswordPage() {
           <TextField label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required autoFocus />
           {error && <div className="notice notice-danger" role="alert">{error}</div>}
           <Button type="submit" size="lg" block loading={loading} disabled={!email.trim()}>Send reset code</Button>
-          <Link to="/reset-password" className="text-sm bold" style={{ textAlign: 'center' }}>I already have a code</Link>
+          <Link to="/reset-password" className="text-sm bold tap-link" style={{ alignSelf: 'center' }}>I already have a code</Link>
         </form>
       )}
     </AuthLayout>

@@ -6,7 +6,7 @@
 .landing-nav { position: sticky; top: 0; z-index: 40; background: rgba(250, 246, 238, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid var(--cream-300); }
 .landing-nav-inner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: 68px; }
 .landing-links { display: none; align-items: center; gap: var(--space-6); font-weight: var(--weight-semibold); }
-.landing-links a { color: var(--ink); }
+.landing-links a { color: var(--ink); min-height: var(--tap); padding-inline: 6px; display: inline-flex; align-items: center; }
 .landing-links.is-open {
   display: flex;
   position: absolute;
