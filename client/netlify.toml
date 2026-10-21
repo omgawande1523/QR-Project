@@ -1,0 +1,20 @@
+# Netlify: set the base directory to "client"; everything else is read from here.
+# Page routes fall back to index.html through public/_redirects.
+[build]
+  command = "npm run build"
+  publish = "build"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# File names under /assets contain a content hash, so browsers may keep them for a year.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# The service worker must always be checked for updates.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"

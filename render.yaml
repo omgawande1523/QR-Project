@@ -1,0 +1,41 @@
+# Render Blueprint for the API: Render dashboard > New > Blueprint > pick this repository.
+# Render asks for every value marked sync: false. See README.md > Deployment for what each one is.
+services:
+  - type: web
+    name: qr-menu-api
+    runtime: node
+    # Starter or above: free instances sleep after 15 minutes without traffic, so the first guest of the
+    # day waits ~a minute and live order updates drop.
+    plan: starter
+    region: singapore # closest Render region to India
+    rootDir: server
+    buildCommand: npm ci
+    startCommand: node server.js
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "1"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MONGODB_URI
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: PUBLIC_URL
+        sync: false
+      # Render's disk is wiped on every deploy, so images go to Cloudinary.
+      - key: STORAGE_DRIVER
+        value: cloudinary
+      - key: CLOUDINARY_URL
+        sync: false
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
