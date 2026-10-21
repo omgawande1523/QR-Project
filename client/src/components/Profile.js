@@ -132,10 +132,12 @@ const Profile = () => {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
 
-      await axios.post(`${API_BASE_URL}/api/users/${userId}/change-password`, {
+      const response = await axios.post(`${API_BASE_URL}/api/users/${userId}/change-password`, {
         currentPassword: passwordChange.currentPassword,
         newPassword: passwordChange.newPassword
       }, { headers });
+      // Changing the password signs out every other session; keep this one with the new token.
+      if (response.data.token) localStorage.setItem('token', response.data.token);
 
       setSuccess('Password changed successfully!');
       setPasswordChange({ currentPassword: '', newPassword: '', confirmPassword: '' });

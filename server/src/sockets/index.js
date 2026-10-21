@@ -1,8 +1,7 @@
-const jwt = require('jsonwebtoken');
-const config = require('../config');
 const Order = require('../models/Order');
 const { rooms } = require('./io');
 const safeEqual = require('../utils/safeEqual');
+const { verifySessionToken } = require('../services/auth');
 
 const OBJECT_ID = /^[a-f\d]{24}$/i;
 
@@ -10,13 +9,12 @@ const OBJECT_ID = /^[a-f\d]{24}$/i;
 function authenticate(socket, next) {
   const token = socket.handshake.auth?.token;
   if (!token) return next();
-  try {
-    const decoded = jwt.verify(token, config.jwtSecret);
-    socket.data.userId = String(decoded.userId);
-    next();
-  } catch (err) {
-    next(new Error('unauthorized'));
-  }
+  verifySessionToken(token)
+    .then(({ userId }) => {
+      socket.data.userId = userId;
+      next();
+    })
+    .catch(() => next(new Error('unauthorized')));
 }
 
 function reply(ack, body) {
