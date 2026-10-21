@@ -33,7 +33,6 @@ const Menu = () => {
   const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
   const [showServiceMenu, setShowServiceMenu] = useState(false);
   const [serviceLoading, setServiceLoading] = useState(false);
-  const [socket, setSocket] = useState(null);
   const [serviceConfirmation, setServiceConfirmation] = useState(null);
 
   // Multi-sensory feedback helper
@@ -102,7 +101,6 @@ const Menu = () => {
 
   useEffect(() => {
     const s = io(SOCKET_URL);
-    setSocket(s);
     s.emit('join', userId);
 
     s.on('menuUpdated', (updatedItem) => {
@@ -310,7 +308,7 @@ const Menu = () => {
     }
   };
 
-  const handleRequestService = (type) => {
+  const handleRequestService = async (type) => {
     let currentTable = tableNumber;
 
     // Fallback: Try fetching from active orders if local state is empty
@@ -335,30 +333,29 @@ const Menu = () => {
       setCustomerName(currentName);
     }
 
-    if (!socket || !currentTable) {
-      if (!socket) alert('Connecting to server... Please try again in a moment.');
+    if (!currentTable) {
       setShowServiceMenu(false);
       return;
     }
 
     setServiceLoading(true);
-    socket.emit('serviceRequest', {
-      type,
-      tableNumber: currentTable,
-      restaurantId: userId,
-      customerName: currentName,
-      timestamp: new Date()
-    });
-
-    triggerHaptic([100, 50, 100]);
-
-    setTimeout(() => {
-      setServiceLoading(false);
-      setShowServiceMenu(false);
+    try {
+      await axios.post(`${API_BASE_URL}/api/service-requests`, {
+        type,
+        tableNumber: currentTable,
+        restaurantId: userId,
+        customerName: currentName
+      });
+      triggerHaptic([100, 50, 100]);
       setServiceConfirmation({ type, table: currentTable });
       // Clear confirmation after 4 seconds
       setTimeout(() => setServiceConfirmation(null), 4000);
-    }, 1000);
+    } catch (error) {
+      alert(error.response?.data?.message || 'Could not send your request. Please try again.');
+    } finally {
+      setServiceLoading(false);
+      setShowServiceMenu(false);
+    }
   };
 
   const handleShareMenu = async () => {

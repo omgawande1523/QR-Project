@@ -78,7 +78,7 @@ const Dashboard = () => {
           axios.get(`${API_BASE_URL}/api/menu/${userId}`),
           axios.get(`${API_BASE_URL}/api/orders`, { headers }),
           axios.get(`${API_BASE_URL}/api/users/${userId}`, { headers }),
-          axios.get(`${API_BASE_URL}/api/service-requests/${userId}`)
+          axios.get(`${API_BASE_URL}/api/service-requests`, { headers })
         ]);
         setMenuItems(menuRes.data);
         setOrders(ordersRes.data);
@@ -258,7 +258,8 @@ const Dashboard = () => {
 
   const clearServiceRequest = async (id) => {
     try {
-      await axios.delete(`${API_BASE_URL}/api/service-requests/${id}`);
+      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      await axios.delete(`${API_BASE_URL}/api/service-requests/${id}`, { headers });
       setServiceRequests(prev => prev.filter(r => r._id !== id && r.id !== id));
       addNotification('Service request handled');
     } catch (err) {

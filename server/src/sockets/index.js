@@ -1,5 +1,3 @@
-const ServiceRequest = require('../models/ServiceRequest');
-
 function registerSocketHandlers(io) {
   io.on('connection', (socket) => {
     console.log('Socket connected:', socket.id);
@@ -19,25 +17,6 @@ function registerSocketHandlers(io) {
         console.log(`Menu updated for restaurant ${restaurantId}`);
       } else {
         io.emit('menuUpdated', updatedItem);
-      }
-    });
-
-    socket.on('serviceRequest', async (data) => {
-      const { restaurantId, type, tableNumber, customerName } = data;
-      if (restaurantId) {
-        try {
-          const newReq = new ServiceRequest({
-            restaurantId,
-            type,
-            tableNumber,
-            customerName: customerName || 'Guest'
-          });
-          await newReq.save();
-          io.to(restaurantId.toString()).emit('serviceRequest', { ...data, _id: newReq._id });
-          console.log(`Service request (${type}) saved and broadcast for restaurant ${restaurantId}`);
-        } catch (err) {
-          console.error('Error saving service request:', err);
-        }
       }
     });
 

@@ -1,9 +1,15 @@
-const { z, objectId } = require('./common');
+const { z, objectId, tableNumber } = require('./common');
+const ServiceRequest = require('../models/ServiceRequest');
 
-exports.listPending = {
-  params: z.object({ restaurantId: objectId })
+exports.create = {
+  body: z.object({
+    restaurantId: objectId,
+    tableNumber,
+    type: z.enum(ServiceRequest.TYPES, { errorMap: () => ({ message: 'Unknown request type' }) }),
+    customerName: z.string().trim().max(60).optional()
+  })
 };
 
-exports.remove = {
+exports.handle = {
   params: z.object({ id: objectId })
 };

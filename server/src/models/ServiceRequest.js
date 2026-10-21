@@ -1,12 +1,18 @@
 const mongoose = require('mongoose');
 
+const SERVICE_REQUEST_TYPES = ['Waiter', 'Water', 'Cutlery', 'Bill'];
+
 const serviceRequestSchema = new mongoose.Schema({
-  restaurantId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  type: String,
-  tableNumber: String,
-  customerName: String,
+  restaurantId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  type: { type: String, enum: SERVICE_REQUEST_TYPES, required: true },
+  tableNumber: { type: Number, required: true },
+  customerName: { type: String, default: 'Guest' },
   timestamp: { type: Date, default: Date.now },
-  status: { type: String, default: 'pending' } // pending, handled
+  status: { type: String, enum: ['pending', 'handled'], default: 'pending' },
+  handledAt: Date
 });
 
-module.exports = mongoose.model('ServiceRequest', serviceRequestSchema);
+const ServiceRequest = mongoose.model('ServiceRequest', serviceRequestSchema);
+ServiceRequest.TYPES = SERVICE_REQUEST_TYPES;
+
+module.exports = ServiceRequest;
