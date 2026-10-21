@@ -1,5 +1,8 @@
-import { useState } from 'react';
-import { Outlet, useLocation, useParams } from 'react-router';
+import { useEffect, useState } from 'react';
+import { Navigate, Outlet, useLocation, useParams } from 'react-router';
+import { QrCode } from 'lucide-react';
+import { local } from '../../lib/storage';
+import { APP_NAME } from '../../config';
 import { Home, Search, ShoppingBag, ClipboardList, ConciergeBell, RefreshCw } from 'lucide-react';
 import { CustomerProvider, useCustomer } from './CustomerContext';
 import { BottomNav, Button, EmptyState } from '../../components/ui';
@@ -45,9 +48,37 @@ function CustomerShell() {
   );
 }
 
+const LAST_MENU = 'qr.lastMenu';
+
+// While a guest is on a menu, "Install app" installs the menu (start page /menu/) instead of the dashboard.
+function useMenuManifest(restaurantId) {
+  useEffect(() => {
+    local.set(LAST_MENU, restaurantId);
+    const link = document.querySelector('link[rel="manifest"]');
+    if (!link) return undefined;
+    const previous = link.getAttribute('href');
+    link.setAttribute('href', '/menu.webmanifest');
+    return () => link.setAttribute('href', previous);
+  }, [restaurantId]);
+}
+
+// /menu/ is the installed menu app's start page: reopen the restaurant the guest last visited.
+export function MenuLauncher() {
+  const last = local.get(LAST_MENU, null);
+  if (last) return <Navigate to={`/menu/${last}/browse`} replace />;
+  return (
+    <main className="customer-app">
+      <EmptyState icon={<QrCode size={28} />} title="Scan the QR code on your table" action={<Button to="/">About {APP_NAME}</Button>}>
+        Each table has a QR code that opens the restaurant's menu.
+      </EmptyState>
+    </main>
+  );
+}
+
 // Route element for /menu/:restaurantId/* (opened by scanning a table QR code).
 export default function CustomerApp() {
   const { restaurantId } = useParams();
+  useMenuManifest(restaurantId);
   return (
     <CustomerProvider key={restaurantId} restaurantId={restaurantId}>
       <CustomerShell />

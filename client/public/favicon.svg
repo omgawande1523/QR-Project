@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#656c1c"/>
+  <!-- QR Menu app mark: three QR finder squares and a serving dome. Colours: olive-700 and cream-bg tokens. -->
+  <g fill="#faf6ee">
+    <path fill-rule="evenodd" d="M96 120a24 24 0 0 1 24-24h72a24 24 0 0 1 24 24v72a24 24 0 0 1-24 24h-72a24 24 0 0 1-24-24zm28 4v64h64v-64z"/>
+    <rect x="140" y="140" width="32" height="32" rx="6"/>
+    <path fill-rule="evenodd" d="M296 120a24 24 0 0 1 24-24h72a24 24 0 0 1 24 24v72a24 24 0 0 1-24 24h-72a24 24 0 0 1-24-24zm28 4v64h64v-64z"/>
+    <rect x="340" y="140" width="32" height="32" rx="6"/>
+    <path fill-rule="evenodd" d="M96 320a24 24 0 0 1 24-24h72a24 24 0 0 1 24 24v72a24 24 0 0 1-24 24h-72a24 24 0 0 1-24-24zm28 4v64h64v-64z"/>
+    <rect x="140" y="340" width="32" height="32" rx="6"/>
+    <rect x="240" y="96" width="32" height="32" rx="6"/>
+    <rect x="240" y="152" width="32" height="32" rx="6"/>
+    <rect x="96" y="240" width="32" height="32" rx="6"/>
+    <rect x="152" y="240" width="32" height="32" rx="6"/>
+    <rect x="240" y="240" width="32" height="32" rx="6"/>
+    <!-- serving dome -->
+    <circle cx="356" cy="300" r="11"/>
+    <path d="M298 384a58 58 0 0 1 116 0z"/>
+    <rect x="284" y="392" width="144" height="20" rx="10"/>
+  </g>
+</svg>

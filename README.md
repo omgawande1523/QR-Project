@@ -134,6 +134,16 @@ Categories, options and the rest of the interface stay in English, and orders, t
 always use the English names. Devanagari text uses Noto Sans Devanagari, downloaded only when it is shown.
 The demo menu's translations are machine-assisted; have a native speaker check them for a real restaurant.
 
+### Installable app (PWA)
+
+Both the dashboard and the customer menu can be installed from the browser ("Install app" / "Add to Home
+screen"). The dashboard manifest opens `/dashboard`; on a menu page the manifest is swapped for one that opens
+`/menu/`, which returns the guest to the restaurant they last visited. `public/sw.js` shows an offline page
+(`/offline.html`) when there is no connection and caches only the offline page, icons and content-hashed build
+files: menus, orders and the API always come from the network. The manifests and offline page are generated from
+`APP_NAME` by `client/pwa/assets.js`. Icons are rendered from `client/scripts/icon/mark.svg` with
+`node scripts/make-icons.mjs` (in `client/`).
+
 ### Images
 
 Every image field (dish photo, logo, banner, QR logo) uses one picker: upload or drag and drop, paste with

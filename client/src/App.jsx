@@ -28,6 +28,7 @@ const RoleGate = lazy(() => import('./features/owner/RoleGate'));
 
 // Customer (opened by scanning a table QR code)
 const CustomerApp = lazy(() => import('./features/customer/CustomerApp'));
+const MenuLauncher = lazy(() => import('./features/customer/CustomerApp').then((m) => ({ default: m.MenuLauncher })));
 const WelcomeScreen = lazy(() => import('./features/customer/WelcomeScreen'));
 const MenuScreen = lazy(() => import('./features/customer/MenuScreen'));
 const ItemDetailScreen = lazy(() => import('./features/customer/ItemDetailScreen'));
@@ -72,6 +73,7 @@ function App() {
             <Route path="/orders" element={<Navigate to="/dashboard/orders" replace />} />
             <Route path="/profile" element={<Navigate to="/dashboard/settings" replace />} />
 
+            <Route path="/menu" element={<MenuLauncher />} />
             <Route path="/menu/:restaurantId" element={<CustomerApp />}>
               <Route index element={<WelcomeScreen />} />
               <Route path="browse" element={<MenuScreen />} />
