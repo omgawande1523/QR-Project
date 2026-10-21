@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { IconButton } from './Button';
+import { pushBack } from '../../lib/backStack';
 
 // Open dialogs, topmost last: with a crop dialog over the dish editor, Escape closes only the top one.
 const openDialogs = [];
@@ -57,6 +58,7 @@ function useDialog(open, onClose, ref) {
     };
     document.addEventListener('keydown', onKey);
     document.addEventListener('focusin', onFocusIn);
+    const removeBack = pushBack(onClose); // the app's back button closes the dialog first
     const overflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const first = ref.current?.querySelector('input, textarea, select, button:not([data-close]), [href]');
@@ -65,6 +67,7 @@ function useDialog(open, onClose, ref) {
       openDialogs.splice(openDialogs.indexOf(token), 1);
       document.removeEventListener('keydown', onKey);
       document.removeEventListener('focusin', onFocusIn);
+      removeBack();
       document.body.style.overflow = overflow;
       opener.current = null;
       previouslyFocused?.focus?.({ preventScroll: true });
@@ -97,9 +100,11 @@ export function Modal({ open, onClose, title, children, footer, wide = false }) 
       <div ref={ref} className={`modal ${wide ? 'modal-wide' : ''}`} role="dialog" aria-modal="true" aria-label={title} tabIndex={-1}>
         <div className="modal-header">
           <h2 style={{ fontSize: 'var(--text-xl)' }}>{title}</h2>
-          <IconButton label="Close" variant="flat" onClick={onClose} data-close>
-            <X size={20} />
-          </IconButton>
+          {onClose && (
+            <IconButton label="Close" variant="flat" onClick={onClose} data-close>
+              <X size={20} />
+            </IconButton>
+          )}
         </div>
         <div className="modal-body">{children}</div>
         {footer && <div className="modal-footer">{footer}</div>}

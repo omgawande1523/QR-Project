@@ -1,0 +1,37 @@
+/* Staff app only (imported by AppShell). */
+
+/* The app draws edge to edge on Android 15+: keep content clear of the status bar and the gesture bar. */
+body {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.app-offline {
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 36px;
+  padding: 6px var(--space-4);
+  background: var(--ink);
+  color: #fff;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  text-align: center;
+}
+
+/* Pull to refresh (the wrapper keeps the kitchen board filling the screen) */
+.pull-area { flex: 1; display: flex; flex-direction: column; }
+.pull-area > main { flex: 1; }
+.pull-indicator {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: var(--olive-700);
+  transition: height var(--duration-fast);
+}
+.pull-indicator.is-ready svg { transform: rotate(180deg); transition: transform var(--duration-fast); }
+.kitchen .pull-indicator { color: var(--olive-300); }

@@ -1,8 +1,15 @@
 import axios from 'axios';
 import API_BASE_URL from '../config';
 import { getToken, clearSession } from './session';
+import { IS_APP } from './platform';
 
 export const api = axios.create({ baseURL: API_BASE_URL, timeout: 20000 });
+
+// The staff app identifies itself, so its logins show up as "app" sessions with the device's name.
+if (IS_APP) api.defaults.headers.common['X-Client'] = 'app';
+export function setDeviceName(name) {
+  if (name) api.defaults.headers.common['X-Device-Name'] = name.slice(0, 60);
+}
 
 api.interceptors.request.use((request) => {
   const token = getToken();
@@ -11,11 +18,13 @@ api.interceptors.request.use((request) => {
 });
 
 // An expired or revoked session on an owner page sends the owner back to the login screen.
+// (In the app every screen but the sign-in pages is a staff screen.)
+const STAFF_PAGE = IS_APP ? /^\/(dashboard|kitchen)(\/|$)/ : /^\/dashboard/;
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     const code = error.response?.data?.code;
-    const onOwnerPage = window.location.pathname.startsWith('/dashboard');
+    const onOwnerPage = STAFF_PAGE.test(window.location.pathname);
     if (error.response?.status === 401 && ['INVALID_TOKEN', 'NO_TOKEN'].includes(code) && onOwnerPage) {
       clearSession();
       window.location.assign('/login?expired=1');

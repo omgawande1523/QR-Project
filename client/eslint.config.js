@@ -5,7 +5,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 
 // Roughly the checks Create React App ran (react-app config): JS recommended, React, hooks rules.
 export default [
-  { ignores: ['build/', 'dist/', 'node_modules/'] },
+  { ignores: ['build/', 'dist/', 'dist-app/', 'node_modules/'] },
   {
     files: ['**/*.{js,jsx}'],
     languageOptions: {
