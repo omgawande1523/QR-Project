@@ -1,0 +1,426 @@
+:root {
+  --demo-primary: #6366f1;
+  --demo-secondary: #a855f7;
+  --demo-accent: #f43f5e;
+  --demo-glass-bg: rgba(255, 255, 255, 0.7);
+  --demo-glass-border: rgba(255, 255, 255, 0.4);
+  --demo-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+}
+
+.demo-page-wrapper {
+  min-height: 100vh;
+  margin-top: 80px;
+  background:
+    radial-gradient(at 0% 0%, hsla(253, 16%, 12%, 1) 0, transparent 50%),
+    radial-gradient(at 50% 0%, hsla(225, 39%, 35%, 1) 0, transparent 50%),
+    radial-gradient(at 100% 0%, hsla(339, 49%, 35%, 1) 0, transparent 50%);
+  background-attachment: fixed;
+  padding: 2rem 1rem;
+  color: #fff;
+}
+
+.demo-container-premium {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* 1. Header & Navigation */
+.demo-hero {
+  text-align: center;
+  margin-bottom: 3rem;
+  animation: fadeInDown 0.8s ease-out;
+}
+
+.demo-hero h1 {
+  font-size: 3.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #fff 0%, #c184f9 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 1rem;
+  letter-spacing: -1px;
+}
+
+.demo-hero p {
+  font-size: 1.25rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+}
+
+.view-segment-control {
+  display: flex;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  padding: 6px;
+  border-radius: 50px;
+  width: fit-content;
+  margin: 2rem auto;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.segment-btn {
+  padding: 0.75rem 2rem;
+  border: none;
+  background: transparent;
+  color: #fff;
+  border-radius: 40px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.segment-btn.active {
+  background: #fff;
+  color: #000;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.segment-btn i {
+  font-size: 1.1rem;
+}
+
+/* 2. Restaurant View Styles */
+.owner-workspace {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.workspace-card {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 24px;
+  padding: 2rem;
+  box-shadow: var(--demo-shadow);
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.workspace-card h2 {
+  font-size: 1.75rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.workspace-card h2 i {
+  color: #c184f9;
+}
+
+/* Form Styles */
+.premium-form {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.input-group-modern {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.input-group-modern label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.input-group-modern input,
+.input-group-modern textarea,
+.input-group-modern select {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 1rem;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 1rem;
+  transition: all 0.3s;
+}
+
+.input-group-modern input::placeholder,
+.input-group-modern textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.input-group-modern input:focus {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #c184f9;
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(193, 132, 249, 0.2);
+}
+
+.btn-add-modern {
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  color: #fff;
+  border: none;
+  padding: 1.25rem;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.btn-add-modern:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+}
+
+/* 3. Menu Grid Premium */
+.menu-grid-demo {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.demo-item-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.demo-item-card:hover {
+  transform: translateY(-8px);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.item-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  z-index: 2;
+  color: #fff;
+}
+
+.demo-item-img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  transition: transform 0.5s;
+}
+
+.demo-item-card:hover .demo-item-img {
+  transform: scale(1.1);
+}
+
+.demo-item-content {
+  padding: 1.5rem;
+}
+
+.demo-item-content h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.demo-item-content .price-tag {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+  display: block;
+  margin: 1rem 0;
+}
+
+.btn-delete-demo {
+  width: 100%;
+  padding: 0.75rem;
+  background: rgba(244, 63, 94, 0.1);
+  color: #f43f5e;
+  border: 1px solid rgba(244, 63, 94, 0.2);
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.btn-delete-demo:hover {
+  background: #f43f5e;
+  color: #fff;
+}
+
+/* 4. Configuration Section */
+.config-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.qr-demo-card {
+  text-align: center;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 24px;
+  color: #000;
+}
+
+.qr-demo-card h3 {
+  margin-bottom: 1.5rem;
+  font-weight: 800;
+}
+
+.qr-wrapper-premium {
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 20px;
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+/* 5. Customer View */
+.customer-demo-flow {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.customer-card-header {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  padding: 2.5rem;
+  border-radius: 30px;
+  text-align: center;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-cart-premium {
+  width: 100%;
+  padding: 1rem;
+  background: #fff;
+  color: #000;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-cart-premium:hover {
+  background: #a855f7;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.floating-cart-demo {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 380px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  padding: 1.5rem;
+  color: #000;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  animation: slideInLeft 0.5s ease-out;
+}
+
+.cart-item-demo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.cart-item-demo img {
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.btn-place-order {
+  width: 100%;
+  padding: 1.25rem;
+  background: #000;
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-weight: 800;
+  font-size: 1.1rem;
+  margin-top: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-place-order:hover {
+  background: #a855f7;
+  transform: scale(1.02);
+}
+
+/* Animations */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .owner-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .demo-hero h1 {
+    font-size: 2.5rem;
+  }
+
+  .floating-cart-demo {
+    width: calc(100% - 2rem);
+    right: 1rem;
+    left: 1rem;
+    bottom: 1rem;
+  }
+}

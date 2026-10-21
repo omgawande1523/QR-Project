@@ -1,0 +1,23 @@
+{
+  "name": "qr-menu",
+  "version": "1.0.0",
+  "private": true,
+  "description": "QR code digital menu and table ordering system for restaurants and cafés",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "scripts": {
+    "install:all": "npm install && npm --prefix server install && npm --prefix client install",
+    "dev": "concurrently --names server,client --prefix-colors green,cyan --kill-others-on-fail \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client start",
+    "build": "npm --prefix client run build",
+    "start": "npm --prefix server start",
+    "seed": "npm --prefix server run seed",
+    "test": "npm --prefix server test && npm --prefix client test -- --watchAll=false --passWithNoTests"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.5"
+  }
+}
