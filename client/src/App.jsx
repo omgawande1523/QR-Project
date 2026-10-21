@@ -9,7 +9,6 @@ import './App.css';
 // Old pages (replaced during the redesign) are lazy so their global CSS only loads on those pages.
 const LandingPage = lazy(() => import('./components/LandingPage'));
 const Dashboard = lazy(() => import('./components/Dashboard'));
-const Order = lazy(() => import('./components/Order'));
 const Demo = lazy(() => import('./components/Demo'));
 const Profile = lazy(() => import('./components/Profile'));
 
@@ -18,6 +17,11 @@ const LoginPage = lazy(() => import('./features/auth/LoginPage'));
 const RegisterPage = lazy(() => import('./features/auth/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('./features/auth/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./features/auth/ResetPasswordPage'));
+
+// Owner dashboard
+const OwnerLayout = lazy(() => import('./features/owner/OwnerLayout'));
+const DashboardHome = lazy(() => import('./features/owner/DashboardHome'));
+const OrdersBoard = lazy(() => import('./features/owner/OrdersBoard'));
 
 // Customer screens load separately so a scanned QR code downloads only what the menu needs.
 const CustomerApp = lazy(() => import('./features/customer/CustomerApp'));
@@ -61,11 +65,20 @@ function App() {
           <Routes>
             <Route element={<LegacyLayout />}>
               <Route path="/" element={<LandingPage />} />
-              <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+              {/* Old dashboard: menu, tables and settings until their new screens land */}
+              <Route path="/dashboard/classic" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
               <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
-              <Route path="/orders" element={<PrivateRoute><Order /></PrivateRoute>} />
               <Route path="/demo" element={<Demo />} />
             </Route>
+
+            <Route path="/dashboard" element={<OwnerLayout />}>
+              <Route index element={<DashboardHome />} />
+              <Route path="orders" element={<OrdersBoard />} />
+              <Route path="menu" element={<Navigate to="/dashboard/classic" replace />} />
+              <Route path="tables" element={<Navigate to="/dashboard/classic" replace />} />
+              <Route path="settings" element={<Navigate to="/profile" replace />} />
+            </Route>
+            <Route path="/orders" element={<Navigate to="/dashboard/orders" replace />} />
 
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
