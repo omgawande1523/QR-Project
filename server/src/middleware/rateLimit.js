@@ -18,5 +18,6 @@ const authLimiter = limiter(15, 20, 'Too many attempts, please try again later')
 const orderLimiter = limiter(5, 60, 'Too many orders from this network, please wait a moment');
 const serviceRequestLimiter = limiter(5, 30, 'Too many requests, please wait a moment');
 const scanLimiter = limiter(5, 120, 'Too many requests, please slow down');
+const contactLimiter = limiter(15, 5, 'Too many messages, please try again later');
 
-module.exports = { authLimiter, orderLimiter, serviceRequestLimiter, scanLimiter };
+module.exports = { authLimiter, orderLimiter, serviceRequestLimiter, scanLimiter, contactLimiter };

@@ -43,5 +43,9 @@ describe('seed script', () => {
 
     const profile = await request(app).get(`/api/users/${login.body.userId}/public`);
     expect(profile.body).toMatchObject({ restaurantName: 'Olive Leaf Café', tables: [1, 2, 3, 4, 5], taxPercent: 5 });
+    expect(profile.body.categories[0]).toBe('Breakfast');
+
+    const demo = await request(app).get('/api/public/demo');
+    expect(demo.body).toEqual({ restaurantId: login.body.userId, table: 1 });
   }, 60000);
 });

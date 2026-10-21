@@ -31,4 +31,21 @@ function sendPasswordResetEmail({ to, resetCode, resetLink }) {
   });
 }
 
-module.exports = { isEmailConfigured, sendPasswordResetEmail };
+const escapeHtml = (value = '') => String(value).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// Notifies the owner's mailbox (EMAIL_USER) about a landing-page enquiry.
+function sendLeadNotification(lead) {
+  const rows = [['Name', lead.name], ['Email', lead.email], ['Phone', lead.phone], ['Restaurant', lead.restaurantName]]
+    .filter(([, value]) => value)
+    .map(([label, value]) => `<p><b>${label}:</b> ${escapeHtml(value)}</p>`)
+    .join('');
+  return getTransporter().sendMail({
+    from: config.email.user,
+    to: config.email.user,
+    replyTo: lead.email,
+    subject: `New enquiry from ${lead.name}`,
+    html: `<h2>New enquiry</h2>${rows}<p>${escapeHtml(lead.message).replace(/\n/g, '<br>')}</p>`
+  });
+}
+
+module.exports = { isEmailConfigured, sendPasswordResetEmail, sendLeadNotification };
