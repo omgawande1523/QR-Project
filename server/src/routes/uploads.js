@@ -3,7 +3,7 @@ const { z } = require('zod');
 const uploads = require('../controllers/uploadController');
 const { verifyToken } = require('../middleware/auth');
 const { singleImage } = require('../middleware/upload');
-const { imageLimiter } = require('../middleware/rateLimit');
+const { imageLimiter, imageUrlLimiter } = require('../middleware/rateLimit');
 const validate = require('../middleware/validate');
 const { IMAGE_KINDS } = require('../services/images');
 const { objectId } = require('../validators/common');
@@ -23,13 +23,15 @@ const schemas = {
       rotation: z.number().finite().min(-360).max(360).default(0)
     })
   },
-  source: { query: z.object({ url: z.string().trim().url().max(2048) }) }
+  source: { query: z.object({ url: z.string().trim().url().max(2048) }) },
+  fromUrl: { body: z.object({ url: z.string({ required_error: 'Paste an image link' }).trim().min(1, 'Paste an image link').max(2048, 'That link is too long') }) }
 };
 
 router.use(verifyToken, imageLimiter);
 
 // Crop flow: original -> crop. Specific paths come before /:kind.
 router.post('/originals', singleImage, uploads.uploadOriginal);
+router.post('/from-url', imageUrlLimiter, validate(schemas.fromUrl), uploads.importFromUrl);
 router.post('/crop', validate(schemas.crop), uploads.crop);
 router.get('/source', validate(schemas.source), uploads.source);
 

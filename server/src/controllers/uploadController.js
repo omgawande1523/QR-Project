@@ -5,6 +5,7 @@ const User = require('../models/User');
 const MenuItem = require('../models/MenuItem');
 const { storage } = require('../services/storage');
 const { saveImage, saveOriginal, cropOriginal } = require('../services/images');
+const remoteImage = require('../services/remoteImage');
 
 const originalBody = (doc) => ({ originalId: doc._id, url: doc.url, width: doc.width, height: doc.height });
 
@@ -17,6 +18,14 @@ exports.uploadImage = asyncHandler(async (req, res) => {
 // Step 1 of the crop flow: keep the full-size original and return it for the crop screen.
 exports.uploadOriginal = asyncHandler(async (req, res) => {
   const original = await saveOriginal(req.file.buffer, req.user.userId);
+  res.status(201).json(originalBody(original));
+});
+
+// Step 1, from a pasted link: the server downloads the image (safely) and keeps it as our own WebP,
+// so menus never hotlink images that expire or change.
+exports.importFromUrl = asyncHandler(async (req, res) => {
+  const buffer = await remoteImage.fetchRemoteImage(req.body.url);
+  const original = await saveOriginal(buffer, req.user.userId, { source: 'url', notImageMessage: "This link isn't an image" });
   res.status(201).json(originalBody(original));
 });
 
