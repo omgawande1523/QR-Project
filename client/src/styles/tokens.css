@@ -64,7 +64,6 @@
   --text-2xl: 1.75rem;
   --text-3xl: 2.25rem;
   --text-4xl: clamp(2.25rem, 5vw, 3.5rem);
-  --weight-regular: 400;
   --weight-medium: 500;
   --weight-semibold: 600;
   --weight-bold: 700;
