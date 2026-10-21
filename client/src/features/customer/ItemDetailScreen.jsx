@@ -88,7 +88,7 @@ export default function ItemDetailScreen() {
 
       <section className="detail-head">
         <div className="row-between" style={{ alignItems: 'flex-start' }}>
-          <h2 className="detail-name">{item.name}</h2>
+          <h2 className="detail-name" lang={item.nameLang}>{item.name}</h2>
           {item.calories ? (
             <span className="detail-cal"><Flame size={16} aria-hidden="true" /> {item.calories} Cal</span>
           ) : null}
@@ -99,7 +99,7 @@ export default function ItemDetailScreen() {
           <SpiceLevel level={item.spiceLevel} />
         </div>
         {item.description && (
-          <p className={`detail-desc ${longDescription && !expanded ? 'clamp-3' : ''}`}>
+          <p className={`detail-desc ${longDescription && !expanded ? 'clamp-3' : ''}`} lang={item.descriptionLang}>
             {item.description}
           </p>
         )}

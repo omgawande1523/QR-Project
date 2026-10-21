@@ -61,7 +61,7 @@ async function addDish(page, name, price) {
   await page.goto('/dashboard/menu');
   await page.getByRole('button', { name: 'Add dish' }).click();
   const dialog = page.getByRole('dialog', { name: 'Add a dish' });
-  await dialog.getByLabel('Name').fill(name);
+  await dialog.getByLabel('Name', { exact: true }).fill(name);
   await dialog.getByLabel('Price (₹)').fill(String(price));
   return dialog;
 }

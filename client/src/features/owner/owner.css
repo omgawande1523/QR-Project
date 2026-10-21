@@ -170,6 +170,12 @@
 .data-table td { padding: var(--space-3); border-bottom: 1px solid var(--cream-200); vertical-align: top; }
 .data-table .num { text-align: right; }
 
+/* ---------- Item translations ---------- */
+.translations-editor { border: 1px solid var(--cream-300); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); }
+.translations-editor summary { display: flex; align-items: center; gap: var(--space-2); cursor: pointer; font-weight: var(--weight-semibold); font-size: var(--text-sm); }
+.translations-editor summary .muted { font-weight: var(--weight-medium); }
+.translations-editor .segmented { align-self: flex-start; }
+
 /* ---------- Receipt ---------- */
 .receipt { font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; font-size: 13px; max-width: 320px; margin: 0 auto; color: #000; }
 .receipt h3 { text-align: center; font-size: 16px; }

@@ -1,6 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import '@fontsource-variable/plus-jakarta-sans';
+// Hindi / Marathi dish names; the browser only downloads it when Devanagari text is on screen.
+import '@fontsource-variable/noto-sans-devanagari';
 import './styles/tokens.css';
 import './styles/base.css';
 import './styles/components.css';

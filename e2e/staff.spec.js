@@ -24,7 +24,7 @@ test('the owner adds a waiter, who logs in and only sees orders and settings', a
   await page.getByRole('button', { name: 'Add staff' }).click();
   const dialog = page.getByRole('dialog', { name: 'Add a staff member' });
   const email = `waiter${Date.now()}@staff.test`;
-  await dialog.getByLabel('Name').fill('Playwright Waiter');
+  await dialog.getByLabel('Name', { exact: true }).fill('Playwright Waiter');
   await dialog.getByLabel('Email').fill(email);
   await dialog.getByLabel('Role').selectOption('waiter');
   const password = await dialog.getByLabel('Temporary password').inputValue();

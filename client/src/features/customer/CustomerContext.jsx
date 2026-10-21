@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { api } from '../../lib/api';
 import { connectSocket } from '../../lib/socket';
 import { local, session } from '../../lib/storage';
+import { availableLanguages, localizeItem } from '../../lib/menuLanguage';
 import { unitPricePaise, computeBill } from '../../lib/pricing';
 import { isActiveOrder } from '../../lib/orderStatus';
 
@@ -15,14 +16,16 @@ const keys = (rid) => ({
   orders: `qr.orders.${rid}`,
   favourites: `qr.fav.${rid}`,
   table: `qr.table.${rid}`,
-  customer: 'qr.customer'
+  customer: 'qr.customer',
+  language: 'qr.language' // the guest's menu language, kept across restaurants
 });
 
 // Everything a customer screen needs: restaurant, live menu, cart, tracked orders, favourites, table.
 export function CustomerProvider({ restaurantId, children }) {
   const k = keys(restaurantId);
   const [restaurant, setRestaurant] = useState(null);
-  const [menu, setMenu] = useState([]);
+  const [rawMenu, setMenu] = useState([]);
+  const [chosenLanguage, setChosenLanguage] = useState(() => local.get(k.language, 'en'));
   const [status, setStatus] = useState('loading'); // loading | ready | error
   const [error, setError] = useState(null);
   const [lines, setLines] = useState(() => local.get(k.cart, []));
@@ -107,6 +110,15 @@ export function CustomerProvider({ restaurantId, children }) {
     setTableState(n);
     session.set(k.table, n);
   }, [k.table]);
+
+  // ---------- Menu language ----------
+  const languages = useMemo(() => availableLanguages(rawMenu), [rawMenu]);
+  const language = languages.some((l) => l.code === chosenLanguage) ? chosenLanguage : 'en';
+  const setLanguage = useCallback((code) => {
+    setChosenLanguage(code);
+    local.set(k.language, code);
+  }, [k.language]);
+  const menu = useMemo(() => rawMenu.map((item) => localizeItem(item, language)), [rawMenu, language]);
 
   // ---------- Cart ----------
   const menuById = useMemo(() => new Map(menu.map((i) => [i._id, i])), [menu]);
@@ -224,6 +236,9 @@ export function CustomerProvider({ restaurantId, children }) {
     restaurant,
     menu,
     menuById,
+    language,
+    languages,
+    setLanguage,
     status,
     error,
     reload: load,

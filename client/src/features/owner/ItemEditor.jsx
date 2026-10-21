@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Languages } from 'lucide-react';
 import { Button, Chip, Modal, Switch, TextField, IconButton, useToast } from '../../components/ui';
 import { api, errorMessage } from '../../lib/api';
 import { ImagePicker } from '../../components/ImagePicker';
@@ -14,8 +14,32 @@ const NEW_CATEGORY = '__new__';
 
 const emptyItem = (category) => ({
   name: '', description: '', category: category || '', price: '', image: '', available: true, isVeg: true,
-  tags: [], spiceLevel: 0, calories: '', variants: [], addOns: []
+  tags: [], spiceLevel: 0, calories: '', variants: [], addOns: [], translations: emptyTranslations()
 });
+const TRANSLATION_LANGUAGES = [{ code: 'hi', label: 'Hindi', native: 'हिंदी' }, { code: 'mr', label: 'Marathi', native: 'मराठी' }];
+function emptyTranslations(existing = {}) {
+  return Object.fromEntries(TRANSLATION_LANGUAGES.map(({ code }) => [code, { name: existing[code]?.name || '', description: existing[code]?.description || '' }]));
+}
+
+// Optional Hindi / Marathi name and description; guests switch the menu language on their phone.
+function TranslationsEditor({ value, onChange, errors, englishName }) {
+  const [lang, setLang] = useState('hi');
+  const filled = TRANSLATION_LANGUAGES.filter(({ code }) => value[code].name || value[code].description).length;
+  const update = (field, text) => onChange({ ...value, [lang]: { ...value[lang], [field]: text } });
+  const current = TRANSLATION_LANGUAGES.find((l) => l.code === lang);
+  return (
+    <details className="translations-editor" open={filled > 0}>
+      <summary><Languages size={16} aria-hidden="true" /> Hindi and Marathi <span className="muted">{filled ? `(${filled} of 2 added)` : '(optional)'}</span></summary>
+      <div className="stack" style={{ marginTop: 'var(--space-3)' }}>
+        <div className="segmented" role="group" aria-label="Translation language">
+          {TRANSLATION_LANGUAGES.map((l) => <button key={l.code} type="button" aria-pressed={lang === l.code} onClick={() => setLang(l.code)}>{l.label} <span lang={l.code}>{l.native}</span></button>)}
+        </div>
+        <TextField label={`Name in ${current.label}`} lang={lang} value={value[lang].name} onChange={(e) => update('name', e.target.value)} error={errors[`translations.${lang}.name`]} maxLength={100} placeholder={englishName} />
+        <TextField label={`Description in ${current.label}`} lang={lang} multiline rows={2} value={value[lang].description} onChange={(e) => update('description', e.target.value)} error={errors[`translations.${lang}.description`]} maxLength={500} hint="Leave blank to show the English text" />
+      </div>
+    </details>
+  );
+}
 
 function OptionsEditor({ title, hint, rows, onChange, addLabel, placeholder }) {
   const update = (i, field, value) => onChange(rows.map((row, j) => (j === i ? { ...row, [field]: value } : row)));
@@ -44,7 +68,8 @@ export function ItemEditor({ item, categories, defaultCategory, onClose, onSaved
   const editing = Boolean(item?._id);
   const [form, setForm] = useState(() => (item ? {
     ...emptyItem(), ...item, calories: item.calories ?? '', price: item.price ?? '',
-    variants: (item.variants || []).map((v) => ({ ...v })), addOns: (item.addOns || []).map((a) => ({ ...a }))
+    variants: (item.variants || []).map((v) => ({ ...v })), addOns: (item.addOns || []).map((a) => ({ ...a })),
+    translations: emptyTranslations(item.translations)
   } : emptyItem(defaultCategory)));
   const [newCategory, setNewCategory] = useState('');
   const [errors, setErrors] = useState({});
@@ -69,7 +94,8 @@ export function ItemEditor({ item, categories, defaultCategory, onClose, onSaved
       spiceLevel: form.spiceLevel,
       calories: form.calories === '' ? null : Number(form.calories),
       variants,
-      addOns: cleanOptions(form.addOns)
+      addOns: cleanOptions(form.addOns),
+      translations: Object.fromEntries(Object.entries(form.translations).map(([code, t]) => [code, { name: t.name.trim(), description: t.description.trim() }]))
     };
     const next = {};
     if (!body.name) next.name = 'Give the dish a name';
@@ -103,6 +129,7 @@ export function ItemEditor({ item, categories, defaultCategory, onClose, onSaved
         <div className="stack">
           <TextField label="Name" value={form.name} onChange={(e) => set('name', e.target.value)} error={errors.name} maxLength={100} autoFocus />
           <TextField label="Description" multiline rows={3} value={form.description} onChange={(e) => set('description', e.target.value)} error={errors.description} maxLength={500} hint="One or two lines: ingredients, how it is made" />
+          <TranslationsEditor value={form.translations} onChange={(v) => set('translations', v)} errors={errors} englishName={form.name} />
           <div className="form-grid">
             <label className="field">
               <span className="field-label">Category</span>

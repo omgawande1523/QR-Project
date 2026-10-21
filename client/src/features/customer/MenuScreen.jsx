@@ -5,6 +5,8 @@ import { useCustomer, lineKey } from './CustomerContext';
 import { FoodCard } from '../../components/FoodCard';
 import { BottomSheet, Button, Chip, IconButton, SearchBar, Skeleton, EmptyState, Switch, Badge, useToast } from '../../components/ui';
 import { STATUS_LABEL } from '../../lib/orderStatus';
+import { searchText } from '../../lib/menuLanguage';
+import { LanguageSwitch } from './LanguageSwitch';
 
 const SORTS = [
   { value: 'recommended', label: 'Recommended' },
@@ -61,7 +63,7 @@ export default function MenuScreen() {
       if (filters.vegOnly && item.isVeg === false) return false;
       if (filters.favouritesOnly && !favourites.has(item._id)) return false;
       if (filters.hideSoldOut && !item.available) return false;
-      if (q && !`${item.name} ${item.description || ''} ${item.category || ''}`.toLowerCase().includes(q)) return false;
+      if (q && !searchText(item).includes(q)) return false;
       return true;
     });
     if (filters.sort === 'price-asc') list = [...list].sort((a, b) => lowestPrice(a) - lowestPrice(b));
@@ -138,6 +140,8 @@ export default function MenuScreen() {
           <span className="order-banner-link">Track <ChevronRight size={16} aria-hidden="true" /></span>
         </button>
       )}
+
+      <LanguageSwitch />
 
       <SearchBar
         inputRef={searchRef}

@@ -258,3 +258,8 @@
 @media (min-width: 600px) {
   .customer-app { box-shadow: 0 0 0 1px var(--cream-300), var(--shadow-lg); }
 }
+
+/* Menu language */
+.language-switch { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); color: var(--muted); }
+.language-switch .segmented button { padding-inline: 14px; }
+.language-switch button[lang='hi'], .language-switch button[lang='mr'] { font-size: var(--text-md); }

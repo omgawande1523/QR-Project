@@ -125,6 +125,15 @@ radio group), quick tags (praise for 4-5 stars, problems for 1-3) and an optiona
 proved by the order's tracking token. `/dashboard/feedback` (owner and manager) shows the average, the share of
 happy guests, the rating distribution, the most-mentioned tags and the latest comments, filterable by stars.
 
+### Menu languages
+
+Each dish can have an optional Hindi and Marathi name and description (Menu > edit a dish > "Hindi and
+Marathi"). When any dish has a translation, the customer menu shows an English / हिंदी / मराठी switch; the
+guest's choice is remembered, untranslated text falls back to English, and search matches either language.
+Categories, options and the rest of the interface stay in English, and orders, the kitchen display and bills
+always use the English names. Devanagari text uses Noto Sans Devanagari, downloaded only when it is shown.
+The demo menu's translations are machine-assisted; have a native speaker check them for a real restaurant.
+
 ### Images
 
 Every image field (dish photo, logo, banner, QR logo) uses one picker: upload or drag and drop, paste with

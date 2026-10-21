@@ -29,9 +29,9 @@ export function FoodCard({ item, quantity = 0, favourite = false, onOpen, onAdd,
       <div className="food-card-body" onClick={onOpen}>
         <h3 className="food-card-name clamp-2">
           {/* The card body also opens the item; stop here so one tap navigates once. */}
-          <button type="button" onClick={(e) => { e.stopPropagation(); onOpen(); }} style={{ textAlign: 'left' }}>{item.name}</button>
+          <button type="button" lang={item.nameLang} onClick={(e) => { e.stopPropagation(); onOpen(); }} style={{ textAlign: 'left' }}>{item.name}</button>
         </h3>
-        {item.description && <p className="food-card-desc truncate">{item.description}</p>}
+        {item.description && <p className="food-card-desc truncate" lang={item.descriptionLang}>{item.description}</p>}
         <p className="food-card-price price">
           {item.variants?.length ? <span className="muted text-xs" style={{ fontWeight: 600 }}>from </span> : null}
           {formatPrice(fromPrice)}

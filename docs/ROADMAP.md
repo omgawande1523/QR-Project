@@ -10,7 +10,7 @@ In this order, one commit each:
 3. ~~Bill / invoice: printable GST invoice per order (PDF), mark paid (cash / UPI / card)~~ done.
 4. ~~Analytics: sales by day and week, by item, by category, peak hours, table usage (charts)~~ done.
 5. ~~Customer feedback: rate the meal after an order is served~~ done.
-6. Multi-language menu (English / Hindi / Marathi) for item names and descriptions (optional fields).
+6. ~~Multi-language menu (English / Hindi / Marathi) for item names and descriptions (optional fields)~~ done.
 7. Optional online payment: Razorpay test mode behind a feature flag (pay at counter stays the default).
 8. PWA: installable customer menu and dashboard, offline fallback page, real app icons
    (the favicon and logo192/512 referenced by index.html and manifest.json are still missing).

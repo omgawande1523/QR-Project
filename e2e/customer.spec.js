@@ -29,7 +29,7 @@ test('scan -> menu -> item with size and add-on -> cart -> order -> live status'
   await page.getByRole('link', { name: /Cart/ }).first().click();
   await expect(page.getByRole('heading', { name: 'Your cart' })).toBeVisible();
   await expect(page.getByText('₹498.75').first()).toBeVisible();
-  await page.getByLabel('Name').fill('E2E Customer');
+  await page.getByLabel('Name', { exact: true }).fill('E2E Customer');
 
   const orderResponse = page.waitForResponse((r) => r.url() === `${API}/api/orders` && r.request().method() === 'POST');
   await page.getByRole('button', { name: /Place order/ }).click();
