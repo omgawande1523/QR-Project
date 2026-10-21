@@ -1,15 +1,39 @@
 const path = require('path');
+const { z } = require('zod');
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
 
+const envSchema = z.object({
+  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+  PORT: z.coerce.number().int().positive().default(5000),
+  MONGODB_URI: z.string().min(1).default('mongodb://localhost:27017/qr-menu'),
+  JWT_SECRET: z.string({ required_error: 'JWT_SECRET is required' })
+    .min(32, 'JWT_SECRET must be at least 32 characters'),
+  FRONTEND_URL: z.string().optional(),
+  EMAIL_USER: z.string().optional(),
+  EMAIL_PASS: z.string().optional()
+});
+
+function loadEnv() {
+  const parsed = envSchema.safeParse(process.env);
+  if (!parsed.success) {
+    const problems = parsed.error.issues.map((issue) => `  - ${issue.path.join('.')}: ${issue.message}`);
+    // Fail fast: never start with a missing or weak secret.
+    throw new Error(`Invalid server configuration:\n${problems.join('\n')}\nSee server/.env.example.`);
+  }
+  return parsed.data;
+}
+
+const env = loadEnv();
+
 const config = {
-  env: process.env.NODE_ENV || 'development',
-  port: Number(process.env.PORT) || 5000,
-  mongoUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/qr-menu',
-  jwtSecret: process.env.JWT_SECRET || 'secret',
-  frontendUrl: process.env.FRONTEND_URL,
+  env: env.NODE_ENV,
+  port: env.PORT,
+  mongoUri: env.MONGODB_URI,
+  jwtSecret: env.JWT_SECRET,
+  frontendUrl: env.FRONTEND_URL,
   email: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
+    user: env.EMAIL_USER,
+    pass: env.EMAIL_PASS
   }
 };
 
