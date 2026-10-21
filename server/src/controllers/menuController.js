@@ -2,6 +2,7 @@ const MenuItem = require('../models/MenuItem');
 const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
 const emit = require('../sockets/io');
+const { discardImage } = require('../services/storage');
 
 async function findOwnedItem(req, action) {
   const item = await MenuItem.findById(req.params.id);
@@ -28,8 +29,10 @@ exports.create = asyncHandler(async (req, res) => {
 
 exports.update = asyncHandler(async (req, res) => {
   const item = await findOwnedItem(req, 'update');
+  const previousImage = item.image;
   item.set(req.body);
   await item.save();
+  if (previousImage && previousImage !== item.image) await discardImage(previousImage);
   broadcast(req.user.userId, 'menuUpdated', item);
   res.json(item);
 });
@@ -37,6 +40,7 @@ exports.update = asyncHandler(async (req, res) => {
 exports.remove = asyncHandler(async (req, res) => {
   const item = await findOwnedItem(req, 'delete');
   await item.deleteOne();
+  await discardImage(item.image);
   broadcast(req.user.userId, 'menuItemDeleted', { _id: item._id });
   res.json({ message: 'Deleted' });
 });

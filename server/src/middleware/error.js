@@ -16,6 +16,7 @@ function normalise(err) {
     return AppError.badRequest(details[0]?.message || 'Invalid data', 'VALIDATION_ERROR', details);
   }
   if (err.code === 11000) return AppError.conflict('A record with these details already exists', 'DUPLICATE');
+  if (err.status === 404 || err.statusCode === 404) return AppError.notFound('File not found'); // express.static
   return null;
 }
 

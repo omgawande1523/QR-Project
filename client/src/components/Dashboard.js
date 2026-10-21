@@ -6,6 +6,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import JSZip from 'jszip';
 import API_BASE_URL, { SOCKET_URL } from '../config';
+import { uploadImage } from '../utils/uploadImage';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -136,14 +137,14 @@ const Dashboard = () => {
     setShowModal(true);
   };
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, image: reader.result });
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    try {
+      const url = await uploadImage(file, 'menu');
+      setFormData(prev => ({ ...prev, image: url }));
+    } catch (error) {
+      addNotification(error.response?.data?.message || 'Image upload failed', 'error');
     }
   };
 

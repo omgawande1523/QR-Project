@@ -7,3 +7,6 @@ process.env.MONGODB_URI = 'mongodb://127.0.0.1:1/never-used-in-tests';
 process.env.FRONTEND_URL = 'http://localhost:3000';
 process.env.EMAIL_USER = '';
 process.env.EMAIL_PASS = '';
+// Uploaded test images go to a per-run temp folder, never server/uploads.
+process.env.UPLOAD_DIR = require('path').join(require('os').tmpdir(), `qr-menu-test-uploads-${process.pid}`);
+process.env.PUBLIC_URL = 'http://localhost:5000';

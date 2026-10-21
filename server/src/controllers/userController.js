@@ -5,6 +5,9 @@ const User = require('../models/User');
 const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
 const { sendPasswordResetEmail } = require('../services/mailer');
+const { discardImage } = require('../services/storage');
+
+const IMAGE_FIELDS = ['profilePicture', 'bannerImage', 'qrLogo'];
 
 const signToken = (userId) => jwt.sign({ userId }, config.jwtSecret, { expiresIn: '7d' });
 
@@ -120,9 +123,16 @@ exports.updateProfile = asyncHandler(async (req, res) => {
   // Remove undefined fields to avoid overwriting existing data with null
   Object.keys(updateData).forEach((key) => updateData[key] === undefined && delete updateData[key]);
 
+  const before = await User.findById(req.params.id).select('profilePicture bannerImage qrLogo');
+  if (!before) throw AppError.notFound('User not found');
+
   const user = await User.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true })
     .select('-password -resetToken -resetTokenExpiry');
-  if (!user) throw AppError.notFound('User not found');
+
+  // Delete uploaded images that were replaced or cleared.
+  await Promise.all(IMAGE_FIELDS
+    .filter((field) => before[field] && before[field] !== user[field])
+    .map((field) => discardImage(before[field])));
   res.json(user);
 });
 

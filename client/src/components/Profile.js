@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import API_BASE_URL from '../config'
+import { uploadImage } from '../utils/uploadImage';
 import './Auth.css';
 
 const Profile = () => {
@@ -25,52 +26,19 @@ const Profile = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const handleImageUpload = (e, fieldName) => {
+  const handleImageUpload = async (e, fieldName) => {
     const file = e.target.files[0];
-    if (file) {
-      // Check file size (max 1MB per image)
-      if (file.size > 1024 * 1024) {
-        setError('Image size should be less than 1MB. Please compress the image.');
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        // Compress image using canvas
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-
-          // Reduce size if too large
-          const maxWidth = fieldName === 'profilePicture' ? 300 : 1000;
-          const maxHeight = fieldName === 'profilePicture' ? 300 : 400;
-
-          if (width > height) {
-            if (width > maxWidth) {
-              height = Math.round(height * maxWidth / width);
-              width = maxWidth;
-            }
-          } else {
-            if (height > maxHeight) {
-              width = Math.round(width * maxHeight / height);
-              height = maxHeight;
-            }
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-
-          // Compress to JPEG with quality 0.7
-          const compressedImage = canvas.toDataURL('image/jpeg', 0.7);
-          setFormData({ ...formData, [fieldName]: compressedImage });
-        };
-        img.src = reader.result;
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Images must be 5 MB or smaller.');
+      return;
+    }
+    try {
+      setError('');
+      const url = await uploadImage(file, fieldName === 'profilePicture' ? 'profile' : 'banner');
+      setFormData(prev => ({ ...prev, [fieldName]: url }));
+    } catch (err) {
+      setError(err.response?.data?.message || 'Image upload failed');
     }
   };
 

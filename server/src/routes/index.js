@@ -11,5 +11,6 @@ router.use('/api/users', require('./users'));
 router.use('/api/menu', require('./menu'));
 router.use('/api/orders', require('./orders'));
 router.use('/api/service-requests', require('./serviceRequests'));
+router.use('/api/uploads', require('./uploads'));
 
 module.exports = router;

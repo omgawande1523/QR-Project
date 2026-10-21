@@ -23,8 +23,10 @@ const tables = z.array(tableNumber).max(500, 'Too many tables')
 
 const hexColor = z.string().trim().regex(/^#[0-9a-f]{6}$/i, 'Colour must be a hex value like #4d5a1f');
 
-// Image references: an uploaded file URL or a pasted http(s) URL. Empty string clears the image.
-const imageRef = z.string().trim().max(10_000_000);
+// Image references: a URL from POST /api/uploads or a pasted http(s) URL; '' clears the image.
+// Inline base64 (data:) images are no longer accepted.
+const imageRef = z.string().trim().max(2048, 'Image URL is too long')
+  .refine((value) => value === '' || /^https?:\/\/[^\s]+$/i.test(value), 'Image must be an uploaded image or an http(s) URL');
 
 const idParam = z.object({ id: objectId });
 

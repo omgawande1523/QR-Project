@@ -10,7 +10,11 @@ const envSchema = z.object({
     .min(32, 'JWT_SECRET must be at least 32 characters'),
   FRONTEND_URL: z.string().optional(),
   EMAIL_USER: z.string().optional(),
-  EMAIL_PASS: z.string().optional()
+  EMAIL_PASS: z.string().optional(),
+  // Public base URL of this API, used to build links to uploaded images
+  PUBLIC_URL: z.string().url().optional(),
+  STORAGE_DRIVER: z.enum(['local']).default('local'),
+  UPLOAD_DIR: z.string().optional()
 });
 
 function loadEnv() {
@@ -34,6 +38,11 @@ const config = {
   email: {
     user: env.EMAIL_USER,
     pass: env.EMAIL_PASS
+  },
+  publicUrl: (env.PUBLIC_URL || `http://localhost:${env.PORT}`).replace(/\/+$/, ''),
+  storage: {
+    driver: env.STORAGE_DRIVER,
+    uploadDir: path.resolve(env.UPLOAD_DIR || path.join(__dirname, '..', '..', 'uploads'))
   }
 };
 
