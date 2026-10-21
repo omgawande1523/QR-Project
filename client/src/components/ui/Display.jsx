@@ -1,4 +1,4 @@
-import { Flame, ChefHat, Sparkles } from 'lucide-react';
+import { Flame, ChefHat, Sparkles, Star } from 'lucide-react';
 
 export function Badge({ tone, icon, children, className = '' }) {
   return (
@@ -51,4 +51,13 @@ export function EmptyState({ icon, title, children, action }) {
 
 export function Spinner({ label = 'Loading' }) {
   return <span className="spinner" role="status" aria-label={label} />;
+}
+
+// Read-only star rating, e.g. a guest's feedback.
+export function Stars({ rating, size = 16 }) {
+  return (
+    <span className="stars" role="img" aria-label={`${rating} out of 5 stars`}>
+      {[1, 2, 3, 4, 5].map((n) => <Star key={n} size={size} strokeWidth={1.75} className={n <= rating ? 'is-on' : ''} aria-hidden="true" />)}
+    </span>
+  );
 }

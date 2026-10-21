@@ -200,6 +200,13 @@ export function CustomerProvider({ restaurantId, children }) {
     await api.post('/api/service-requests', { restaurantId, tableNumber: table, type, customerName: saved.customerName || undefined });
   }, [restaurantId, table, k.customer]);
 
+  // Rating a served meal; the tracking token proves the order is ours.
+  const rateOrder = useCallback(async (orderId, feedback) => {
+    const token = orders[orderId]?.trackingToken;
+    const res = await api.post(`/api/orders/${orderId}/feedback`, { token, ...feedback });
+    setOrders((map) => ({ ...map, [orderId]: { ...res.data, trackingToken: token } }));
+  }, [orders]);
+
   const trackedOrders = useMemo(() => tracked.map((t) => orders[t.id]).filter(Boolean), [tracked, orders]);
   const activeOrders = trackedOrders.filter((o) => isActiveOrder(o.status));
 
@@ -233,6 +240,7 @@ export function CustomerProvider({ restaurantId, children }) {
     quantityForItem,
     placeOrder,
     reorder,
+    rateOrder,
     requestService,
     orders,
     trackedOrders,

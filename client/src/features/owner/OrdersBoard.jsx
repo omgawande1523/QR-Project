@@ -4,7 +4,7 @@ import { useOwner } from './OwnerContext';
 import { PageHeader } from './OwnerLayout';
 import { OrderCard, OrderItems } from './OrderCard';
 import { BillModal } from './BillModal';
-import { Badge, Button, Card, EmptyState, IconButton, SelectField, Skeleton, useToast } from '../../components/ui';
+import { Badge, Button, Card, EmptyState, IconButton, SelectField, Skeleton, Stars, useToast } from '../../components/ui';
 import { BOARD_COLUMNS, STATUS_LABEL, STATUS_TONE } from '../../lib/orderStatus';
 import { api, errorMessage } from '../../lib/api';
 import { formatPrice, formatTime } from '../../lib/format';
@@ -57,6 +57,7 @@ function History({ table, onPrint }) {
                   <td>
                     <Badge tone={STATUS_TONE[o.status]}>{STATUS_LABEL[o.status]}</Badge>
                     {o.payment?.paidAt && <span className="muted text-xs" style={{ display: 'block', marginTop: 2 }}>{PAYMENT_LABEL[o.payment.method]}</span>}
+                    {o.feedback?.rating && <span style={{ display: 'block', marginTop: 2 }}><Stars rating={o.feedback.rating} size={12} /></span>}
                   </td>
                   <td className="text-xs" style={{ whiteSpace: 'nowrap' }}>{o.invoiceNumber || <span className="muted">-</span>}</td>
                   <td className="num price">{formatPrice(o.totalAmount)}</td>

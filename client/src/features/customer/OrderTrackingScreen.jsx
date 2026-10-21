@@ -7,6 +7,8 @@ import { CUSTOMER_STEPS, customerStepIndex, STATUS_LABEL } from '../../lib/order
 import { formatPrice, formatTime } from '../../lib/format';
 import { errorMessage } from '../../lib/api';
 import { shortId } from './OrdersScreen';
+import { FeedbackCard } from './FeedbackCard';
+import { canRate } from '../../lib/feedback';
 
 const STEP_ICONS = [ClipboardCheck, CookingPot, BellRing, HandPlatter];
 
@@ -107,6 +109,8 @@ export default function OrderTrackingScreen() {
           </ol>
         </Card>
       )}
+
+      {canRate(order) && <FeedbackCard order={order} />}
 
       <div className="tracking-actions">
         <Button variant="secondary" icon={<ConciergeBell size={18} />} onClick={openWaiter}>Call waiter</Button>

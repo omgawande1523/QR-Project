@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router';
-import { LayoutDashboard, ClipboardList, UtensilsCrossed, QrCode, Settings, LogOut, Menu as MenuIcon, X, ExternalLink, Bell, Wifi, WifiOff, ChefHat, Users, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, UtensilsCrossed, QrCode, Settings, LogOut, Menu as MenuIcon, X, ExternalLink, Bell, Wifi, WifiOff, ChefHat, Users, BarChart3, Star } from 'lucide-react';
 import { OwnerProvider, useOwner } from './OwnerContext';
 import { Brand } from '../auth/AuthLayout';
 import { BottomSheet, Button, EmptyState, IconButton, Switch } from '../../components/ui';
@@ -15,6 +15,7 @@ const NAV = [
   { to: '/dashboard/menu', label: 'Menu', Icon: UtensilsCrossed, area: 'menu' },
   { to: '/dashboard/tables', label: 'Tables & QR', Icon: QrCode, area: 'tables' },
   { to: '/dashboard/analytics', label: 'Analytics', Icon: BarChart3, area: 'analytics' },
+  { to: '/dashboard/feedback', label: 'Feedback', Icon: Star, area: 'feedback' },
   { to: '/dashboard/staff', label: 'Staff', Icon: Users, area: 'staff' },
   { to: '/dashboard/settings', label: 'Settings', Icon: Settings, area: 'settings' }
 ];

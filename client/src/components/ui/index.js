@@ -6,6 +6,6 @@ export { QuantityStepper } from './QuantityStepper';
 export { OptionRow, OptionGroup } from './OptionRow';
 export { BottomSheet, Modal } from './Overlay';
 export { ToastProvider, useToast } from './Toast';
-export { Badge, ItemBadges, VegMark, Skeleton, EmptyState, Spinner } from './Display';
+export { Badge, ItemBadges, VegMark, Skeleton, EmptyState, Spinner, Stars } from './Display';
 export { Field, TextField, SelectField, Switch } from './Field';
 export { BottomNav } from './BottomNav';

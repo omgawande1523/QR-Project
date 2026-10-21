@@ -585,3 +585,8 @@
   .modal-wide { width: calc(100% - var(--space-4)); }
   .modal-wide .modal-body { padding: var(--space-4); }
 }
+
+/* Read-only star rating */
+.stars { display: inline-flex; gap: 1px; color: var(--cream-300); vertical-align: middle; }
+.stars svg { fill: currentColor; }
+.stars svg.is-on { color: var(--olive-600); }
