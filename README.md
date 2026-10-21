@@ -61,6 +61,16 @@ This starts the API on http://localhost:5000 and the React app on http://localho
 | `npm run seed` | Loads demo data |
 | `npm test` | Runs server and client tests |
 
+## Demo data
+
+```powershell
+npm run seed
+```
+
+Creates the demo restaurant **Olive Leaf Café** (22 dishes with photos, 5 tables, sample orders and a pending
+waiter call) and prints its customer-menu link. Log in to the dashboard with **demo@qrmenu.test / Demo@1234**.
+Re-running replaces only the demo account's own data. Image credits: `server/scripts/seed-assets/CREDITS.md`.
+
 ## Environment variables
 
 **server/.env** (see `server/.env.example`)

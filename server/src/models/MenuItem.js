@@ -19,6 +19,7 @@ const menuItemSchema = new mongoose.Schema({
   category: String,
   image: String,
   available: { type: Boolean, default: true },
+  isVeg: { type: Boolean, default: true },
   variants: { type: [variantSchema], default: [] },
   addOns: { type: [addOnSchema], default: [] },
   owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false }

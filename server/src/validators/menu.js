@@ -19,6 +19,7 @@ const itemFields = {
   category: z.string().trim().max(50, 'Category must be at most 50 characters').optional(),
   image: imageRef.optional(),
   available: z.boolean().optional(),
+  isVeg: z.boolean().optional(),
   variants: z.array(option).max(10, 'At most 10 sizes').refine(uniqueNames, 'Size names must be unique').optional(),
   addOns: z.array(option).max(20, 'At most 20 add-ons').refine(uniqueNames, 'Add-on names must be unique').optional()
 };
