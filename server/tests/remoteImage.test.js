@@ -159,6 +159,32 @@ describe('fetchRemoteImage', () => {
   });
 });
 
+describe('unreachable addresses', () => {
+  // A host with several addresses where the first does not answer (10.255.255.1 is not routed here).
+  const fallbackFetcher = (addresses) => createRemoteImageFetcher({
+    resolve: async () => addresses,
+    isAllowed: () => true,
+    limits: { allowedPorts: [80, 443, port], connectTimeoutMs: 300 }
+  });
+
+  test('tries the next checked address when one does not accept a connection', async () => {
+    const bytes = await fallbackFetcher(['10.255.255.1', '127.0.0.1'])(url('/photo.png', 'multi.test'));
+    expect(bytes.equals(png)).toBe(true);
+  });
+
+  test('gives up with a clear error when no address answers', async () => {
+    await expectError(fallbackFetcher(['10.255.255.1', '10.255.255.2'])(url('/photo.png', 'multi.test')), 422, 'DOWNLOAD_FAILED');
+  });
+
+  test('a server that answers slowly is not retried on another address', async () => {
+    const resolve = jest.fn(async () => ['127.0.0.1', '127.0.0.1']);
+    const fetcher = createRemoteImageFetcher({ resolve, isAllowed: () => true, limits: { allowedPorts: [80, 443, port], timeoutMs: 400, connectTimeoutMs: 300 } });
+    const started = Date.now();
+    await expectError(fetcher(url('/slow', 'multi.test')), 422, 'DOWNLOAD_FAILED');
+    expect(Date.now() - started).toBeLessThan(1500);
+  });
+});
+
 describe('POST /api/uploads/from-url', () => {
   const importUrl = (token, link) => request(app).post('/api/uploads/from-url').set(auth(token)).send({ url: link });
 

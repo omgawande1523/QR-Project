@@ -11,10 +11,12 @@ const AppError = require('../utils/AppError');
 // - the host is resolved here and every address must be public unicast (no private, loopback,
 //   link-local, CGNAT, multicast or reserved ranges, including IPv4-mapped IPv6); the connection
 //   is pinned to the checked address so DNS cannot change between the check and the connect
+//   (a fresh socket each time; if an address does not answer, the next checked one is tried)
 // - the same checks run again on every redirect (at most 3)
 // - one deadline for the whole download and a byte limit counted while streaming; compressed
 //   responses are not accepted, so the limit cannot be bypassed by decompression
-const DEFAULT_LIMITS = { maxBytes: 8 * 1024 * 1024, timeoutMs: 10_000, maxRedirects: 3, allowedPorts: [80, 443] };
+const DEFAULT_LIMITS = { maxBytes: 8 * 1024 * 1024, timeoutMs: 10_000, connectTimeoutMs: 3000, maxRedirects: 3, allowedPorts: [80, 443] };
+const MAX_ADDRESSES = 3;
 const REDIRECTS = new Set([301, 302, 303, 307, 308]);
 const USER_AGENT = 'QRMenuImageFetcher/1.0 (+https://github.com/omgawande1523/QR-Project)';
 
@@ -24,6 +26,9 @@ const errors = {
   failed: () => new AppError(422, "Couldn't download that image", 'DOWNLOAD_FAILED'),
   tooLarge: (maxBytes) => new AppError(413, `Image is too large (the limit is ${Math.round(maxBytes / 1024 / 1024)} MB)`, 'IMAGE_TOO_LARGE')
 };
+
+// Internal signal: this address did not accept a connection, try the next one.
+const UNREACHABLE = new Error('address unreachable');
 
 function isPublicAddress(address) {
   let parsed;
@@ -43,7 +48,7 @@ async function systemResolve(hostname) {
 }
 
 function createRemoteImageFetcher({ resolve = systemResolve, isAllowed = (address) => isPublicAddress(address), limits = {} } = {}) {
-  const { maxBytes, timeoutMs, maxRedirects, allowedPorts } = { ...DEFAULT_LIMITS, ...limits };
+  const { maxBytes, timeoutMs, connectTimeoutMs, maxRedirects, allowedPorts } = { ...DEFAULT_LIMITS, ...limits };
 
   function parse(raw) {
     let url;
@@ -79,24 +84,45 @@ function createRemoteImageFetcher({ resolve = systemResolve, isAllowed = (addres
     if (!addresses?.length) throw errors.failed();
     if (addresses.some((address) => !isAllowed(address, hostname))) throw errors.blocked();
 
-    const pinned = addresses[0];
-    const family = net.isIP(pinned);
+    // One unreachable server (a dead CDN edge, IPv6 without a route) should not fail the import.
+    for (const address of addresses.slice(0, MAX_ADDRESSES)) {
+      try {
+        return await requestVia(url, address, deadline);
+      } catch (err) {
+        if (err !== UNREACHABLE) throw err;
+      }
+    }
+    throw errors.failed();
+  }
+
+  // GET through one checked address. Rejects with UNREACHABLE if the TCP connection never opened.
+  function requestVia(url, address, deadline) {
+    const family = net.isIP(address);
     const lib = url.protocol === 'https:' ? https : http;
     return new Promise((resolvePromise, reject) => {
+      let connected = false;
       const req = lib.request(url, {
         method: 'GET',
+        agent: false,
         headers: { 'User-Agent': USER_AGENT, Accept: 'image/avif,image/webp,image/png,image/jpeg,image/*;q=0.8', 'Accept-Encoding': 'identity' },
         // Always connect to the address that passed the check above.
-        lookup: (_host, options, callback) => (options?.all ? callback(null, [{ address: pinned, family }]) : callback(null, pinned, family))
+        lookup: (_host, options, callback) => (options?.all ? callback(null, [{ address, family }]) : callback(null, address, family))
       });
       const timer = setTimeout(() => req.destroy(errors.failed()), remaining(deadline));
+      const connectTimer = setTimeout(() => req.destroy(UNREACHABLE), Math.min(connectTimeoutMs, remaining(deadline)));
+      const done = () => { clearTimeout(timer); clearTimeout(connectTimer); };
+      req.on('socket', (socket) => socket.once('connect', () => {
+        connected = true;
+        clearTimeout(connectTimer);
+      }));
       req.on('response', (res) => {
-        clearTimeout(timer);
+        done();
         resolvePromise(res);
       });
       req.on('error', (err) => {
-        clearTimeout(timer);
-        reject(err instanceof AppError ? err : errors.failed());
+        done();
+        if (err === UNREACHABLE || (!connected && !(err instanceof AppError))) reject(UNREACHABLE);
+        else reject(err instanceof AppError ? err : errors.failed());
       });
       req.end();
     });
