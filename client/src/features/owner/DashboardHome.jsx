@@ -8,6 +8,7 @@ import { Button, Card, EmptyState, Skeleton, Badge, useToast } from '../../compo
 import { BOARD_COLUMNS, STATUS_LABEL, STATUS_TONE, isActiveOrder } from '../../lib/orderStatus';
 import { formatPrice, timeAgo } from '../../lib/format';
 import { useNow } from '../../lib/useNow';
+import { siteOrigin } from '../../lib/platform';
 
 const startOfToday = () => {
   const d = new Date();
@@ -58,7 +59,7 @@ export default function DashboardHome() {
     };
   }, [orders]);
 
-  const menuLink = `${window.location.origin}/menu/${userId}`;
+  const menuLink = `${siteOrigin()}/menu/${userId}`;
   const copyLink = async () => {
     try {
       await navigator.clipboard.writeText(menuLink);

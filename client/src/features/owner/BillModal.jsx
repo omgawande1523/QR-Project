@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Printer, FileDown, ReceiptText, CheckCircle2, Banknote, Smartphone, CreditCard } from 'lucide-react';
+import { Printer, FileDown, ReceiptText, CheckCircle2, Banknote, Smartphone, CreditCard, Share2 } from 'lucide-react';
 import { Button, Modal, TextField, useToast } from '../../components/ui';
 import { formatPrice, formatDateTime } from '../../lib/format';
 import { api, errorMessage } from '../../lib/api';
 import { qrCanvas } from '../../lib/tableCards';
 import { PAYMENT_LABEL, RESTAURANT_SAC, downloadInvoicePdf, gstBreakdown, invoiceTitle, placeOfSupply, shortOrderId, upiPayLink } from '../../lib/invoice';
 import { useOwner } from './OwnerContext';
+import { IS_APP, printPage } from '../../lib/platform';
 
 const METHODS = [
   { value: 'cash', icon: Banknote },
@@ -80,9 +81,10 @@ export function BillModal({ order: initial, onClose }) {
         <>
           <Button variant="secondary" onClick={onClose}>Close</Button>
           {order.invoiceNumber
-            ? <Button variant="secondary" icon={<FileDown size={18} />} onClick={downloadPdf} loading={busy === 'pdf'}>PDF</Button>
+            // In the app the invoice PDF opens the share sheet (WhatsApp, Gmail, Drive, print).
+            ? <Button variant="secondary" icon={IS_APP ? <Share2 size={18} /> : <FileDown size={18} />} onClick={downloadPdf} loading={busy === 'pdf'}>{IS_APP ? 'Share PDF' : 'PDF'}</Button>
             : !cancelled && <Button variant="secondary" icon={<ReceiptText size={18} />} onClick={makeBill} loading={busy === 'bill'}>Make bill</Button>}
-          <Button icon={<Printer size={18} />} onClick={() => window.print()}>Print</Button>
+          <Button icon={<Printer size={18} />} onClick={() => printPage(`Receipt T${order.tableNumber}`).catch(() => toast.error('Could not open printing'))}>Print</Button>
         </>
       )}
     >

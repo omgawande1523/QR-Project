@@ -8,6 +8,7 @@ import { ImagePicker } from '../../components/ImagePicker';
 import { isActiveOrder } from '../../lib/orderStatus';
 import { tableUrl, qrCanvas, tableCardCanvas, downloadCanvas, downloadTablesPdf, isDarkEnough, loadImage, defaultQrColor } from '../../lib/tableCards';
 import { cssVar } from '../../lib/tokens';
+import { openExternal } from '../../lib/platform';
 
 // Brand shades come from the design tokens; rust and navy are extra dark options.
 const presetColors = () => [cssVar('--olive-800'), cssVar('--olive-900'), cssVar('--ink'), cssVar('--olive-700'), '#7a2e12', '#1f3d5c'].filter(Boolean);
@@ -59,7 +60,9 @@ export default function TablesPage() {
     setBusy(`png-${table}`);
     try {
       const card = await tableCardCanvas({ restaurantName: profile.restaurantName, restaurantId: userId, table, color, logo: logoImg });
-      downloadCanvas(card, `table-${table}-qr.png`);
+      await downloadCanvas(card, `table-${table}-qr.png`);
+    } catch {
+      toast.error('Could not create the picture');
     } finally {
       setBusy(null);
     }
@@ -139,7 +142,7 @@ export default function TablesPage() {
                   <p className="muted text-xs">{scans[table] || 0} scan{scans[table] === 1 ? '' : 's'}</p>
                   <div className="row" style={{ gap: 6 }}>
                     <Button size="sm" variant="secondary" icon={<Download size={16} />} onClick={() => downloadOne(table)} loading={busy === `png-${table}`}>PNG</Button>
-                    <IconButton label={`Open table ${table} menu`} variant="flat" onClick={() => window.open(tableUrl(userId, table), '_blank', 'noopener')}><ExternalLink size={18} /></IconButton>
+                    <IconButton label={`Open table ${table} menu`} variant="flat" onClick={() => openExternal(tableUrl(userId, table))}><ExternalLink size={18} /></IconButton>
                   </div>
                 </Card>
               ))}

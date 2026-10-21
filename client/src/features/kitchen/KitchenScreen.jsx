@@ -2,7 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router';
 import { Maximize, Minimize, Sun, SunDim, Undo2, Volume2, VolumeX, ArrowLeft, StickyNote, ChefHat, LogOut } from 'lucide-react';
 import { OwnerProvider, useOwner } from '../owner/OwnerContext';
-import { isLoggedIn, clearSession } from '../../lib/session';
+import { isLoggedIn } from '../../lib/session';
+import { signOut } from '../../lib/auth';
+import { IS_APP, isNative } from '../../lib/platform';
+import { PullToRefresh } from '../../components/PullToRefresh';
 import { homeFor } from '../../lib/roles';
 import { useNow } from '../../lib/useNow';
 import { usePageTitle } from '../../lib/usePageTitle';
@@ -63,7 +66,7 @@ function Ticket({ order, now, onBump, busy }) {
 }
 
 function Kitchen() {
-  const { orders, ordersLoaded, setOrderStatus, profile, connected, alerts, setAlerts, role } = useOwner();
+  const { orders, ordersLoaded, setOrderStatus, profile, connected, alerts, setAlerts, role, refresh } = useOwner();
   usePageTitle('Kitchen display');
   const navigate = useNavigate();
   const now = useNow(1000);
@@ -86,7 +89,19 @@ function Kitchen() {
     return () => document.removeEventListener('fullscreenchange', onChange);
   }, []);
 
-  // Keep the screen awake while the kitchen display is open (re-acquired when the tab is shown again).
+  // App: the screen always stays on while the kitchen display is open.
+  useEffect(() => {
+    let release = () => {};
+    if (IS_APP && isNative()) {
+      import('@capacitor-community/keep-awake').then(({ KeepAwake }) => {
+        KeepAwake.keepAwake().catch(() => {});
+        release = () => KeepAwake.allowSleep().catch(() => {});
+      });
+    }
+    return () => release();
+  }, []);
+
+  // Website: keep the screen awake on request (re-acquired when the tab is shown again).
   useEffect(() => {
     if (!awake || !('wakeLock' in navigator)) return undefined;
     let cancelled = false;
@@ -125,13 +140,24 @@ function Kitchen() {
     } catch { /* toast shown */ } finally { setBusy(null); }
   };
 
-  const toggleFullscreen = () => (document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()).catch(() => {});
+  const toggleFullscreen = () => {
+    if (IS_APP && isNative()) {
+      // App: full screen hides the status bar.
+      import('@capacitor/status-bar').then(({ StatusBar }) => (fullscreen ? StatusBar.show() : StatusBar.hide())).catch(() => {});
+      setFullscreen(!fullscreen);
+      return;
+    }
+    (document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()).catch(() => {});
+  };
+  useEffect(() => () => {
+    if (IS_APP && isNative()) import('@capacitor/status-bar').then(({ StatusBar }) => StatusBar.show()).catch(() => {});
+  }, []);
 
   return (
     <div className="kitchen">
       <header className="kitchen-bar">
         {role === 'kitchen' ? (
-          <button type="button" className="kitchen-icon" aria-label="Log out" onClick={() => { clearSession(); navigate('/login', { replace: true }); }}><LogOut size={22} /></button>
+          <button type="button" className="kitchen-icon" aria-label="Log out" onClick={async () => { await signOut(); navigate('/login', { replace: true }); }}><LogOut size={22} /></button>
         ) : (
           <Link to={homeFor(role)} className="kitchen-icon" aria-label="Back to the dashboard"><ArrowLeft size={22} /></Link>
         )}
@@ -154,7 +180,7 @@ function Kitchen() {
         <button type="button" className="kitchen-icon" onClick={() => setAlerts({ sound: !alerts.sound })} aria-label={alerts.sound ? 'Mute new-ticket sound' : 'Turn on new-ticket sound'} aria-pressed={alerts.sound}>
           {alerts.sound ? <Volume2 size={22} /> : <VolumeX size={22} />}
         </button>
-        {'wakeLock' in navigator && (
+        {!isNative() && 'wakeLock' in navigator && (
           <button type="button" className="kitchen-icon" onClick={() => setAwake((v) => !v)} aria-label={awake ? 'Let the screen sleep' : 'Keep the screen on'} aria-pressed={awake}>
             {awake ? <Sun size={22} /> : <SunDim size={22} />}
           </button>
@@ -164,18 +190,20 @@ function Kitchen() {
         </button>
       </header>
 
-      <main className="kitchen-board">
-        {!ordersLoaded && <p className="kitchen-empty">Loading orders…</p>}
-        {ordersLoaded && shown.length === 0 && (
-          <div className="kitchen-empty">
-            <ChefHat size={56} aria-hidden="true" />
-            <p>No tickets. New orders appear here instantly.</p>
-          </div>
-        )}
-        {shown.map((order) => (
-          <Ticket key={order._id} order={order} now={now} onBump={bump} busy={busy === order._id} />
-        ))}
-      </main>
+      <PullToRefresh onRefresh={refresh}>
+        <main className="kitchen-board">
+          {!ordersLoaded && <p className="kitchen-empty">Loading orders…</p>}
+          {ordersLoaded && shown.length === 0 && (
+            <div className="kitchen-empty">
+              <ChefHat size={56} aria-hidden="true" />
+              <p>No tickets. New orders appear here instantly.</p>
+            </div>
+          )}
+          {shown.map((order) => (
+            <Ticket key={order._id} order={order} now={now} onBump={bump} busy={busy === order._id} />
+          ))}
+        </main>
+      </PullToRefresh>
     </div>
   );
 }

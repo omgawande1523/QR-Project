@@ -1,11 +1,13 @@
 import QRCode from 'qrcode';
 import { APP_NAME } from '../config';
 import { cssVar } from './tokens';
+import { saveFile, siteOrigin } from './platform';
 
 // Default QR colour: the brand's dark olive (dark enough to scan reliably).
 export const defaultQrColor = () => cssVar('--olive-800', '#484e0a');
 
-export const tableUrl = (restaurantId, table) => `${window.location.origin}/menu/${restaurantId}?table=${table}`;
+// Always the website's address, also when the codes are made in the staff app.
+export const tableUrl = (restaurantId, table) => `${siteOrigin()}/menu/${restaurantId}?table=${table}`;
 
 // Relative luminance; QR codes need dark modules on a light background to scan reliably.
 export function isDarkEnough(hex) {
@@ -105,11 +107,10 @@ function fitText(ctx, text, maxWidth) {
   return `${cut}…`;
 }
 
-export function downloadCanvas(canvas, filename) {
-  const link = document.createElement('a');
-  link.download = filename;
-  link.href = canvas.toDataURL('image/png');
-  link.click();
+// A download on the website, the share sheet in the app.
+export async function downloadCanvas(canvas, filename) {
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+  await saveFile(blob, filename, { title: 'Table QR code' });
 }
 
 // A4 portrait, four cards per page (2 x 2), each about 92 x 123 mm.
@@ -128,5 +129,5 @@ export async function downloadTablesPdf({ restaurantName, restaurantId, tables, 
     const card = await tableCardCanvas({ restaurantName, restaurantId, table: tables[i], color, logo });
     pdf.addImage(card.toDataURL('image/jpeg', 0.92), 'JPEG', x, y, cardW, cardH);
   }
-  pdf.save(`${restaurantName.replace(/[^\w]+/g, '-')}-table-cards.pdf`);
+  await saveFile(pdf.output('blob'), `${restaurantName.replace(/[^\w]+/g, '-')}-table-cards.pdf`);
 }

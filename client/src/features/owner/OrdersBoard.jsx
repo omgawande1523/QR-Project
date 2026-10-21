@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { Printer, Volume2, VolumeX } from 'lucide-react';
 import { useOwner } from './OwnerContext';
 import { PageHeader } from './OwnerLayout';
@@ -81,6 +82,22 @@ export default function OrdersBoard() {
   const [busy, setBusy] = useState(null);
   const [dragOver, setDragOver] = useState(null);
   const [receipt, setReceipt] = useState(null);
+  // ?order=<id> (a tapped notification): show that order on the board, scrolled into view and highlighted.
+  const [params, setParams] = useSearchParams();
+  const [focused, setFocused] = useState(null);
+  const focusId = params.get('order');
+  useEffect(() => {
+    if (!focusId || !ordersLoaded) return undefined;
+    setView('board');
+    setTable('all');
+    setFocused(focusId);
+    const next = new URLSearchParams(params);
+    next.delete('order');
+    setParams(next, { replace: true });
+    requestAnimationFrame(() => document.getElementById(`order-${focusId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' }));
+    const timer = setTimeout(() => setFocused(null), 4000);
+    return () => clearTimeout(timer);
+  }, [focusId, ordersLoaded, params, setParams]);
 
   const byStatus = useMemo(() => {
     const map = Object.fromEntries(BOARD_COLUMNS.map((c) => [c.status, []]));
@@ -154,6 +171,7 @@ export default function OrdersBoard() {
           {BOARD_COLUMNS.map((column) => (
             <section
               key={column.status}
+              data-status={column.status}
               className={`board-column ${dragOver === column.status ? 'is-over' : ''}`}
               aria-label={`${column.label} (${byStatus[column.status].length})`}
               onDragOver={(e) => { e.preventDefault(); setDragOver(column.status); }}
@@ -169,7 +187,7 @@ export default function OrdersBoard() {
                 {!ordersLoaded && <Skeleton height={140} radius="var(--radius-card)" />}
                 {ordersLoaded && byStatus[column.status].length === 0 && <p className="board-empty">No orders</p>}
                 {byStatus[column.status].map((order) => (
-                  <OrderCard key={order._id} order={order} now={now} draggable busy={busy === order._id} onStatus={change} onPrint={setReceipt} />
+                  <OrderCard key={order._id} order={order} now={now} draggable busy={busy === order._id} onStatus={change} onPrint={setReceipt} focused={focused === order._id} onDragOverColumn={setDragOver} />
                 ))}
               </div>
             </section>

@@ -5,6 +5,7 @@ import { getToken, getUserId, getRole, setSession } from '../../lib/session';
 import { can } from '../../lib/roles';
 import { local } from '../../lib/storage';
 import { useToast } from '../../components/ui';
+import { haptic, onAppResume } from '../../lib/platform';
 
 const OwnerContext = createContext(null);
 const ALERTS_KEY = 'qr.alerts';
@@ -28,6 +29,7 @@ export function OwnerProvider({ children }) {
   alertsRef.current = alerts;
   const roleRef = useRef(me.role);
   roleRef.current = me.role;
+  const refreshRef = useRef(null);
 
   const setAlerts = useCallback((patch) => {
     setAlertsState((current) => {
@@ -66,15 +68,24 @@ export function OwnerProvider({ children }) {
     setOrdersLoaded(true);
   }, []);
 
+  const loadRequests = useCallback(async (role) => {
+    if (can(role, 'requests')) setRequests((await api.get('/api/service-requests')).data);
+  }, []);
+
   useEffect(() => {
     api.get('/api/users/me').then((res) => {
       setMe(res.data);
       setSession({ token: getToken(), role: res.data.role });
-      if (can(res.data.role, 'requests')) api.get('/api/service-requests').then((r) => setRequests(r.data)).catch(() => {});
+      loadRequests(res.data.role).catch(() => {});
     }).catch(() => {});
     loadProfile().catch((err) => toast.error(errorMessage(err, 'Could not load your restaurant')));
     loadOrders().catch((err) => toast.error(errorMessage(err, 'Could not load orders')));
-  }, [loadProfile, loadOrders, toast]);
+  }, [loadProfile, loadOrders, loadRequests, toast]);
+
+  // Everything shared, fetched again (pull to refresh, and the app coming back to the foreground).
+  const refresh = useCallback(async () => {
+    await Promise.allSettled([loadProfile(), loadOrders(), loadRequests(roleRef.current)]);
+  }, [loadProfile, loadOrders, loadRequests]);
 
   // ---------- Live updates ----------
   useEffect(() => {
@@ -97,7 +108,14 @@ export function OwnerProvider({ children }) {
     const relay = (event) => (payload) => listeners.current.get(event)?.forEach((fn) => fn(payload));
     socket.on('menuUpdated', relay('menuUpdated'));
     socket.on('menuItemDeleted', relay('menuItemDeleted'));
+    // App only: Android may have closed the connection in the background. On return to the foreground or
+    // when the network is back, reconnect and fetch what was missed.
+    const stopResume = onAppResume(() => {
+      if (!socket.connected) socket.connect();
+      refreshRef.current?.();
+    });
     return () => {
+      stopResume();
       socket.disconnect();
       socketRef.current = null;
     };
@@ -122,6 +140,7 @@ export function OwnerProvider({ children }) {
     try {
       const res = await api.put(`/api/orders/${orderId}`, { status });
       setOrders((list) => list.map((o) => (o._id === orderId ? res.data : o)));
+      haptic();
       return res.data;
     } catch (err) {
       toast.error(errorMessage(err, 'Could not update the order'));
@@ -143,8 +162,11 @@ export function OwnerProvider({ children }) {
     }
   }, [toast]);
 
+  refreshRef.current = refresh;
+
   const value = useMemo(() => ({
     userId,
+    refresh,
     me,
     role: me.role,
     profile,
@@ -161,7 +183,7 @@ export function OwnerProvider({ children }) {
     alerts,
     setAlerts,
     subscribe
-  }), [userId, me, profile, loadProfile, saveProfile, orders, ordersLoaded, loadOrders, setOrderStatus, replaceOrder, requests, markRequestHandled, connected, alerts, setAlerts, subscribe]);
+  }), [userId, refresh, me, profile, loadProfile, saveProfile, orders, ordersLoaded, loadOrders, setOrderStatus, replaceOrder, requests, markRequestHandled, connected, alerts, setAlerts, subscribe]);
 
   return <OwnerContext.Provider value={value}>{children}</OwnerContext.Provider>;
 }

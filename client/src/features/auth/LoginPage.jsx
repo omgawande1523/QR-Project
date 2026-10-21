@@ -6,6 +6,7 @@ import { Button, TextField } from '../../components/ui';
 import { api, errorMessage } from '../../lib/api';
 import { setSession, isLoggedIn, getRole } from '../../lib/session';
 import { homeFor } from '../../lib/roles';
+import { IS_APP } from '../../lib/platform';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -51,7 +52,8 @@ export default function LoginPage() {
         </div>
         {error && <div className="notice notice-danger" role="alert">{error}</div>}
         <Button type="submit" size="lg" block loading={loading} disabled={!identifier || !password}>Log in</Button>
-        <Button variant="ghost" to="/demo">Just looking? Try the live demo</Button>
+        {/* The demo is a guest menu, which lives on the website, not in the staff app. */}
+        {!IS_APP && <Button variant="ghost" to="/demo">Just looking? Try the live demo</Button>}
       </form>
     </AuthLayout>
   );

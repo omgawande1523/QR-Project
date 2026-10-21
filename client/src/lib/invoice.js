@@ -1,4 +1,5 @@
 import { toPaise, toRupees } from './pricing';
+import { saveFile } from './platform';
 
 // Restaurant service (SAC 996331, "services provided by restaurants") for the GST invoice.
 export const RESTAURANT_SAC = '996331';
@@ -212,5 +213,6 @@ export async function downloadInvoicePdf({ order, profile, qrDataUrl = null }) {
   if (!profile?.gstin && order.taxAmount > 0) { text('GSTIN not set: add it in Settings to issue a tax invoice.', left); y += 5; }
   text('This is a computer-generated invoice and needs no signature. Thank you, visit again!', left);
 
-  pdf.save(`invoice-${(order.invoiceNumber || shortOrderId(order._id)).replace(/[^\w-]+/g, '-')}.pdf`);
+  // A download on the website; the share sheet in the app (WhatsApp, Gmail, Drive, print).
+  await saveFile(pdf.output('blob'), `invoice-${(order.invoiceNumber || shortOrderId(order._id)).replace(/[^\w-]+/g, '-')}.pdf`);
 }

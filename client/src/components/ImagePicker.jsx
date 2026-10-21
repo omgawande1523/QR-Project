@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ImagePlus, Crop, Trash2, Upload, Link2 } from 'lucide-react';
+import { ImagePlus, Crop, Trash2, Upload, Link2, Camera, Images } from 'lucide-react';
 import { Button, useToast } from './ui';
 import { CropModal } from './CropModal';
 import { errorMessage } from '../lib/api';
 import { IMAGE_FIELDS, MAX_IMAGE_MB, uploadOriginal, importImageUrl, imageSource } from '../lib/images';
+import { IS_APP, isNative } from '../lib/platform';
 
 const looksLikeUrl = (text) => /^https?:\/\/\S+$/i.test(text.trim());
 const imageFromClipboard = (data) => [...(data?.items || [])].find((item) => item.kind === 'file' && item.type.startsWith('image/'))?.getAsFile() || null;
@@ -74,6 +75,20 @@ export function ImagePicker({ kind, value, onChange, label = 'Photo', globalPast
 
   const editCrop = () => start('Opening…', () => imageSource(value));
 
+  // App: the phone's camera or gallery, then the same upload and crop as a chosen file.
+  const native = isNative();
+  const fromPhone = async (source) => {
+    if (IS_APP) {
+      try {
+        const { pickPhoto } = await import('../native/camera');
+        const file = await pickPhoto(source);
+        if (file) fromFile(file);
+      } catch (err) {
+        toast.error(/denied|permission/i.test(err?.message || '') ? 'Allow camera and photo access for QR Menu Staff in Android settings' : 'Could not get the photo');
+      }
+    }
+  };
+
   return (
     <div className="image-picker">
       <span className="field-label">{label}</span>
@@ -109,6 +124,12 @@ export function ImagePicker({ kind, value, onChange, label = 'Photo', globalPast
         onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ''; fromFile(file); }} />
 
       <div className="row wrap picker-actions">
+        {native && (
+          <>
+            <Button size="sm" variant="secondary" icon={<Camera size={16} />} onClick={() => fromPhone('camera')} disabled={Boolean(busy)}>Take photo</Button>
+            <Button size="sm" variant="secondary" icon={<Images size={16} />} onClick={() => fromPhone('gallery')} disabled={Boolean(busy)}>Choose from gallery</Button>
+          </>
+        )}
         <Button size="sm" variant="secondary" icon={<Upload size={16} />} onClick={() => inputRef.current?.click()} disabled={Boolean(busy)}>{value ? 'Replace' : 'Upload'}</Button>
         {value && <Button size="sm" variant="secondary" icon={<Crop size={16} />} onClick={editCrop} disabled={Boolean(busy)}>Edit crop</Button>}
         {value && <Button size="sm" variant="ghost" icon={<Trash2 size={16} />} onClick={() => onChange('')} disabled={Boolean(busy)}>Remove</Button>}

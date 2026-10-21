@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
-import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router';
+import { NavLink, Navigate, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router';
 import { LayoutDashboard, ClipboardList, UtensilsCrossed, QrCode, Settings, LogOut, Menu as MenuIcon, X, ExternalLink, Bell, Wifi, WifiOff, ChefHat, Users, BarChart3, Star } from 'lucide-react';
 import { OwnerProvider, useOwner } from './OwnerContext';
 import { Brand } from '../auth/AuthLayout';
 import { BottomSheet, Button, EmptyState, IconButton, Switch } from '../../components/ui';
-import { isLoggedIn, clearSession } from '../../lib/session';
+import { isLoggedIn } from '../../lib/session';
+import { signOut } from '../../lib/auth';
+import { pushBack } from '../../lib/backStack';
+import { IS_APP, openExternal, siteOrigin } from '../../lib/platform';
+import { PullToRefresh } from '../../components/PullToRefresh';
 import { timeAgo } from '../../lib/format';
 import { can, ROLE_LABEL } from '../../lib/roles';
 import { usePageTitle } from '../../lib/usePageTitle';
@@ -25,8 +29,8 @@ function Sidebar({ open, onClose }) {
   const { userId, orders, role, me } = useOwner();
   const navigate = useNavigate();
   const newOrders = orders.filter((o) => o.status === 'pending').length;
-  const logout = () => {
-    clearSession();
+  const logout = async () => {
+    await signOut();
     navigate('/login', { replace: true });
   };
   return (
@@ -51,9 +55,16 @@ function Sidebar({ open, onClose }) {
           <NavLink to="/kitchen" className="sidebar-link">
             <ChefHat size={20} aria-hidden="true" /><span>Kitchen display</span>
           </NavLink>
-          <a className="sidebar-link" href={`/menu/${userId}?table=1`} target="_blank" rel="noreferrer">
-            <ExternalLink size={20} aria-hidden="true" /><span>Customer menu</span>
-          </a>
+          {IS_APP ? (
+            // The customer menu lives on the website: open it in the phone's browser.
+            <button type="button" className="sidebar-link" onClick={() => openExternal(`${siteOrigin()}/menu/${userId}?table=1`)}>
+              <ExternalLink size={20} aria-hidden="true" /><span>Customer menu</span>
+            </button>
+          ) : (
+            <a className="sidebar-link" href={`/menu/${userId}?table=1`} target="_blank" rel="noreferrer">
+              <ExternalLink size={20} aria-hidden="true" /><span>Customer menu</span>
+            </a>
+          )}
           <button type="button" className="sidebar-link" onClick={logout}>
             <LogOut size={20} aria-hidden="true" /><span>Log out</span>
           </button>
@@ -90,6 +101,15 @@ function RequestsSheet({ open, onClose }) {
 function Topbar({ onMenu }) {
   const { profile, saveProfile, requests, connected, role } = useOwner();
   const [requestsOpen, setRequestsOpen] = useState(false);
+  // ?requests=1 (a tapped table-request notification) opens the requests sheet.
+  const [params, setParams] = useSearchParams();
+  useEffect(() => {
+    if (params.get('requests') !== '1') return;
+    setRequestsOpen(true);
+    const next = new URLSearchParams(params);
+    next.delete('requests');
+    setParams(next, { replace: true });
+  }, [params, setParams]);
   const acceptingText = profile?.acceptingOrders !== false ? 'Accepting orders' : 'Orders paused';
   return (
     <header className="topbar no-print">
@@ -122,17 +142,27 @@ function Topbar({ onMenu }) {
 }
 
 function Shell() {
+  const { refresh } = useOwner();
   const [drawer, setDrawer] = useState(false);
+  const [refreshes, setRefreshes] = useState(0);
   const location = useLocation();
   useEffect(() => setDrawer(false), [location.pathname]);
+  useEffect(() => (drawer ? pushBack(() => setDrawer(false)) : undefined), [drawer]);
+  // Pull to refresh (app): reload the shared data and remount the screen so it fetches its own again.
+  const pullRefresh = async () => {
+    await refresh();
+    setRefreshes((n) => n + 1);
+  };
   return (
     <div className="owner">
       <Sidebar open={drawer} onClose={() => setDrawer(false)} />
       <div className="owner-main">
         <Topbar onMenu={() => setDrawer(true)} />
-        <main className="owner-content page-enter" key={location.pathname}>
-          <Outlet />
-        </main>
+        <PullToRefresh onRefresh={pullRefresh}>
+          <main className="owner-content page-enter" key={`${location.pathname}#${refreshes}`}>
+            <Outlet />
+          </main>
+        </PullToRefresh>
       </div>
     </div>
   );
