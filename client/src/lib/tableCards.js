@@ -3,7 +3,7 @@ import { APP_NAME } from '../config';
 import { cssVar } from './tokens';
 
 // Default QR colour: the brand's dark olive (dark enough to scan reliably).
-export const defaultQrColor = () => cssVar('--olive-800', '#485000');
+export const defaultQrColor = () => cssVar('--olive-800', '#484e0a');
 
 export const tableUrl = (restaurantId, table) => `${window.location.origin}/menu/${restaurantId}?table=${table}`;
 

@@ -1,23 +1,24 @@
 /*
  * Design tokens: the only place colours, type, radii, shadows and spacing are defined.
- * Brand: olive leaf green. --olive-500 is the base (approximate #A3B23A until the colour is
- * sampled from design-reference/olive-color.png); the scale was generated in OKLab around it.
+ * Brand: olive leaf green. --olive-500 is #A3AD4F (rgb 163, 173, 79), the median of the main paint
+ * area of design-reference/olive-color.png. The scale keeps its OKLab hue (114.5°) and steps lightness
+ * evenly: 50 -> 500 from L 0.97 to the base (0.72), 500 -> 900 from the base to L 0.30.
  *
- * Contrast rule (WCAG AA): white text only on --olive-700 or darker (#606B00 = 5.8:1 on white).
- * Light olive (300-500) is for accents and backgrounds with --ink content on top (7:1 on 500).
+ * Contrast rule (WCAG AA): white text only on --olive-700 or darker (#656C1C = 5.65:1).
+ * Light olive (50-500) is for accents and backgrounds with --ink content on top (6.75:1 on 500).
  */
 :root {
   /* Olive scale */
-  --olive-50: #f5fae4;
-  --olive-100: #eaf2cc;
-  --olive-200: #dbe5aa;
-  --olive-300: #c6d481;
-  --olive-400: #b3c259;
-  --olive-500: #a3b23a;
-  --olive-600: #7d8906;
-  --olive-700: #606b00;
-  --olive-800: #485000;
-  --olive-900: #313700;
+  --olive-50: #f4f7e5;
+  --olive-100: #e3e8c9;
+  --olive-200: #d3daa9;
+  --olive-300: #c2cb87;
+  --olive-400: #b2bc68;
+  --olive-500: #a3ad4f;
+  --olive-600: #838c33;
+  --olive-700: #656c1c;
+  --olive-800: #484e0a;
+  --olive-900: #2d3100;
 
   /* Neutrals */
   --cream-bg: #faf6ee; /* warm off-white page background */
@@ -30,7 +31,7 @@
   --on-dark-muted: #b9bca7; /* secondary text on --ink */
 
   /* Semantic */
-  --success: #2e7d32;
+  --success: #2a772f; /* 4.8:1 on --success-bg */
   --success-bg: #e6f2e4;
   --danger: #b3261e;
   --danger-bg: #fbe7e5;

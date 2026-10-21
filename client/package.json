@@ -24,7 +24,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "check:contrast": "node scripts/check-contrast.mjs"
   },
   "type": "module",
   "devDependencies": {

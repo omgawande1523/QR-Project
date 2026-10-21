@@ -2,7 +2,7 @@ const nodemailer = require('nodemailer');
 const config = require('../config');
 
 // Brand colour for emails; keep in step with --olive-700 in client/src/styles/tokens.css.
-const BRAND_COLOR = '#606b00';
+const BRAND_COLOR = '#656c1c';
 
 const isEmailConfigured = () => Boolean(config.email.user && config.email.pass);
 
