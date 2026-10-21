@@ -6,12 +6,14 @@ const config = require('./config');
 const { storage } = require('./services/storage');
 const { imageVariants } = require('./services/storage/imageVariants');
 const { notFound, errorHandler } = require('./middleware/error');
+const requestLog = require('./middleware/requestLog');
 
 function createApp() {
   const app = express();
 
   app.disable('x-powered-by');
   app.set('trust proxy', config.trustProxy);
+  if (config.env === 'production') app.use(requestLog());
   app.use(helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' }
   }));

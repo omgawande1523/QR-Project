@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const AppError = require('../utils/AppError');
+const log = require('../utils/logger');
 
 function notFound(req, res, next) {
   next(AppError.notFound(`Route not found: ${req.method} ${req.path}`, 'ROUTE_NOT_FOUND'));
@@ -24,8 +25,9 @@ function normalise(err) {
 function errorHandler(err, req, res, next) {
   const known = normalise(err);
   if (!known) {
-    // Log the full error server-side; the client never sees internals or stack traces.
-    console.error(`[${req.method} ${req.originalUrl}]`, err);
+    // Log the error server-side; the client never sees internals or stack traces. The path is logged
+    // without its query string, which can carry order tracking tokens.
+    log.error('Unexpected error', { method: req.method, path: req.originalUrl.split('?')[0], requestId: res.getHeader('X-Request-Id'), err });
     return res.status(500).json({ message: 'Something went wrong. Please try again.', code: 'INTERNAL_ERROR' });
   }
   const body = { message: known.message, code: known.code };

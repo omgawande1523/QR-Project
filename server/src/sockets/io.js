@@ -1,3 +1,4 @@
+const log = require('../utils/logger');
 // Holds the Socket.io server so controllers can emit without importing the HTTP layer.
 // All emits happen here, from the server, after a database write; clients never relay events.
 let io = null;
@@ -21,7 +22,7 @@ function emitTo(room, event, payload) {
   try {
     io.to(room).emit(event, payload);
   } catch (err) {
-    console.error('Socket emit error:', err);
+    log.error('Socket emit failed', { err });
   }
 }
 

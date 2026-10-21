@@ -2,6 +2,7 @@ const Order = require('../models/Order');
 const { rooms } = require('./io');
 const safeEqual = require('../utils/safeEqual');
 const { verifySessionToken } = require('../services/auth');
+const log = require('../utils/logger');
 
 const OBJECT_ID = /^[a-f\d]{24}$/i;
 
@@ -52,7 +53,7 @@ function registerSocketHandlers(io) {
         socket.join(rooms.order(orderId));
         reply(ack, { ok: true });
       } catch (err) {
-        console.error('trackOrder error:', err);
+        log.error('trackOrder failed', { err });
         reply(ack, { ok: false, message: 'Could not track order' });
       }
     });

@@ -9,6 +9,7 @@ const { isEmailConfigured, sendPasswordResetEmail } = require('../services/maile
 const { discardImage } = require('../services/storage');
 const { signToken, signStaffToken } = require('../services/auth');
 const Staff = require('../models/Staff');
+const log = require('../utils/logger');
 
 const IMAGE_FIELDS = ['profilePicture', 'bannerImage', 'qrLogo'];
 // What customers see before ordering (logo = profilePicture).
@@ -108,7 +109,8 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
   try {
     await sendPasswordResetEmail({ to: email, resetCode, resetLink });
   } catch (err) {
-    console.error('Forgot password email error:', err);
+    // The error can contain the recipient's address: log only what went wrong.
+    log.error('Password reset email failed', { error: err.message, code: err.code });
     await User.updateOne({ _id: user._id }, { $unset: { resetCodeHash: 1, resetCodeExpiry: 1 } });
     throw new AppError(502, 'Failed to send reset email', 'EMAIL_FAILED');
   }

@@ -2,6 +2,7 @@ const MenuItem = require('../models/MenuItem');
 const User = require('../models/User');
 const Upload = require('../models/Upload');
 const { storage } = require('./storage');
+const log = require('../utils/logger');
 
 const HOUR_MS = 60 * 60 * 1000;
 const DEFAULT_AGE_MS = 24 * HOUR_MS;
@@ -53,7 +54,7 @@ async function cleanupUploads({ olderThanMs = DEFAULT_AGE_MS, now = Date.now(), 
       await Upload.deleteOne({ _id: upload._id });
     } catch (err) {
       result.failed += 1;
-      console.error('Upload cleanup: could not remove', upload.key, err.message);
+      log.error('Upload cleanup: could not remove an image', { key: upload.key, error: err.message });
     }
   }
   return result;
@@ -64,9 +65,9 @@ function scheduleUploadCleanup({ intervalMs = DEFAULT_INTERVAL_MS, firstRunMs = 
   const run = async () => {
     try {
       const { finals, originals, failed } = await cleanupUploads();
-      if (finals || originals || failed) console.log(`Upload cleanup: removed ${finals} unused crops and ${originals} originals${failed ? `, ${failed} failed` : ''}`);
+      if (finals || originals || failed) log.info('Upload cleanup', { removedCrops: finals, removedOriginals: originals, failed });
     } catch (err) {
-      console.error('Upload cleanup failed:', err.message);
+      log.error('Upload cleanup failed', { err });
     }
   };
   const first = setTimeout(run, firstRunMs);

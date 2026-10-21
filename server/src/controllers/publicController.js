@@ -3,6 +3,7 @@ const Lead = require('../models/Lead');
 const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
 const { isEmailConfigured, sendLeadNotification } = require('../services/mailer');
+const log = require('../utils/logger');
 
 // "Try live demo" on the landing page opens the seeded demo restaurant.
 exports.getDemo = asyncHandler(async (req, res) => {
@@ -15,7 +16,7 @@ exports.contact = asyncHandler(async (req, res) => {
   const lead = await Lead.create(req.body);
   if (isEmailConfigured()) {
     // The enquiry is already saved; a failed notification email must not fail the request.
-    sendLeadNotification(lead).catch((err) => console.error('Lead notification failed:', err.message));
+    sendLeadNotification(lead).catch((err) => log.error('Lead notification failed', { err }));
   }
   res.status(201).json({ message: 'Thanks! We will get back to you within one working day.' });
 });

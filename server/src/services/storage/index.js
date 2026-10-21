@@ -1,6 +1,7 @@
 const config = require('../../config');
 const createLocalStorage = require('./localStorage');
 const { createCloudinaryStorage } = require('./cloudinaryStorage');
+const log = require('../../utils/logger');
 
 /*
  * Storage adapter interface. An adapter (local disk, Cloudinary, or later S3) implements:
@@ -30,7 +31,7 @@ async function discardImage(url) {
   try {
     await storage.remove(key);
   } catch (err) {
-    console.error('Could not delete image', key, err.message);
+    log.error('Could not delete image', { key, error: err.message });
   }
 }
 
