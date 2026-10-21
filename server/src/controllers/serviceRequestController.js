@@ -3,6 +3,7 @@ const User = require('../models/User');
 const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
 const emit = require('../sockets/io');
+const push = require('../services/push');
 
 // Customers call the waiter, ask for water, etc. Public, but the table must belong to the restaurant.
 exports.create = asyncHandler(async (req, res) => {
@@ -20,6 +21,7 @@ exports.create = asyncHandler(async (req, res) => {
   });
 
   emit.toRestaurant(restaurantId, 'serviceRequest', request);
+  push.notify(restaurantId, 'tableRequest', request);
   res.status(201).json({ _id: request._id, type: request.type, tableNumber: request.tableNumber, status: request.status });
 });
 

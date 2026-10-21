@@ -5,6 +5,7 @@ const User = require('../models/User');
 const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
 const emit = require('../sockets/io');
+const push = require('../services/push');
 const safeEqual = require('../utils/safeEqual');
 const { priceOrder } = require('../services/pricing');
 const { nextInvoiceNumber } = require('../services/invoices');
@@ -39,6 +40,7 @@ exports.create = asyncHandler(async (req, res) => {
     trackingToken
   });
   emit.toRestaurant(restaurantId, 'newOrder', savedOrder);
+  push.notify(restaurantId, 'newOrder', savedOrder);
 
   res.status(201).json({ ...savedOrder.toJSON(), trackingToken });
 });
@@ -137,10 +139,12 @@ exports.updateStatus = asyncHandler(async (req, res) => {
     throw AppError.conflict(`This order is already ${order.status === 'complete' ? 'completed' : 'cancelled'}`, 'ORDER_CLOSED');
   }
 
+  const becameReady = order.status !== 'ready' && req.body.status === 'ready';
   order.status = req.body.status;
   await order.save();
 
   emit.toRestaurant(order.restaurantId, 'orderUpdated', order);
   emit.toOrder(order._id, 'orderUpdated', order);
+  if (becameReady) push.notify(order.restaurantId, 'orderReady', order);
   res.json(order);
 });
