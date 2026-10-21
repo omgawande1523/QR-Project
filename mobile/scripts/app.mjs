@@ -11,6 +11,7 @@ import { spawnSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { appEnv } from '../../client/site/app.js';
 
 const MOBILE = fileURLToPath(new URL('..', import.meta.url));
 const ROOT = join(MOBILE, '..');
@@ -75,19 +76,6 @@ function toolchain() {
 }
 
 // ---------- Configuration ----------
-function readEnvFile(file) {
-  if (!existsSync(file)) return {};
-  return Object.fromEntries(readFileSync(file, 'utf8').split(/\r?\n/)
-    .map((line) => line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/))
-    .filter(Boolean)
-    .map(([, key, value]) => [key, value.replace(/^["']|["']$/g, '')]));
-}
-
-// Same precedence as Vite: .env.app, then .env.app.local, then the environment.
-function appEnv() {
-  return { ...readEnvFile(join(CLIENT, '.env.app')), ...readEnvFile(join(CLIENT, '.env.app.local')), ...Object.fromEntries(Object.entries(process.env).filter(([k]) => k.startsWith('VITE_'))) };
-}
-
 function pluginVersionProblems() {
   const client = JSON.parse(readFileSync(join(CLIENT, 'package.json'), 'utf8')).dependencies;
   const mobile = JSON.parse(readFileSync(join(MOBILE, 'package.json'), 'utf8')).dependencies;

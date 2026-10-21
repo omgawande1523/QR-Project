@@ -21,7 +21,8 @@ function sharedChunk(id) {
 export default defineConfig(({ mode }) => ({
   plugins: [react(), mode === 'app' ? appPlugin() : sitePlugin()],
   define: appDefines(mode),
-  ...(mode === 'app' ? { publicDir: false } : {}),
+  // The app reads its own settings (site/app.js appEnv): no public/ files, no .env files from client/.
+  ...(mode === 'app' ? { publicDir: false, envDir: 'site' } : {}),
   server: {
     port: 3000, // falls back to the next free port (3001) when 3000 is taken
     open: false

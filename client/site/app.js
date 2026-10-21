@@ -8,10 +8,30 @@ export function appConfig() {
   return JSON.parse(readFileSync(new URL('app.config.json', MOBILE), 'utf8'));
 }
 
+function readEnvFile(url) {
+  if (!existsSync(url)) return {};
+  return Object.fromEntries(readFileSync(url, 'utf8').split(/\r?\n/)
+    .map((line) => line.match(/^\s*(VITE_[A-Z0-9_]+)\s*=\s*(.*?)\s*$/))
+    .filter(Boolean)
+    .map(([, key, value]) => [key, value.replace(/^["']|["']$/g, '')]));
+}
+
+// The app build's VITE_* settings: client/.env.app, then client/.env.app.local, then the environment.
+// The website's client/.env is deliberately not read: its localhost API address is wrong for a phone.
+// Also used by mobile/scripts/app.mjs.
+export function appEnv() {
+  const fromEnv = Object.fromEntries(Object.entries(process.env).filter(([k]) => k.startsWith('VITE_')));
+  const env = { ...readEnvFile(new URL('../.env.app', import.meta.url)), ...readEnvFile(new URL('../.env.app.local', import.meta.url)), ...fromEnv };
+  return { VITE_API_URL: 'http://10.0.2.2:5000', ...env };
+}
+
 // Build-time constants (see src/lib/platform.js). Push is on only when Firebase is set up for Android.
 export function appDefines(mode) {
   if (mode !== 'app') return { 'import.meta.env.VITE_APP': JSON.stringify('false') };
+  const env = appEnv();
   return {
+    ...Object.fromEntries(['VITE_API_URL', 'VITE_SOCKET_URL', 'VITE_SITE_URL', 'VITE_CONTACT_EMAIL']
+      .map((key) => [`import.meta.env.${key}`, JSON.stringify(env[key] || '')])),
     'import.meta.env.VITE_APP': JSON.stringify('true'),
     'import.meta.env.VITE_APP_VERSION': JSON.stringify(appConfig().versionName),
     'import.meta.env.VITE_PUSH': JSON.stringify(String(existsSync(new URL('android/app/google-services.json', MOBILE))))
