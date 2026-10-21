@@ -171,6 +171,11 @@ ports only, every DNS answer must be a public address (checked again on each of 
 connection pinned to the checked address), a 10 s deadline, an 8 MB limit enforced while streaming, and the bytes
 must decode as a raster image. The limit is 20 links per owner per 10 minutes.
 
+Images that were added but never used are removed automatically: crops older than 24 hours that no dish or
+profile field uses, and originals older than 24 hours that no remaining crop was made from (the original behind
+an image in use is kept for "Edit crop"). The server runs this a minute after start and every 6 hours; preview it
+with `npm --prefix server run cleanup:uploads -- --dry-run`, or turn it off with `UPLOAD_CLEANUP=off`.
+
 ## Environment variables
 
 **server/.env** (see `server/.env.example`)
@@ -186,6 +191,7 @@ must decode as a raster image. The limit is 20 links per owner per 10 minutes.
 | `TRUST_PROXY` | Reverse proxies in front of the API: `0` locally, `1` on Render/Railway |
 | `PUBLIC_URL` | Public base URL of the API, used in uploaded image links (default `http://localhost:PORT`) |
 | `STORAGE_DRIVER`, `UPLOAD_DIR` | Image storage; `local` saves to `server/uploads` and serves `/uploads` |
+| `UPLOAD_CLEANUP` | `off` stops the automatic removal of unused images (on by default) |
 | `EMAIL_USER`, `EMAIL_PASS` | SMTP login for password-reset emails; password reset is disabled when blank |
 
 **client/.env** (see `client/.env.example`)

@@ -47,7 +47,9 @@ const config = {
   storage: {
     driver: env.STORAGE_DRIVER,
     uploadDir: path.resolve(env.UPLOAD_DIR || path.join(__dirname, '..', '..', 'uploads'))
-  }
+  },
+  // Removes images that were added but never used (see services/uploadCleanup.js); UPLOAD_CLEANUP=off disables it.
+  uploadCleanup: env.UPLOAD_CLEANUP !== 'off'
 };
 
 const splitList = (value) => (value || '').split(',').map((s) => s.trim().replace(/\/+$/, '')).filter(Boolean);

@@ -2,8 +2,8 @@ const mongoose = require('mongoose');
 
 // Images an owner added. An "original" is the full-size image as uploaded (or downloaded from a link);
 // a "final" is a crop of it that a dish or profile field uses. Keeping the original lets the owner
-// re-crop later without uploading again. Originals and finals that nothing references are removed by
-// the cleanup job planned for Phase 4.
+// re-crop later without uploading again. Finals nothing uses, and originals no final was made from, are
+// removed after 24 hours by services/uploadCleanup.js.
 const uploadSchema = new mongoose.Schema({
   owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   role: { type: String, enum: ['original', 'final'], required: true },

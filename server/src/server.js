@@ -6,6 +6,7 @@ const connectDB = require('./config/db');
 const createApp = require('./app');
 const registerSocketHandlers = require('./sockets');
 const { setIo } = require('./sockets/io');
+const { scheduleUploadCleanup } = require('./services/uploadCleanup');
 
 // Builds the HTTP + Socket.io server without connecting to MongoDB or listening (used by tests).
 function createServer() {
@@ -37,6 +38,7 @@ async function start() {
     console.log(`Server is running on port ${config.port}`);
     console.log(`CORS enabled for: ${config.allowedOrigins.join(', ') || '(none)'}`);
   });
+  if (config.uploadCleanup) scheduleUploadCleanup();
 
   let shuttingDown = false;
   const shutdown = (signal) => {
