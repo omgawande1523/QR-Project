@@ -39,7 +39,7 @@ export function OwnerProvider({ children }) {
 
   const announce = useCallback((title, body) => {
     const prefs = alertsRef.current;
-    if (prefs.sound) new Audio('/notification.mp3').play().catch(() => {});
+    if (prefs.sound) new Audio('/notification.wav').play().catch(() => {});
     if (prefs.voice && 'speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(body ? `${title}. ${body}` : title);
       utterance.lang = 'en-IN';

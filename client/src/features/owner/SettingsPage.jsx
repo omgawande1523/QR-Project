@@ -167,7 +167,7 @@ export default function SettingsPage() {
           <Switch checked={alerts.sound} onChange={(on) => setAlerts({ sound: on })} label="Sound for new orders and table requests" />
           <Switch checked={alerts.voice} onChange={(on) => setAlerts({ voice: on })} label="Read new orders aloud" />
           <Switch checked={alerts.browser} onChange={enableBrowserAlerts} label={<span className="row" style={{ gap: 6 }}><BellRing size={16} aria-hidden="true" /> Browser notifications when this tab is hidden</span>} />
-          <Button variant="secondary" size="sm" onClick={() => new Audio('/notification.mp3').play().catch(() => toast.error('Click anywhere on the page first, then try again'))}>Play test sound</Button>
+          <Button variant="secondary" size="sm" onClick={() => new Audio('/notification.wav').play().catch(() => toast.error('Click anywhere on the page first, then try again'))}>Play test sound</Button>
         </Section>
 
         <Section title={isStaff ? 'Your password' : 'Account'} description={isStaff ? `Signed in as ${me.name || 'staff'} (${ROLE_LABEL[role]})` : `Signed in as ${profile.email}${profile.phoneNumber ? ` · ${profile.phoneNumber}` : ''}`}>
