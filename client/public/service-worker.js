@@ -1,21 +1,14 @@
-// Minimal Service Worker for PWA "Add to Home Screen" support
-const CACHE_NAME = 'qr-menu-cache-v1';
-const urlsToCache = [
-    '/',
-    '/index.html',
-    '/manifest.json'
-];
+// Retired service worker. Earlier builds registered a cache-first worker that could serve a stale
+// index.html. Browsers that still have it installed fetch this file on their next update check;
+// it clears every cache, unregisters itself and reloads open tabs. A proper PWA worker replaces it later.
+self.addEventListener('install', () => self.skipWaiting());
 
-self.addEventListener('install', (event) => {
-    event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then((cache) => cache.addAll(urlsToCache))
-    );
-});
-
-self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        caches.match(event.request)
-            .then((response) => response || fetch(event.request))
-    );
+self.addEventListener('activate', (event) => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.map((key) => caches.delete(key)));
+    await self.registration.unregister();
+    const clients = await self.clients.matchAll({ type: 'window' });
+    clients.forEach((client) => client.navigate(client.url));
+  })());
 });

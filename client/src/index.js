@@ -10,11 +10,9 @@ root.render(
   </React.StrictMode>
 );
 
-// Register Service Worker
+// No service worker for now: remove any worker an earlier build registered.
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js')
-      .then(reg => console.log('Service Worker registered', reg))
-      .catch(err => console.log('Service Worker registration failed', err));
-  });
+  navigator.serviceWorker.getRegistrations()
+    .then((registrations) => registrations.forEach((registration) => registration.unregister()))
+    .catch(() => {});
 }
