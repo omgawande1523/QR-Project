@@ -12,7 +12,7 @@ In this order, one commit each:
 5. ~~Customer feedback: rate the meal after an order is served~~ done.
 6. ~~Multi-language menu (English / Hindi / Marathi) for item names and descriptions (optional fields)~~ done.
 7. Optional online payment: Razorpay test mode behind a feature flag (pay at counter stays the default).
-   Waiting on the owner: one platform Razorpay account or each restaurant's own, and test keys.
+   Skipped for now (owner decision, 21 Oct 2026): pay at the counter (cash, UPI QR on the bill, card) only.
 8. ~~PWA: installable customer menu and dashboard, offline fallback page, real app icons~~ done.
 9. ~~SEO / meta tags and an Open Graph image for the landing page~~ done.
 10. ~~Abandoned-upload cleanup: delete unused images older than 24 hours, keeping originals that back a used crop~~ done.
