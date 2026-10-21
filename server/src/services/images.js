@@ -14,7 +14,7 @@ const ALLOWED_FORMATS = ['jpeg', 'png', 'webp', 'gif', 'avif', 'heif'];
 
 /**
  * Re-encodes an uploaded image as WebP: verifies it really is an image (whatever the file
- * extension or Content-Type claimed), applies EXIF rotation, strips metadata and resizes it.
+ * extension or Content-Type claimed), applies EXIF orientation, strips metadata and resizes it.
  */
 async function processImage(buffer, kind) {
   const size = IMAGE_KINDS[kind];
@@ -34,7 +34,7 @@ async function processImage(buffer, kind) {
   }
 
   return sharp(buffer, { animated: false })
-    .rotate()
+    .autoOrient()
     .resize({ ...size, fit: 'inside', withoutEnlargement: true })
     .webp({ quality: 80 })
     .toBuffer();
