@@ -23,6 +23,7 @@ async function addStaff(owner, role) {
   return login.body.token;
 }
 
+const serve = (owner, id) => request(app).put(`/api/orders/${id}`).set(auth(owner.token)).send({ status: 'served' });
 const invoice = (token, id) => request(app).post(`/api/orders/${id}/invoice`).set(auth(token));
 const pay = (token, id, body) => request(app).post(`/api/orders/${id}/pay`).set(auth(token)).send(body);
 
@@ -43,6 +44,7 @@ describe('invoices', () => {
     const a = await placeOrder(owner, item);
     const b = await placeOrder(owner, item);
     const fy = financialYear();
+    await serve(owner, a._id);
 
     const first = await invoice(owner.token, a._id);
     expect(first.status).toBe(200);
@@ -50,7 +52,8 @@ describe('invoices', () => {
     expect(first.body.invoicedAt).toBeTruthy();
     // Printing again keeps the same number
     expect((await invoice(owner.token, a._id)).body.invoiceNumber).toBe(`${fy}/000001`);
-    expect((await invoice(owner.token, b._id)).body.invoiceNumber).toBe(`${fy}/000002`);
+    // An order still cooking gets its number but keeps its status
+    expect((await invoice(owner.token, b._id)).body).toMatchObject({ invoiceNumber: `${fy}/000002`, status: 'pending' });
   });
 
   test('each restaurant has its own sequence', async () => {
@@ -86,6 +89,7 @@ describe('payments', () => {
   test('marking paid records the method, closes the order and numbers the bill if needed', async () => {
     const owner = await registerOwner(app);
     const order = await placeOrder(owner, await createMenuItem(app, owner.token));
+    await serve(owner, order._id);
     const res = await pay(owner.token, order._id, { method: 'upi', reference: 'UTR 4321' });
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ status: 'complete', payment: { method: 'upi', reference: 'UTR 4321' } });
@@ -97,6 +101,23 @@ describe('payments', () => {
     expect(again.body.code).toBe('ALREADY_PAID');
     // Reprinting a paid bill keeps it complete
     expect((await invoice(owner.token, order._id)).body.status).toBe('complete');
+  });
+
+  test('paying in advance keeps the order on the kitchen display; billing it after serving closes it', async () => {
+    const owner = await registerOwner(app);
+    const order = await placeOrder(owner, await createMenuItem(app, owner.token));
+    const paid = await pay(owner.token, order._id, { method: 'cash' });
+    expect(paid.body).toMatchObject({ status: 'pending', payment: { method: 'cash' } });
+    await serve(owner, order._id);
+    expect((await invoice(owner.token, order._id)).body.status).toBe('complete');
+  });
+
+  test('a billed order closes when paid', async () => {
+    const owner = await registerOwner(app);
+    const order = await placeOrder(owner, await createMenuItem(app, owner.token));
+    await serve(owner, order._id);
+    expect((await invoice(owner.token, order._id)).body.status).toBe('billed');
+    expect((await pay(owner.token, order._id, { method: 'upi' })).body.status).toBe('complete');
   });
 
   test('only cash, UPI or card can be recorded by staff', async () => {
@@ -124,6 +145,7 @@ describe('payments', () => {
   test('the customer tracking page sees the bill and payment', async () => {
     const owner = await registerOwner(app);
     const order = await placeOrder(owner, await createMenuItem(app, owner.token));
+    await serve(owner, order._id);
     await pay(owner.token, order._id, { method: 'card' });
     const status = await request(app).get(`/api/orders/status/${order._id}`).query({ token: order.trackingToken });
     expect(status.body).toMatchObject({ status: 'complete', payment: { method: 'card' } });

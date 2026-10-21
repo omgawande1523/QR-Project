@@ -84,24 +84,27 @@ function broadcastOrder(order) {
   emit.toOrder(order._id, 'orderUpdated', order);
 }
 
-// Makes the bill: assigns the invoice number once (calling again returns the same one) and marks
-// the order billed unless it is already paid.
+// Served (or billed) orders close once they are paid; an order paid in advance keeps cooking.
+const SETTLE_FROM = ['served', 'billed'];
+
+// Makes the bill: assigns the invoice number once (calling again returns the same one). A served
+// order moves to billed, or straight to complete if it was paid in advance.
 exports.invoice = asyncHandler(async (req, res) => {
   const order = await findOwnOrder(req);
   await ensureInvoiceNumber(order);
-  if (order.status !== 'complete') order.status = 'billed';
+  if (order.status === 'served') order.status = order.payment?.paidAt ? 'complete' : 'billed';
   await order.save();
   broadcastOrder(order);
   res.json(order);
 });
 
-// Settles the bill (cash, UPI or card) and closes the order.
+// Settles the bill (cash, UPI or card); closes the order if it has been served.
 exports.pay = asyncHandler(async (req, res) => {
   const order = await findOwnOrder(req);
   if (order.payment?.paidAt) throw AppError.conflict('This bill is already paid', 'ALREADY_PAID');
   await ensureInvoiceNumber(order);
   order.payment = { method: req.body.method, reference: req.body.reference, paidAt: new Date() };
-  order.status = 'complete';
+  if (SETTLE_FROM.includes(order.status)) order.status = 'complete';
   await order.save();
   broadcastOrder(order);
   res.json(order);
