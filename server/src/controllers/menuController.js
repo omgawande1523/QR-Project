@@ -9,10 +9,6 @@ async function findOwnedItem(req, action) {
   return item;
 }
 
-exports.listAll = asyncHandler(async (req, res) => {
-  res.json(await MenuItem.find());
-});
-
 exports.listByRestaurant = asyncHandler(async (req, res) => {
   res.json(await MenuItem.find({ owner: req.params.userId }));
 });
