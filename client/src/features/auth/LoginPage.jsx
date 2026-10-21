@@ -23,7 +23,8 @@ export default function LoginPage() {
     try {
       const res = await api.post('/api/users/login', { identifier: identifier.trim(), password });
       setSession(res.data);
-      navigate(params.get('next')?.startsWith('/dashboard') ? params.get('next') : '/dashboard', { replace: true });
+      const next = params.get('next') || '';
+      navigate(/^\/(dashboard|kitchen)(\/|$)/.test(next) ? next : '/dashboard', { replace: true });
     } catch (err) {
       setError(errorMessage(err, 'Could not log in'));
     } finally {

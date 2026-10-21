@@ -20,6 +20,7 @@ const OrdersBoard = lazy(() => import('./features/owner/OrdersBoard'));
 const MenuManager = lazy(() => import('./features/owner/MenuManager'));
 const TablesPage = lazy(() => import('./features/owner/TablesPage'));
 const SettingsPage = lazy(() => import('./features/owner/SettingsPage'));
+const KitchenScreen = lazy(() => import('./features/kitchen/KitchenScreen'));
 
 // Customer (opened by scanning a table QR code)
 const CustomerApp = lazy(() => import('./features/customer/CustomerApp'));
@@ -59,6 +60,7 @@ function App() {
               <Route path="tables" element={<TablesPage />} />
               <Route path="settings" element={<SettingsPage />} />
             </Route>
+            <Route path="/kitchen" element={<KitchenScreen />} />
             {/* Paths used by the previous version of the app */}
             <Route path="/orders" element={<Navigate to="/dashboard/orders" replace />} />
             <Route path="/profile" element={<Navigate to="/dashboard/settings" replace />} />

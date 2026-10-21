@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router';
-import { LayoutDashboard, ClipboardList, UtensilsCrossed, QrCode, Settings, LogOut, Menu as MenuIcon, X, ExternalLink, Bell, Wifi, WifiOff } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, UtensilsCrossed, QrCode, Settings, LogOut, Menu as MenuIcon, X, ExternalLink, Bell, Wifi, WifiOff, ChefHat } from 'lucide-react';
 import { OwnerProvider, useOwner } from './OwnerContext';
 import { Brand } from '../auth/AuthLayout';
 import { BottomSheet, Button, EmptyState, IconButton, Switch } from '../../components/ui';
@@ -42,6 +42,9 @@ function Sidebar({ open, onClose }) {
           ))}
         </nav>
         <div className="sidebar-foot">
+          <NavLink to="/kitchen" className="sidebar-link">
+            <ChefHat size={20} aria-hidden="true" /><span>Kitchen display</span>
+          </NavLink>
           <a className="sidebar-link" href={`/menu/${userId}?table=1`} target="_blank" rel="noreferrer">
             <ExternalLink size={20} aria-hidden="true" /><span>Customer menu</span>
           </a>

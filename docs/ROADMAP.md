@@ -4,7 +4,7 @@
 
 In this order, one commit each:
 
-1. Kitchen Display Screen (`/kitchen`): full screen, big text, live via socket, bump button.
+1. ~~Kitchen Display Screen (`/kitchen`)~~ done.
    Replaces the old dashboard's "kitchen mode", removed in Phase 3.
 2. Staff accounts with roles: Owner, Manager, Waiter, Kitchen (route and API guards).
 3. Bill / invoice: printable GST invoice per order (PDF), mark paid (cash / UPI / card).
