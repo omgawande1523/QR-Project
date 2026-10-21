@@ -18,6 +18,7 @@ const MenuItem = require('../src/models/MenuItem');
 const Order = require('../src/models/Order');
 const ServiceRequest = require('../src/models/ServiceRequest');
 const Counter = require('../src/models/Counter');
+const TRANSLATIONS = require('./seed-translations');
 const { nextInvoiceNumber, financialYear, counterKey, formatInvoiceNumber } = require('../src/services/invoices');
 const { IMAGE_KINDS, saveOriginal, cropOriginal } = require('../src/services/images');
 const Upload = require('../src/models/Upload');
@@ -299,7 +300,7 @@ async function main() {
   const items = [];
   for (const { image, ...fields } of MENU) {
     const { url } = await addImage(fs.readFileSync(path.join(ASSETS, `${image}.webp`)), 'menu', restaurant._id);
-    items.push(await MenuItem.create({ ...fields, image: url, owner: restaurant._id }));
+    items.push(await MenuItem.create({ ...fields, translations: TRANSLATIONS[fields.name], image: url, owner: restaurant._id }));
   }
   const itemsByName = new Map(items.map((item) => [item.name, item]));
   // Orders are priced from the menu; mark everything available while pricing sample orders.

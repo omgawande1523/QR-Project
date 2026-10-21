@@ -12,6 +12,14 @@ const option = z.object({
   price
 });
 
+// One language's optional name and description; blank fields are dropped so English shows instead.
+const translation = z.object({
+  name: z.string().trim().max(100, 'Translated name must be at most 100 characters').optional(),
+  description: z.string().trim().max(500, 'Translated description must be at most 500 characters').optional()
+}).strict().transform((t) => Object.fromEntries(Object.entries(t).filter(([, v]) => v)));
+const translations = z.object(Object.fromEntries(MenuItem.LANGUAGES.map((lang) => [lang, translation.optional()])))
+  .strict('Only Hindi (hi) and Marathi (mr) translations are supported');
+
 const uniqueNames = (list) => new Set(list.map((o) => o.name.toLowerCase())).size === list.length;
 
 const itemFields = {
@@ -27,6 +35,7 @@ const itemFields = {
   spiceLevel: z.coerce.number().int().min(0).max(3).optional(),
   calories: z.coerce.number().int().min(0).max(5000).nullable().optional(),
   variants: z.array(option).max(10, 'At most 10 sizes').refine(uniqueNames, 'Size names must be unique').optional(),
+  translations: translations.optional(),
   addOns: z.array(option).max(20, 'At most 20 add-ons').refine(uniqueNames, 'Add-on names must be unique').optional()
 };
 

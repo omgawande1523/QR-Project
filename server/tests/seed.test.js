@@ -36,6 +36,7 @@ describe('seed script', () => {
     const menu = await request(app).get(`/api/menu/${login.body.userId}`);
     expect(menu.body.length).toBeGreaterThanOrEqual(20);
     expect(menu.body.every((item) => item.image.includes('/uploads/menu/'))).toBe(true);
+    expect(menu.body.every((item) => item.translations?.hi?.name && item.translations?.mr?.name)).toBe(true);
 
     const orders = await request(app).get('/api/orders').set('Authorization', `Bearer ${login.body.token}`);
     expect(orders.body.length).toBeGreaterThan(300); // 8 live orders and eight weeks of history

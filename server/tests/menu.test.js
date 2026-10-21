@@ -96,3 +96,29 @@ describe('menu item details and bulk availability', () => {
     expect((await request(app).patch('/api/menu/availability').set(auth(owner.token)).send({ ids: [], available: false })).status).toBe(400);
   });
 });
+
+describe('menu translations', () => {
+  test('stores optional Hindi and Marathi names and descriptions; blanks fall back to English', async () => {
+    const owner = await registerOwner(app);
+    const item = await createMenuItem(app, owner.token, {
+      name: 'Masala Dosa',
+      translations: { hi: { name: ' मसाला डोसा ', description: 'आलू भरा कुरकुरा डोसा' }, mr: { name: 'मसाला डोसा', description: '' } }
+    });
+    expect(item.translations).toEqual({ hi: { name: 'मसाला डोसा', description: 'आलू भरा कुरकुरा डोसा' }, mr: { name: 'मसाला डोसा' } });
+
+    const menu = await request(app).get(`/api/menu/${owner.userId}`);
+    expect(menu.body[0].translations.hi.name).toBe('मसाला डोसा');
+
+    const updated = await request(app).put(`/api/menu/${item._id}`).set(auth(owner.token)).send({ translations: { mr: { name: 'मसाला दोसा' } } });
+    expect(updated.status).toBe(200);
+    expect(updated.body.translations.mr).toEqual({ name: 'मसाला दोसा' });
+  });
+
+  test('rejects unsupported languages and over-long text', async () => {
+    const owner = await registerOwner(app);
+    const french = await request(app).post('/api/menu').set(auth(owner.token)).send({ name: 'Dosa', price: 100, translations: { fr: { name: 'Crêpe' } } });
+    expect(french.status).toBe(400);
+    const long = await request(app).post('/api/menu').set(auth(owner.token)).send({ name: 'Dosa', price: 100, translations: { hi: { name: 'क'.repeat(101) } } });
+    expect(long.status).toBe(400);
+  });
+});
