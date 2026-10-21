@@ -10,7 +10,7 @@ their table, browse the menu, and place orders; the restaurant sees orders live 
 
 ```
 QR-Project/
-├── client/            React app (Create React App)
+├── client/            React 18 app (Vite)
 ├── server/            Express + Mongoose + Socket.io API
 │   └── scripts/       maintenance scripts (seed, guarded reset)
 ├── design-reference/  brand colour and UI references
@@ -50,16 +50,18 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 npm run dev
 ```
 
-This starts the API on http://localhost:5000 and the React app on http://localhost:3000.
+This starts the API on http://localhost:5000 and the React app (Vite) on http://localhost:3000; if port 3000
+is taken, Vite uses the next free port (3001 is already allowed by the API in development).
 
 | Script | What it does |
 | --- | --- |
 | `npm run install:all` | Installs root, server and client dependencies |
-| `npm run dev` | Runs server (nodemon) and client (React dev server) together |
+| `npm run dev` | Runs server (nodemon) and client (Vite) together |
 | `npm run build` | Production build of the client into `client/build` |
 | `npm start` | Starts the API server |
 | `npm run seed` | Loads demo data |
-| `npm test` | Runs server and client tests |
+| `npm test` | Runs server tests (Jest + Supertest) and client tests (Vitest) |
+| `npm run lint` | Lints the client |
 
 ## Demo data
 
@@ -80,19 +82,23 @@ Re-running replaces only the demo account's own data. Image credits: `server/scr
 | `NODE_ENV` | `development` or `production` |
 | `PORT` | API port (default 5000) |
 | `MONGODB_URI` | MongoDB connection string |
-| `JWT_SECRET` | Secret used to sign login tokens |
+| `JWT_SECRET` | Secret used to sign login tokens; **required**, at least 32 characters |
 | `FRONTEND_URL` | Allowed CORS origin and base URL for password-reset links |
+| `CORS_ORIGINS` | Extra allowed origins, comma separated (localhost:3000/3001 are added in development) |
+| `TRUST_PROXY` | Reverse proxies in front of the API: `0` locally, `1` on Render/Railway |
+| `PUBLIC_URL` | Public base URL of the API, used in uploaded image links (default `http://localhost:PORT`) |
+| `STORAGE_DRIVER`, `UPLOAD_DIR` | Image storage; `local` saves to `server/uploads` and serves `/uploads` |
 | `EMAIL_USER`, `EMAIL_PASS` | SMTP login for password-reset emails; password reset is disabled when blank |
 
 **client/.env** (see `client/.env.example`)
 
 | Variable | Purpose |
 | --- | --- |
-| `REACT_APP_API_URL` | API base URL (default `http://localhost:5000`) |
-| `REACT_APP_SOCKET_URL` | Socket.io URL (defaults to `REACT_APP_API_URL`) |
+| `VITE_API_URL` | API base URL (default `http://localhost:5000`) |
+| `VITE_SOCKET_URL` | Socket.io URL (defaults to `VITE_API_URL`) |
 
-To test from a phone on the same Wi-Fi, set `REACT_APP_API_URL` to your PC's LAN address
-(for example `http://192.168.1.20:5000`) and add that client origin to `FRONTEND_URL`.
+To test from a phone on the same Wi-Fi, set `VITE_API_URL` to your PC's LAN address
+(for example `http://192.168.1.20:5000`) and add that client origin to `CORS_ORIGINS` in `server/.env`. Client env changes need a dev-server restart.
 
 ## Resetting the database
 
