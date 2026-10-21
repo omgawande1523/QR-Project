@@ -245,3 +245,16 @@ describe('order lifecycle and listing', () => {
     expect(bad.status).toBe(400);
   });
 });
+
+describe('served status', () => {
+  test('an order can move through ready -> served -> billed -> complete', async () => {
+    const owner = await registerOwner(app);
+    const item = await createMenuItem(app, owner.token);
+    const order = (await placeOrder({ restaurantId: owner.userId, tableNumber: 1, items: [{ menuItem: item._id, quantity: 1 }] })).body;
+    for (const status of ['process', 'ready', 'served', 'billed', 'complete']) {
+      const res = await request(app).put(`/api/orders/${order._id}`).set(auth(owner.token)).send({ status });
+      expect(res.status).toBe(200);
+      expect(res.body.status).toBe(status);
+    }
+  });
+});

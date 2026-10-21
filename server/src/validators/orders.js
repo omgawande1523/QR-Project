@@ -1,6 +1,7 @@
 const { z, objectId, tableNumber, phoneNumber } = require('./common');
 
-const ORDER_STATUSES = ['pending', 'process', 'ready', 'billed', 'complete', 'cancelled'];
+// Board order: New (pending) -> Preparing (process) -> Ready -> Served -> Billed -> closed (complete).
+const ORDER_STATUSES = ['pending', 'process', 'ready', 'served', 'billed', 'complete', 'cancelled'];
 const MAX_QUANTITY = 50;
 
 exports.ORDER_STATUSES = ORDER_STATUSES;
