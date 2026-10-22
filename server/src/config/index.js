@@ -35,7 +35,9 @@ const envSchema = z.object({
   // APP_LATEST_VERSION it offers the update. APP_UPDATE_URL is where the update button goes.
   APP_MIN_VERSION: z.preprocess((v) => v || undefined, z.string().regex(VERSION, 'must look like 1.2.3').default('1.0.0')),
   APP_LATEST_VERSION: z.preprocess((v) => v || undefined, z.string().regex(VERSION, 'must look like 1.2.3').optional()),
-  APP_UPDATE_URL: z.preprocess((v) => v || undefined, z.string().url().default('https://play.google.com/store/apps/details?id=com.qrmenu.staff'))
+  APP_UPDATE_URL: z.preprocess((v) => v || undefined, z.string().url().default('https://play.google.com/store/apps/details?id=com.qrmenu.staff')),
+  // The iPhone app's update button: its App Store page (https://apps.apple.com/app/id<Apple ID>) once it is live.
+  APP_UPDATE_URL_IOS: z.preprocess((v) => v || undefined, z.string().url().default('https://apps.apple.com/search?term=QR%20Menu%20Staff'))
 }).superRefine((env, ctx) => {
   if (env.STORAGE_DRIVER === 'cloudinary' && !parseCloudinaryUrl(env.CLOUDINARY_URL || '')) {
     ctx.addIssue({
@@ -82,7 +84,8 @@ const config = {
   app: {
     minVersion: env.APP_MIN_VERSION,
     latestVersion: env.APP_LATEST_VERSION || env.APP_MIN_VERSION,
-    updateUrl: env.APP_UPDATE_URL
+    updateUrl: env.APP_UPDATE_URL,
+    updateUrlIos: env.APP_UPDATE_URL_IOS
   }
 };
 

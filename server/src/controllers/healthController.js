@@ -35,7 +35,9 @@ exports.apiInfo = (req, res) => {
 };
 
 // The staff app checks this on start: below minVersion it must update, below latestVersion it may.
+// The staff app asks with ?platform=ios or android and gets its own store's update link.
 exports.appVersion = (req, res) => {
+  const { updateUrlIos, ...app } = config.app;
   res.set('Cache-Control', 'public, max-age=300');
-  res.json(config.app);
+  res.json({ ...app, updateUrl: req.query.platform === 'ios' ? updateUrlIos : app.updateUrl });
 };

@@ -22,7 +22,11 @@ exports.login = {
 };
 
 exports.deleteAccount = {
-  body: z.object({ password: z.string().min(1, 'Enter your password').max(128) })
+  body: z.object({
+    password: z.string().min(1, 'Enter your password').max(128),
+    // Owners type DELETE too (the whole restaurant goes); staff deleting their own login do not.
+    confirm: z.string().max(40).optional()
+  })
 };
 
 exports.forgotPassword = {
