@@ -7,6 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A1B2C3D41000D88900FA2026 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D41000000000FA2026 /* MainViewController.swift */; };
+		A1B2C3D41000F77800FA2026 /* NativePrintPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D410001EEF00FA2026 /* NativePrintPlugin.swift */; };
+		A1B2C3D41001166700FA2026 /* new_order.wav in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D410007BBC00FA2026 /* new_order.wav */; };
+		A1B2C3D41001355600FA2026 /* table_request.wav in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D410009AAB00FA2026 /* table_request.wav */; };
+		A1B2C3D41001544500FA2026 /* order_ready.wav in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D41000B99A00FA2026 /* order_ready.wav */; };
+		A1B2C3D41001733400FA2026 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D41001B11200FA2026 /* FirebaseMessaging */; };
 		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
 		4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */ = {isa = PBXBuildFile; productRef = 4D22ABE82AF431CB00220026 /* CapApp-SPM */; };
 		50379B232058CBB4000EE86E /* capacitor.config.json in Resources */ = {isa = PBXBuildFile; fileRef = 50379B222058CBB4000EE86E /* capacitor.config.json */; };
@@ -19,6 +25,12 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		A1B2C3D41000000000FA2026 /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
+		A1B2C3D410001EEF00FA2026 /* NativePrintPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativePrintPlugin.swift; sourceTree = "<group>"; };
+		A1B2C3D410003DDE00FA2026 /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
+		A1B2C3D410007BBC00FA2026 /* new_order.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = new_order.wav; sourceTree = "<group>"; };
+		A1B2C3D410009AAB00FA2026 /* table_request.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = table_request.wav; sourceTree = "<group>"; };
+		A1B2C3D41000B99A00FA2026 /* order_ready.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = order_ready.wav; sourceTree = "<group>"; };
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
 		50379B222058CBB4000EE86E /* capacitor.config.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = capacitor.config.json; sourceTree = "<group>"; };
 		504EC3041FED79650016851F /* App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = App.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -38,6 +50,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */,
+				A1B2C3D41001733400FA2026 /* FirebaseMessaging in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -67,6 +80,10 @@
 				9582B6822FE993A50072D4E8 /* SceneDelegate.swift */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
+				A1B2C3D41000000000FA2026 /* MainViewController.swift */,
+				A1B2C3D410001EEF00FA2026 /* NativePrintPlugin.swift */,
+				A1B2C3D410003DDE00FA2026 /* App.entitlements */,
+				A1B2C3D410005CCD00FA2026 /* Sounds */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
@@ -75,6 +92,16 @@
 				50B271D01FEDC1A000F3C39B /* public */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		A1B2C3D410005CCD00FA2026 /* Sounds */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D410007BBC00FA2026 /* new_order.wav */,
+				A1B2C3D410009AAB00FA2026 /* table_request.wav */,
+				A1B2C3D41000B99A00FA2026 /* order_ready.wav */,
+			);
+			path = Sounds;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -87,6 +114,7 @@
 				504EC3001FED79650016851F /* Sources */,
 				504EC3011FED79650016851F /* Frameworks */,
 				504EC3021FED79650016851F /* Resources */,
+				A1B2C3D41001D00100FA2026 /* Copy Firebase settings */,
 			);
 			buildRules = (
 			);
@@ -95,6 +123,7 @@
 			name = App;
 			packageProductDependencies = (
 				4D22ABE82AF431CB00220026 /* CapApp-SPM */,
+				A1B2C3D41001B11200FA2026 /* FirebaseMessaging */,
 			);
 			productName = App;
 			productReference = 504EC3041FED79650016851F /* App.app */;
@@ -127,6 +156,7 @@
 			mainGroup = 504EC2FB1FED79650016851F;
 			packageReferences = (
 				D4C12C0A2AAA248700AAC8A2 /* XCLocalSwiftPackageReference "CapApp-SPM" */,
+				A1B2C3D41001922300FA2026 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			productRefGroup = 504EC3051FED79650016851F /* Products */;
 			projectDirPath = "";
@@ -148,10 +178,31 @@
 				50379B232058CBB4000EE86E /* capacitor.config.json in Resources */,
 				504EC30D1FED79650016851F /* Main.storyboard in Resources */,
 				2FAD9763203C412B000D30F8 /* config.xml in Resources */,
+				A1B2C3D41001166700FA2026 /* new_order.wav in Resources */,
+				A1B2C3D41001355600FA2026 /* table_request.wav in Resources */,
+				A1B2C3D41001544500FA2026 /* order_ready.wav in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		A1B2C3D41001D00100FA2026 /* Copy Firebase settings */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Firebase settings";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Firebase settings for push notifications: written by the cloud build, never committed.\n# Without them the app builds and runs, just without notifications.\nif [ -f \"${SRCROOT}/App/GoogleService-Info.plist\" ]; then\n  cp \"${SRCROOT}/App/GoogleService-Info.plist\" \"${BUILT_PRODUCTS_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		504EC3001FED79650016851F /* Sources */ = {
@@ -160,6 +211,8 @@
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,
+				A1B2C3D41000D88900FA2026 /* MainViewController.swift in Sources */,
+				A1B2C3D41000F77800FA2026 /* NativePrintPlugin.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -299,15 +352,17 @@
 			baseConfigurationReference = 958DCC722DB07C7200EA8C5F /* debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.0;
 				OTHER_SWIFT_FLAGS = "$(inherited) \"-D\" \"COCOAPODS\" \"-DDEBUG\"";
 				PRODUCT_BUNDLE_IDENTIFIER = com.qrmenu.staff;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -321,15 +376,17 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.qrmenu.staff;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
@@ -368,11 +425,27 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		A1B2C3D41001922300FA2026 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		4D22ABE82AF431CB00220026 /* CapApp-SPM */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = D4C12C0A2AAA248700AAC8A2 /* XCLocalSwiftPackageReference "CapApp-SPM" */;
 			productName = "CapApp-SPM";
+		};
+		A1B2C3D41001B11200FA2026 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D41001922300FA2026 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

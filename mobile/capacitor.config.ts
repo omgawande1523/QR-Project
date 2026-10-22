@@ -17,6 +17,15 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: process.env.QRMENU_ALLOW_HTTP === '1' ? 'http' : 'https'
   },
+  // iOS loads the screens from capacitor://localhost (also allowed by the API). Plain http to a local test API
+  // needs an App Transport Security exception for that one host, which only simulator builds add
+  // (scripts/app.mjs ios-ats); release builds talk https only.
+  ios: {
+    contentInset: 'never', // edge to edge; the CSS keeps clear of the notch and home indicator (app.css)
+    preferredContentMode: 'mobile', // iPad gets the touch layout, not a desktop-style page
+    allowsLinkPreview: false, // a long press drags an order card instead of previewing a link
+    backgroundColor: '#faf6ee'
+  },
   plugins: {
     SplashScreen: {
       launchAutoHide: false, // hidden by the app once the first screen has rendered
@@ -31,6 +40,10 @@ const config: CapacitorConfig = {
     },
     PushNotifications: {
       presentationOptions: ['badge', 'sound', 'alert']
+    },
+    Keyboard: {
+      // iOS: the web view shrinks above the keyboard, so dialogs and focused fields stay visible
+      resize: 'native'
     }
   }
 };

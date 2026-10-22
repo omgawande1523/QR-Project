@@ -1,5 +1,5 @@
-// Writes the three notification sounds into android/app/src/main/res/raw (16-bit mono WAV, near full scale so
-// they are heard in a busy kitchen). Each type sounds different so staff know what it is without looking:
+// Writes the three notification sounds into android/app/src/main/res/raw and ios/App/App/Sounds (16-bit mono
+// WAV, near full scale so they are heard in a busy kitchen; iOS plays WAV notification sounds up to 30 s). Each type sounds different so staff know what it is without looking:
 //   new_order      three rising notes, the most insistent
 //   table_request  a two-note "ding-dong", like a counter bell
 //   order_ready    two quick high notes
@@ -54,7 +54,9 @@ const SOUNDS = {
   order_ready: render([note(1760, 0, 0.35), note(1760, 0.22, 0.6)], 0.9)
 };
 
-const dir = fileURLToPath(new URL('../android/app/src/main/res/raw/', import.meta.url));
-mkdirSync(dir, { recursive: true });
-for (const [name, wav] of Object.entries(SOUNDS)) writeFileSync(`${dir}${name}.wav`, wav);
-console.log(`notification sounds written to ${dir}`);
+for (const folder of ['../android/app/src/main/res/raw/', '../ios/App/App/Sounds/']) {
+  const dir = fileURLToPath(new URL(folder, import.meta.url));
+  mkdirSync(dir, { recursive: true });
+  for (const [name, wav] of Object.entries(SOUNDS)) writeFileSync(`${dir}${name}.wav`, wav);
+  console.log(`notification sounds written to ${dir}`);
+}
