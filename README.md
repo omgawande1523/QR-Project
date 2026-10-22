@@ -522,7 +522,29 @@ build, simulator run, signature and upload happens on a Mac in the cloud: **Code
 backup, **GitHub Actions** (`.github/workflows/ios.yml`). Both are started by hand, so pushes never use Mac
 minutes. Publishing: [docs/APP_STORE.md](docs/APP_STORE.md).
 
-<!-- IOS-SCREENSHOTS -->
+<p>
+  <img src="docs/screenshots/app/ios-iphone-orders.png" alt="Orders board on an iPhone 17 Pro Max simulator" width="200">
+  <img src="docs/screenshots/app/ios-iphone-dashboard.png" alt="Dashboard home on an iPhone simulator" width="200">
+  <img src="docs/screenshots/app/ios-ipad-kitchen-landscape.png" alt="Kitchen display on an iPad Pro 13-inch simulator in landscape" width="420">
+</p>
+
+### Verified on a real Mac
+
+The **ios-check** workflow ran on GitHub's macOS runners (Xcode, iPhone 17 Pro Max and iPad Pro 13-inch (M5)
+simulators) and passed:
+
+| Check | Result |
+| --- | --- |
+| The iOS project compiles (Debug, iOS Simulator), all 15 plugins and Firebase Messaging included | Passed |
+| The app installs and launches on iPhone and iPad and shows the login screen | Passed |
+| Owner signs in on iPhone against a live API, dashboard and orders board load | Passed (Maestro) |
+| iPhone stays upright when turned on the orders board | Passed |
+| Kitchen signs in on iPad; the kitchen display turns to landscape | Passed |
+| Safe areas: content clear of the Dynamic Island and the home indicator | Seen in the screenshots |
+
+Not verified on a Mac yet, because it needs your Apple account or a real device: the signed release build and
+TestFlight upload, push notifications (simulators cannot receive them), the camera, AirPrint and the share sheet.
+Their code compiles and the same features work in the Android app.
 
 ### What iOS adds or does differently
 

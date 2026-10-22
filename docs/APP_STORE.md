@@ -83,7 +83,8 @@ sizes for the largest devices are enough; Apple scales them down for smaller one
 
 The **ios-check** cloud build (Codemagic or GitHub Actions) takes them on exactly these simulators (iPhone Pro
 Max and iPad Pro 13-inch) with the demo restaurant: download the `ios-check` artifact and pick from
-`iPhone-*.png` and `iPad-*.png`. Suggested set: orders board, kitchen display (iPad landscape), dashboard home,
+`iPhone-*.png` and `iPad-*.png` (landscape screens are captured sideways: rotate them upright first, as
+`docs/screenshots/app/ios-ipad-kitchen-landscape.png` was). Suggested set: orders board, kitchen display (iPad landscape), dashboard home,
 menu editor, bill with UPI QR, table QR codes, settings with signed-in devices. Screenshots must show the app
 itself (no device frames are needed) and no real guests' personal data; the demo data is made up.
 
