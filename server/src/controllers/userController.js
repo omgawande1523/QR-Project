@@ -14,7 +14,7 @@ const log = require('../utils/logger');
 const IMAGE_FIELDS = ['profilePicture', 'bannerImage', 'qrLogo'];
 // What customers see before ordering (logo = profilePicture).
 const PUBLIC_PROFILE_FIELDS = 'restaurantName tagline address profilePicture bannerImage tables categories openingHours '
-  + 'taxPercent serviceChargePercent acceptingOrders';
+  + 'taxPercent serviceChargePercent acceptingOrders upiId'; // upiId: the guest's bill shows a pay-by-UPI QR
 // Never sent to clients (legacy resetToken fields may still exist on older documents).
 const PRIVATE_FIELDS = '-password -resetCodeHash -resetCodeExpiry -resetCodeAttempts -tokenVersion -resetToken -resetTokenExpiry';
 

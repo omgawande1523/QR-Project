@@ -33,6 +33,13 @@ describe('restaurant profile', () => {
     ['email', 'gstin', 'tableStats', 'phoneNumber', 'tokenVersion'].forEach((field) => expect(res.body[field]).toBeUndefined());
   });
 
+  test('the UPI ID is public so the guest can pay their bill by UPI', async () => {
+    const owner = await registerOwner(app);
+    await update(owner, { upiId: 'cafe.shiv@okaxis' });
+    const res = await request(app).get(`/api/users/${owner.userId}/public`);
+    expect(res.body.upiId).toBe('cafe.shiv@okaxis');
+  });
+
   test.each([
     [{ gstin: 'ABC' }],
     [{ openingHours: [{ day: 1, open: '8am', close: '22:00' }] }],
