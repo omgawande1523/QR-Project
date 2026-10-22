@@ -68,8 +68,13 @@ screenshots() {
     sleep 25
     xcrun simctl io "$udid" screenshot "$SHOTS/$kind-1-login.png"
     if [ "$api" = 1 ]; then
-      # Maestro saves screenshots relative to where it runs.
+      local marker="$SHOTS/.maestro-$kind"
+      touch "$marker"
       (cd "$SHOTS" && "$(maestro_bin)" --device "$udid" test "$flows/$kind.yaml") || { echo "Sign-in flow failed on $kind"; failed=1; }
+      # Where Maestro writes screenshots depends on its version: collect them from the likely places.
+      find "$SHOTS" "$flows" "$HOME/.maestro" "$PWD" -name "$kind-*.png" -newer "$marker" -not -path "$SHOTS/$kind-*" 2>/dev/null \
+        | while read -r shot; do echo "Maestro screenshot: $shot"; cp "$shot" "$SHOTS/"; done
+      rm -f "$marker"
     fi
     xcrun simctl spawn "$udid" log show --last 15m --style compact --predicate "process == \"App\"" > "$SHOTS/$kind-app.log" 2>/dev/null || true
     xcrun simctl shutdown "$udid" || true
