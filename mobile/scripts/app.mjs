@@ -83,7 +83,7 @@ function pluginVersionProblems() {
   const client = JSON.parse(readFileSync(join(CLIENT, 'package.json'), 'utf8')).dependencies;
   const mobile = JSON.parse(readFileSync(join(MOBILE, 'package.json'), 'utf8')).dependencies;
   return Object.keys(mobile)
-    .filter((name) => name !== '@capacitor/android')
+    .filter((name) => !['@capacitor/android', '@capacitor/ios'].includes(name))
     .filter((name) => client[name] !== mobile[name])
     .map((name) => `${name}: client ${client[name] || 'missing'}, mobile ${mobile[name]}`);
 }
