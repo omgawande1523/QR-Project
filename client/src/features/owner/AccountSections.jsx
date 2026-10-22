@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Monitor, Smartphone, LogOut, BellRing, Trash2 } from 'lucide-react';
+import { Monitor, Smartphone, LogOut, BellRing, Trash2, ShieldCheck, ExternalLink } from 'lucide-react';
 import { Section } from './SettingsSection';
-import { Badge, Button, Skeleton, Switch, useToast } from '../../components/ui';
+import { Badge, Button, Skeleton, Switch, TextField, useToast } from '../../components/ui';
 import { PasswordField } from '../auth/PasswordField';
 import { api, errorMessage } from '../../lib/api';
 import { setSession, clearSession } from '../../lib/session';
 import { signOut } from '../../lib/auth';
 import { timeAgo } from '../../lib/format';
 import { NOTIFICATIONS } from '../../lib/roles';
-import { IS_APP, isNative } from '../../lib/platform';
+import { APP_VERSION, IS_APP, isIOS, isNative, openExternal, siteOrigin } from '../../lib/platform';
+
+const PLATFORM_LABEL = { ios: ' (iPhone/iPad)', android: ' (Android)', web: '' };
 
 // Every browser and phone signed in to this login, with "Sign out" per device and "Sign out everywhere".
 export function DevicesSection() {
@@ -66,7 +68,7 @@ export function DevicesSection() {
                   <strong className="truncate">{s.deviceName}</strong>
                   {s.current && <Badge tone="accent">This device</Badge>}
                 </p>
-                <p className="muted text-xs">{s.client === 'app' ? 'Staff app' : 'Website'} · active {timeAgo(s.lastActiveAt)}{s.notifications ? ' · notifications on' : ''}</p>
+                <p className="muted text-xs">{s.client === 'app' ? `Staff app${PLATFORM_LABEL[s.platform] || ''}` : 'Website'} · active {timeAgo(s.lastActiveAt)}{s.notifications ? ' · notifications on' : ''}</p>
               </div>
               <Button size="sm" variant="secondary" icon={<LogOut size={16} />} onClick={() => signOutDevice(s)} loading={busy === s.id} aria-label={`Sign out ${s.deviceName}${s.current ? ' (this device)' : ''}`}>Sign out</Button>
             </li>
@@ -78,7 +80,12 @@ export function DevicesSection() {
   );
 }
 
-// App only: Android notification permission and a switch per notification type for this phone.
+// Where to turn notifications back on after saying no to the permission question.
+const notificationSettingsHint = () => (isIOS()
+  ? 'Notifications are off for QR Menu Staff. Turn them on in Settings > Notifications > QR Menu Staff.'
+  : 'Notifications are off for QR Menu Staff. Turn them on in Android Settings > Apps > QR Menu Staff > Notifications.');
+
+// App only: the notification permission and a switch per notification type for this phone.
 export function AppNotificationsSection({ role }) {
   const toast = useToast();
   const [permission, setPermission] = useState(null);
@@ -100,7 +107,7 @@ export function AppNotificationsSection({ role }) {
     if (!IS_APP) return;
     const { registerPush } = await import('../../native/push');
     const result = await registerPush();
-    if (result !== 'granted') toast.error('Notifications are off for QR Menu Staff. Turn them on in Android Settings > Apps > QR Menu Staff > Notifications.');
+    if (result !== 'granted') toast.error(notificationSettingsHint());
     refresh();
   };
 
@@ -130,21 +137,35 @@ export function AppNotificationsSection({ role }) {
   );
 }
 
-// Deletes the account after asking for the password: an owner deletes the whole restaurant, staff only their login.
+// The privacy policy (required in the app by the App Store) and the app version.
+export function AboutSection() {
+  return (
+    <Section title="Privacy and about" description={IS_APP ? `QR Menu Staff ${APP_VERSION}` : undefined}>
+      <p className="text-sm">How QR Menu handles your restaurant's data and your guests' orders.</p>
+      <div>
+        <Button variant="secondary" icon={<ShieldCheck size={18} />} onClick={() => openExternal(`${siteOrigin()}/privacy`)}>
+          Privacy policy <ExternalLink size={14} aria-hidden="true" />
+        </Button>
+      </div>
+    </Section>
+  );
+}
+
+// Deletes the account from inside the website or the app (the App Store requires the app to offer it): the
+// password, and for an owner, who deletes the whole restaurant, the word DELETE typed out as well.
+export const confirmsDelete = (text) => text.trim().toUpperCase() === 'DELETE';
 export function DeleteAccountSection({ isStaff }) {
   const toast = useToast();
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
+  const [typed, setTyped] = useState('');
   const [busy, setBusy] = useState(false);
 
   const remove = async () => {
-    const warning = isStaff
-      ? 'Delete your login? You will be signed out and will need a new invitation from the owner.'
-      : 'Delete the restaurant and everything in it: menu, orders, bills, staff logins and photos? This cannot be undone.';
-    if (!window.confirm(warning)) return;
+    if (isStaff && !window.confirm('Delete your login? You will be signed out and will need a new invitation from the owner.')) return;
     setBusy(true);
     try {
-      await api.post('/api/users/delete-account', { password });
+      await api.post('/api/users/delete-account', isStaff ? { password } : { password, confirm: typed });
       clearSession();
       toast.success(isStaff ? 'Your login has been deleted' : 'Your restaurant account has been deleted');
       navigate('/login', { replace: true });
@@ -163,7 +184,18 @@ export function DeleteAccountSection({ isStaff }) {
         : 'Deletes the restaurant with its menu, orders, bills, guest ratings, staff logins and photos. Download any bills you need first.'}
     >
       <PasswordField label="Your password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
-      <div><Button variant="danger" icon={<Trash2 size={18} />} onClick={remove} loading={busy} disabled={!password}>{isStaff ? 'Delete my login' : 'Delete restaurant account'}</Button></div>
+      {!isStaff && (
+        <TextField
+          label="Type DELETE to confirm"
+          hint="The restaurant and everything in it is deleted for good. This cannot be undone."
+          value={typed}
+          onChange={(e) => setTyped(e.target.value)}
+          autoComplete="off"
+          autoCapitalize="characters"
+          spellCheck={false}
+        />
+      )}
+      <div><Button variant="danger" icon={<Trash2 size={18} />} onClick={remove} loading={busy} disabled={!password || (!isStaff && !confirmsDelete(typed))}>{isStaff ? 'Delete my login' : 'Delete restaurant account'}</Button></div>
     </Section>
   );
 }

@@ -21,7 +21,8 @@ export default function DeleteAccountPage() {
     setBusy(true);
     try {
       const login = await api.post('/api/users/login', { identifier: email.trim(), password });
-      const res = await api.post('/api/users/delete-account', { password }, { headers: { Authorization: `Bearer ${login.data.token}` } });
+      // The ticked box is this page's confirmation (owners type DELETE in Settings).
+      const res = await api.post('/api/users/delete-account', { password, confirm: 'DELETE' }, { headers: { Authorization: `Bearer ${login.data.token}` } });
       setDone(res.data.message);
     } catch (err) {
       setError(errorMessage(err, 'Could not delete the account'));

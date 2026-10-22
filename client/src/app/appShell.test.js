@@ -1,4 +1,6 @@
-import { pushTarget, olderThan } from './AppShell';
+import { pushTarget, olderThan, rotatesFreely } from './AppShell';
+import { deviceLabel } from '../native/boot';
+import { confirmsDelete } from '../features/owner/AccountSections';
 import { pushBack, popBack } from '../lib/backStack';
 import { setSession, getToken, getRole, isLoggedIn, clearSession } from '../lib/session';
 import { IS_APP, siteOrigin } from '../lib/platform';
@@ -19,6 +21,28 @@ describe('app versions', () => {
     expect(olderThan('1.9.3', '1.10.0')).toBe(true);
     expect(olderThan('2.0.0', '1.99.99')).toBe(false);
     expect(olderThan('1.2.0', '1.2.0')).toBe(false);
+  });
+});
+
+describe('iPhone and iPad', () => {
+  test('the devices list names the device without its personal name', () => {
+    expect(deviceLabel({ platform: 'ios', manufacturer: 'Apple', model: 'iPhone17,2', name: "Asha's iPhone" })).toBe('Apple iPhone');
+    expect(deviceLabel({ platform: 'ios', manufacturer: 'Apple', model: 'iPad16,6' })).toBe('Apple iPad');
+    expect(deviceLabel({ platform: 'ios', model: '' })).toBe('Apple iPhone');
+    expect(deviceLabel({ platform: 'android', manufacturer: 'samsung', model: 'SM-X200' })).toBe('samsung SM-X200');
+    expect(deviceLabel({ platform: 'android' })).toBe('Android app');
+  });
+
+  test('only the kitchen display turns to landscape on an iPhone', () => {
+    expect(rotatesFreely('/kitchen')).toBe(true);
+    expect(rotatesFreely('/kitchen/')).toBe(true);
+    for (const path of ['/dashboard', '/dashboard/orders', '/login', '/kitchenette']) expect(rotatesFreely(path)).toBe(false);
+  });
+
+  test('deleting a restaurant needs DELETE typed out', () => {
+    expect(confirmsDelete('DELETE')).toBe(true);
+    expect(confirmsDelete(' delete ')).toBe(true);
+    for (const text of ['', 'DELET', 'delete it', 'yes']) expect(confirmsDelete(text)).toBe(false);
   });
 });
 

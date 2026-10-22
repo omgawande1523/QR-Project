@@ -4,7 +4,7 @@ import { useOwner } from './OwnerContext';
 import { PageHeader } from './OwnerLayout';
 import { Button, Skeleton, Switch, TextField, SelectField, useToast } from '../../components/ui';
 import { Section } from './SettingsSection';
-import { DevicesSection, AppNotificationsSection, DeleteAccountSection } from './AccountSections';
+import { DevicesSection, AppNotificationsSection, AboutSection, DeleteAccountSection } from './AccountSections';
 import { IS_APP } from '../../lib/platform';
 import { PasswordField } from '../auth/PasswordField';
 import { api, errorMessage } from '../../lib/api';
@@ -167,6 +167,7 @@ export default function SettingsPage() {
 
         <AppNotificationsSection role={role} />
         <DevicesSection />
+        <AboutSection />
         <DeleteAccountSection isStaff={isStaff} />
       </div>
     </>
