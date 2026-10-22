@@ -26,7 +26,8 @@ export function appEnv() {
   return { VITE_API_URL: 'http://10.0.2.2:5000', ...env };
 }
 
-// Build-time constants (see src/lib/platform.js). Push is on only when Firebase is set up for Android.
+// Build-time constants (see src/lib/platform.js). Push is on per platform once its Firebase file is in place:
+// google-services.json for Android, GoogleService-Info.plist for iOS (added by the cloud build).
 export function appDefines(mode) {
   if (mode !== 'app') return { 'import.meta.env.VITE_APP': JSON.stringify('false') };
   const env = appEnv();
@@ -35,7 +36,8 @@ export function appDefines(mode) {
       .map((key) => [`import.meta.env.${key}`, JSON.stringify(env[key] || '')])),
     'import.meta.env.VITE_APP': JSON.stringify('true'),
     'import.meta.env.VITE_APP_VERSION': JSON.stringify(appConfig().versionName),
-    'import.meta.env.VITE_PUSH': JSON.stringify(String(existsSync(new URL('android/app/google-services.json', MOBILE))))
+    'import.meta.env.VITE_PUSH_ANDROID': JSON.stringify(String(existsSync(new URL('android/app/google-services.json', MOBILE)))),
+    'import.meta.env.VITE_PUSH_IOS': JSON.stringify(String(existsSync(new URL('ios/App/App/GoogleService-Info.plist', MOBILE))))
   };
 }
 

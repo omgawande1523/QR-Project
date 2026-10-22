@@ -10,6 +10,10 @@ export const isNative = () => IS_APP && Boolean(window.Capacitor?.isNativePlatfo
 // Native code below sits in `if (IS_APP && isNative())` blocks: the literal IS_APP lets the website build drop
 // the block and the plugin it imports (a function call alone would not).
 
+// 'ios' or 'android' inside the installed app; 'web' for the website and the app build opened in a browser.
+export const platformName = () => (isNative() ? window.Capacitor.getPlatform() : 'web');
+export const isIOS = () => platformName() === 'ios';
+
 export const APP_VERSION = import.meta.env.VITE_APP_VERSION || '0.0.0';
 
 // The public website: QR codes, menu links and the privacy page must point there, also from inside the app
@@ -37,8 +41,8 @@ export function haptic() {
 }
 
 /**
- * Saves a generated file: a download on the website, the Android share sheet in the app (WhatsApp, Drive,
- * Gmail, print services...). `blob` is a Blob; returns once the browser download started or the sheet closed.
+ * Saves a generated file: a download on the website, the share sheet in the app (WhatsApp, Drive, Gmail, Files,
+ * Save Image, and Print, which is AirPrint on iPhone). `blob` is a Blob; returns once the browser download started or the sheet closed.
  */
 export async function saveFile(blob, filename, { title = filename } = {}) {
   if (IS_APP && isNative()) {
@@ -54,7 +58,7 @@ export async function saveFile(blob, filename, { title = filename } = {}) {
   setTimeout(() => URL.revokeObjectURL(url), 30_000);
 }
 
-// Prints the current page: the browser's print dialog, or Android's print service in the app.
+// Prints the current page: the browser's print dialog, Android's print service or AirPrint in the app.
 export async function printPage(jobName = 'Receipt') {
   if (IS_APP && isNative()) {
     const { printWebView } = await import('../native/print');

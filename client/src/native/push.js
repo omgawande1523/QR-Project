@@ -4,12 +4,15 @@ import { api } from '../lib/api';
 import { isLoggedIn } from '../lib/session';
 import { onSignOut } from '../lib/auth';
 
-// Push needs Firebase: the app build only turns it on when mobile/android/app/google-services.json exists
-// (see mobile/scripts/app.mjs). Without it, calling the plugin would crash the app on start.
-export const PUSH_ENABLED = import.meta.env.VITE_PUSH === 'true';
+// Push needs Firebase: the app build turns it on per platform when its Firebase file exists
+// (mobile/android/app/google-services.json, mobile/ios/App/App/GoogleService-Info.plist). Without it,
+// calling the plugin would crash the Android app on start.
+const PUSH_BUILT = { android: import.meta.env.VITE_PUSH_ANDROID === 'true', ios: import.meta.env.VITE_PUSH_IOS === 'true' };
+export const pushEnabled = () => Boolean(PUSH_BUILT[Capacitor.getPlatform()]);
 
-// One high-priority channel per type, each with its own sound, so staff can tell them apart by ear and set
-// them separately in Android's settings. Ids must match server/src/services/push/index.js; the sounds are in
+// Android: one high-priority channel per type, each with its own sound, so staff can tell them apart by ear
+// and set them separately in Android's settings. (iOS has no channels: the server names the sound in each
+// notification, and the files are in mobile/ios/App/App/Sounds.) Ids must match server/src/services/push/index.js; the sounds are in
 // mobile/android/app/src/main/res/raw (made by mobile/scripts/make-sounds.mjs). Android never changes a
 // channel's sound after it is created: use a new id to change one.
 export const CHANNELS = [
@@ -22,8 +25,8 @@ let registered = false;
 
 // Once at start-up: channels and listeners. `onOpen(data)` runs when a notification is tapped.
 export async function setupPush(onOpen) {
-  if (!PUSH_ENABLED) return;
-  await Promise.all(CHANNELS.map((c) => PushNotifications.createChannel({
+  if (!pushEnabled()) return;
+  if (Capacitor.getPlatform() === 'android') await Promise.all(CHANNELS.map((c) => PushNotifications.createChannel({
     id: c.id,
     name: c.name,
     description: c.description,
@@ -44,13 +47,13 @@ export async function setupPush(onOpen) {
 }
 
 export async function pushPermission() {
-  if (!PUSH_ENABLED) return 'unavailable';
+  if (!pushEnabled()) return 'unavailable';
   return (await PushNotifications.checkPermissions()).receive;
 }
 
-// After sign-in: asks for permission once (Android 13+) and registers this device. Safe to call often.
+// After sign-in: asks for permission once (iOS, Android 13+) and registers this device. Safe to call often.
 export async function registerPush() {
-  if (!PUSH_ENABLED || registered || !isLoggedIn()) return pushPermission();
+  if (!pushEnabled() || registered || !isLoggedIn()) return pushPermission();
   let permission = await PushNotifications.checkPermissions();
   if (permission.receive.startsWith('prompt')) permission = await PushNotifications.requestPermissions();
   if (permission.receive !== 'granted') return permission.receive;

@@ -1,12 +1,13 @@
 import axios from 'axios';
 import API_BASE_URL from '../config';
 import { getToken, clearSession } from './session';
-import { IS_APP } from './platform';
+import { IS_APP, isNative, platformName } from './platform';
 
 export const api = axios.create({ baseURL: API_BASE_URL, timeout: 20000 });
 
-// The staff app identifies itself, so its logins show up as "app" sessions with the device's name.
+// The staff app identifies itself, so its logins show up as "app" sessions with the platform and device name.
 if (IS_APP) api.defaults.headers.common['X-Client'] = 'app';
+if (IS_APP && isNative()) api.defaults.headers.common['X-Platform'] = platformName();
 export function setDeviceName(name) {
   if (name) api.defaults.headers.common['X-Device-Name'] = name.slice(0, 60);
 }
