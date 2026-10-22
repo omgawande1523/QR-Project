@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { IconButton } from './Button';
 import { pushBack } from '../../lib/backStack';
+import { IS_APP } from '../../lib/platform';
 
 // Open dialogs, topmost last: with a crop dialog over the dish editor, Escape closes only the top one.
 const openDialogs = [];
@@ -83,7 +84,17 @@ export function BottomSheet({ open, onClose, title, children, labelledBy }) {
     <div className="overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}>
       <div ref={ref} className="sheet" role="dialog" aria-modal="true" aria-label={labelledBy ? undefined : title} aria-labelledby={labelledBy} tabIndex={-1}>
         <div className="sheet-handle" aria-hidden="true" />
-        {title && <h2 style={{ fontSize: 'var(--text-xl)', marginBottom: 'var(--space-4)' }}>{title}</h2>}
+        {/* The app shows a Close button too: iPhones have no back button to dismiss the sheet. */}
+        {(title || (IS_APP && onClose)) && (
+          <div className="sheet-header">
+            {title && <h2 style={{ fontSize: 'var(--text-xl)' }}>{title}</h2>}
+            {IS_APP && onClose && (
+              <IconButton label="Close" variant="flat" onClick={onClose} data-close>
+                <X size={20} />
+              </IconButton>
+            )}
+          </div>
+        )}
         {children}
       </div>
     </div>,

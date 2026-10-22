@@ -6,7 +6,7 @@ import { api } from '../lib/api';
 import { popBack } from '../lib/backStack';
 import { getRole, isLoggedIn } from '../lib/session';
 import { homeFor } from '../lib/roles';
-import { APP_VERSION, isNative, openExternal, onAppResume } from '../lib/platform';
+import { APP_VERSION, isIOS, isNative, openExternal, onAppResume, platformName } from '../lib/platform';
 import './app.css';
 
 // Where a tapped notification leads: the kitchen to its display, everyone else to the order on the board
@@ -43,6 +43,20 @@ function useBackButton() {
     })).then((h) => { handle = h; });
     return () => { handle?.remove(); };
   }, [location.pathname, navigate]);
+}
+
+// iPhone: portrait everywhere except the kitchen display, which may turn to landscape (an iPad turns freely).
+// Android keeps its usual behaviour. The native side starts iPhones in portrait (MainViewController.swift).
+export const rotatesFreely = (pathname) => /^\/kitchen(\/|$)/.test(pathname);
+function useOrientation() {
+  const { pathname } = useLocation();
+  const free = rotatesFreely(pathname);
+  useEffect(() => {
+    if (!isIOS() || !/iPhone/.test(navigator.userAgent)) return;
+    import('@capacitor/screen-orientation')
+      .then(({ ScreenOrientation }) => (free ? ScreenOrientation.unlock() : ScreenOrientation.lock({ orientation: 'portrait' })))
+      .catch(() => {});
+  }, [free]);
 }
 
 // Notifications: channels and listeners once, then register this device whenever someone is signed in.
@@ -110,7 +124,8 @@ function UpdatePrompt() {
   const [info, setInfo] = useState(null);
   const [dismissed, setDismissed] = useState(false);
   useEffect(() => {
-    const check = () => api.get('/api/app-version').then((res) => setInfo(res.data)).catch(() => {});
+    // Each platform gets its own store's link (App Store or Google Play).
+    const check = () => api.get('/api/app-version', { params: { platform: platformName() } }).then((res) => setInfo(res.data)).catch(() => {});
     check();
     return onAppResume(check);
   }, []);
@@ -144,6 +159,7 @@ export function AppShell({ children }) {
   useBackButton();
   usePush();
   useStatusBar();
+  useOrientation();
   return (
     <>
       <OfflineBanner />

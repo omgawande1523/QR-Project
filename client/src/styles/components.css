@@ -245,6 +245,7 @@
   padding: var(--space-3) var(--space-5) calc(var(--space-6) + env(safe-area-inset-bottom));
   animation: sheet-up var(--duration) var(--ease-out);
 }
+.sheet-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-4); }
 .sheet-handle { width: 44px; height: 5px; border-radius: var(--radius-pill); background: var(--cream-300); margin: 0 auto var(--space-4); }
 .modal {
   margin: auto;

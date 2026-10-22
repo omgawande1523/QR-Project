@@ -1,10 +1,40 @@
 /* Staff app only (imported by AppShell). */
 
-/* The app draws edge to edge on Android 15+: keep content clear of the status bar and the gesture bar. */
-body {
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+/* The app draws edge to edge (Android 15+, every iPhone and iPad): keep content clear of the status bar, the
+   notch or Dynamic Island, the home indicator and the gesture bar. The insets live in variables so every
+   layer uses the same values (and the end-to-end tests can stand in for a notch). */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
 }
+body {
+  padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+}
+
+/* Layers above the page sit outside the body's padding, so they keep clear of the edges themselves.
+   (html raises these rules above the dashboard's own styles, which load later.) */
+html .overlay { padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left); }
+html .modal { max-height: calc(100% - var(--space-8)); }
+html .overlay > .sheet { margin-bottom: calc(-1 * var(--safe-bottom)); } /* runs to the bottom edge; its padding clears the home indicator */
+html .sidebar {
+  padding-top: calc(var(--space-5) + var(--safe-top));
+  padding-bottom: calc(var(--space-3) + var(--safe-bottom));
+  padding-left: calc(var(--space-3) + var(--safe-left));
+}
+html .toast-stack { bottom: calc(var(--nav-height) + var(--space-6) + var(--safe-bottom)); }
+html .owner, html .kitchen { min-height: calc(100vh - var(--safe-top) - var(--safe-bottom)); }
+@media (min-width: 1024px) {
+  /* iPad and tablets: the sidebar is a column inside the padded page */
+  html .sidebar { padding-top: var(--space-5); padding-bottom: var(--space-3); padding-left: var(--space-3); height: calc(100vh - var(--safe-top) - var(--safe-bottom)); }
+}
+
+/* iPhone and iPad */
+html.platform-ios, .platform-ios body { overscroll-behavior-y: none; } /* no rubber band fighting pull to refresh */
+.platform-ios body:has(.kitchen) { background: var(--ink); } /* the status bar is hidden there: no cream strip */
+.platform-ios .order-card { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; } /* long press drags */
+.platform-ios { -webkit-tap-highlight-color: transparent; }
 
 .app-offline {
   position: sticky;

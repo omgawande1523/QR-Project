@@ -4,7 +4,7 @@ import { Button, useToast } from './ui';
 import { CropModal } from './CropModal';
 import { errorMessage } from '../lib/api';
 import { IMAGE_FIELDS, MAX_IMAGE_MB, uploadOriginal, importImageUrl, imageSource } from '../lib/images';
-import { IS_APP, isNative } from '../lib/platform';
+import { IS_APP, isIOS, isNative } from '../lib/platform';
 
 const looksLikeUrl = (text) => /^https?:\/\/\S+$/i.test(text.trim());
 const imageFromClipboard = (data) => [...(data?.items || [])].find((item) => item.kind === 'file' && item.type.startsWith('image/'))?.getAsFile() || null;
@@ -127,7 +127,7 @@ export function ImagePicker({ kind, value, onChange, label = 'Photo', globalPast
         {native && (
           <>
             <Button size="sm" variant="secondary" icon={<Camera size={16} />} onClick={() => fromPhone('camera')} disabled={Boolean(busy)}>Take photo</Button>
-            <Button size="sm" variant="secondary" icon={<Images size={16} />} onClick={() => fromPhone('gallery')} disabled={Boolean(busy)}>Choose from gallery</Button>
+            <Button size="sm" variant="secondary" icon={<Images size={16} />} onClick={() => fromPhone('gallery')} disabled={Boolean(busy)}>{isIOS() ? 'Choose from Photos' : 'Choose from gallery'}</Button>
           </>
         )}
         <Button size="sm" variant="secondary" icon={<Upload size={16} />} onClick={() => inputRef.current?.click()} disabled={Boolean(busy)}>{value ? 'Replace' : 'Upload'}</Button>
