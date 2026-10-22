@@ -75,15 +75,18 @@ function usePush() {
 
 // The status bar is cream with dark icons on every screen. Depending on the Android and WebView version the
 // strip behind it is either the app window (cream) or the page, so the kitchen display keeps a cream strip too
-// (app.css) instead of switching colours.
+// (app.css) instead of switching colours. On iPhone and iPad the page itself is behind the status bar, so the
+// dark kitchen display gets light icons (seen in the iPad simulator run).
 function useStatusBar() {
+  const { pathname } = useLocation();
+  const darkPage = isIOS() && rotatesFreely(pathname);
   useEffect(() => {
     if (!isNative()) return;
     import('@capacitor/status-bar').then(({ StatusBar, Style }) => {
-      StatusBar.setStyle({ style: Style.Light }).catch(() => {});
+      StatusBar.setStyle({ style: darkPage ? Style.Dark : Style.Light }).catch(() => {});
       StatusBar.setBackgroundColor({ color: '#faf6ee' }).catch(() => {}); // Android 14 and older
     });
-  }, []);
+  }, [darkPage]);
 }
 
 function useOnline() {
