@@ -268,3 +268,21 @@
   font-size: var(--text-md);
   font-family: 'Noto Sans Devanagari', 'Nirmala UI', 'Kohinoor Devanagari', 'Devanagari Sangam MN', 'Mangal', system-ui, sans-serif;
 }
+
+/* This visit's bill: welcome screen card, menu bar and /bill page */
+.visit-bill { display: flex; flex-direction: column; gap: var(--space-2); width: 100%; margin-top: var(--space-4); text-align: left; }
+.visit-bill-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.visit-bill-head .card-title { display: inline-flex; align-items: center; gap: var(--space-2); }
+.visit-bill-state { padding: 2px 10px; border-radius: var(--radius-pill); font-size: var(--text-xs); font-weight: var(--weight-bold); background: var(--warning-bg); color: var(--warning); }
+.visit-bill-state.is-billed { background: var(--info-bg); color: var(--info); }
+.visit-bill-state.is-paid { background: var(--success-bg); color: var(--success); }
+.visit-bill-lines { list-style: none; margin: var(--space-2) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.visit-bill-actions { display: flex; flex-direction: column; align-items: stretch; gap: var(--space-2); margin-top: var(--space-3); }
+.visit-bill-paid { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); background: var(--success-bg); color: var(--success); font-weight: var(--weight-semibold); }
+.visit-bill-upi { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); margin-top: var(--space-3); text-align: center; }
+.visit-bill-upi img { width: 168px; height: 168px; }
+.visit-bill-bar { display: flex; align-items: center; gap: var(--space-3); min-height: var(--tap); margin-bottom: var(--space-3); padding: var(--space-2) var(--space-4); border-radius: var(--radius-pill); background: var(--surface); box-shadow: var(--shadow-sm); color: var(--ink); font-size: var(--text-sm); }
+.visit-bill-bar:hover { text-decoration: none; background: var(--cream-200); }
+.visit-bill-bar > svg { color: var(--olive-700); flex-shrink: 0; }
+.visit-bill-bar-state { color: var(--muted); }
+.visit-bill-bar-link { display: inline-flex; align-items: center; color: var(--olive-700); font-weight: var(--weight-bold); }

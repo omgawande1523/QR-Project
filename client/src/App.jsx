@@ -21,6 +21,7 @@ const ItemDetailScreen = lazy(() => import('./features/customer/ItemDetailScreen
 const CartScreen = lazy(() => import('./features/customer/CartScreen'));
 const OrdersScreen = lazy(() => import('./features/customer/OrdersScreen'));
 const OrderTrackingScreen = lazy(() => import('./features/customer/OrderTrackingScreen'));
+const BillScreen = lazy(() => import('./features/customer/VisitBill'));
 
 function App() {
   return (
@@ -43,6 +44,7 @@ function App() {
               <Route path="cart" element={<CartScreen />} />
               <Route path="orders" element={<OrdersScreen />} />
               <Route path="orders/:orderId" element={<OrderTrackingScreen />} />
+              <Route path="bill" element={<BillScreen />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />

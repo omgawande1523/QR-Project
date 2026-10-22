@@ -38,6 +38,8 @@ Restaurant owners: the plain-language guide is [docs/USER_GUIDE.md](docs/USER_GU
 - English / हिंदी / मराठी switch for dish names and descriptions
 - Cart with GST and service charge worked out on the server (prices cannot be tampered with), place order,
   live status (Received, Preparing, Ready, Served), reorder, call a waiter or ask for the bill
+- "Your bill" for the visit on the welcome screen and the menu: every order from that phone today combined
+  (items, GST, total, paid and due), Ask for bill, and once staff make the bill a UPI QR and pay link for the amount
 - Rate the meal after it is served
 - Installable on the home screen; an offline page instead of a browser error
 

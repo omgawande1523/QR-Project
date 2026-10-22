@@ -8,6 +8,7 @@ import { STATUS_LABEL } from '../../lib/orderStatus';
 import { searchText } from '../../lib/menuLanguage';
 import { responsiveImage } from '../../lib/srcset';
 import { LanguageSwitch } from './LanguageSwitch';
+import { VisitBillBar, useVisitBill } from './VisitBill';
 
 const SORTS = [
   { value: 'recommended', label: 'Recommended' },
@@ -118,6 +119,7 @@ export default function MenuScreen() {
   );
 
   const latestActive = activeOrders[0];
+  const bill = useVisitBill();
 
   return (
     <main className="customer-page menu-page page-enter">
@@ -144,6 +146,7 @@ export default function MenuScreen() {
           <span className="order-banner-link">Track <ChevronRight size={16} aria-hidden="true" /></span>
         </button>
       )}
+      {bill && <VisitBillBar bill={bill} />}
 
       <LanguageSwitch />
 

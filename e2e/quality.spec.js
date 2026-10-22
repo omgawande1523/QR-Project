@@ -96,6 +96,7 @@ const SCREENS = [
   { name: 'customer cart', path: () => `/menu/${ctx.restaurantId}/cart`, ready: 'Your cart', customer: true, cart: true },
   { name: 'customer orders', path: () => `/menu/${ctx.restaurantId}/orders`, ready: 'Your orders', customer: true },
   { name: 'customer order tracking', path: () => `/menu/${ctx.restaurantId}/orders/${ctx.order._id}`, ready: 'Received', customer: true },
+  { name: 'customer bill', path: () => `/menu/${ctx.restaurantId}/bill`, ready: 'Ask for bill', customer: true },
   { name: 'dashboard home', path: () => '/dashboard', owner: true },
   { name: 'dashboard orders', path: () => '/dashboard/orders', ready: 'Audit Guest', owner: true },
   { name: 'dashboard menu', path: () => '/dashboard/menu', ready: 'Masala Dosa', owner: true },

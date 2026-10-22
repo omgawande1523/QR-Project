@@ -8,6 +8,7 @@ import { session } from '../../lib/storage';
 import { openStatus } from '../../lib/hours';
 import { APP_NAME } from '../../config';
 import { responsiveImage } from '../../lib/srcset';
+import { VisitBillCard, useVisitBill } from './VisitBill';
 
 // First screen after scanning a table QR code: hero image, restaurant, table, "View Menu".
 export default function WelcomeScreen() {
@@ -15,6 +16,7 @@ export default function WelcomeScreen() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const tableParam = Number(params.get('table')) || null;
+  const bill = useVisitBill();
 
   useEffect(() => {
     if (!tableParam || !restaurant) return;
@@ -75,6 +77,7 @@ export default function WelcomeScreen() {
             Track your order{activeOrders.length > 1 ? 's' : ''}
           </Button>
         )}
+        {bill && <VisitBillCard bill={bill} />}
         <p className="welcome-powered">Powered by {APP_NAME}</p>
       </div>
     </main>
