@@ -27,6 +27,7 @@
     "app:run": "node mobile/scripts/app.mjs run",
     "app:apk": "node mobile/scripts/app.mjs apk",
     "app:aab": "node mobile/scripts/app.mjs aab",
+    "app:ios:sync": "node mobile/scripts/app.mjs ios-sync",
     "e2e:app": "playwright test --config playwright.app.config.js"
   },
   "devDependencies": {

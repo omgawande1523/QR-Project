@@ -233,6 +233,15 @@ switch (command) {
   case 'ios-ats':
     iosAts(process.argv.includes('--release'));
     break;
+  case 'ios-build-number': {
+    // (cloud build) CFBundleVersion: must go up with every TestFlight upload of the same version.
+    const number = process.argv[3];
+    if (!/^\d+$/.test(number || '')) fail('Usage: node scripts/app.mjs ios-build-number <whole number>');
+    const file = join(IOS_APP, 'App.xcodeproj', 'project.pbxproj');
+    writeFileSync(file, readFileSync(file, 'utf8').replace(/CURRENT_PROJECT_VERSION = [^;]+;/g, `CURRENT_PROJECT_VERSION = ${number};`));
+    console.log(`iOS build number ${number} (version ${appConfig.versionName})`);
+    break;
+  }
   default:
-    fail('Usage: node scripts/app.mjs doctor | build | sync | apk | aab | run | open | ios-sync | ios-ats');
+    fail('Usage: node scripts/app.mjs doctor | build | sync | apk | aab | run | open | ios-sync | ios-ats | ios-build-number');
 }

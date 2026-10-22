@@ -1,0 +1,91 @@
+# QR Menu Staff for iPhone and iPad, built on Codemagic's Macs (iOS apps can only be compiled on macOS).
+# Both workflows start by hand from the Codemagic dashboard ("Start new build"): no triggers, so pushes never
+# spend build minutes. Setup, secrets and where to find each one: README.md, "iOS staff app".
+# .github/workflows/ios.yml does the same on GitHub Actions as a backup.
+
+workflows:
+  # Proves the iOS project compiles and launches. No Apple account needed.
+  ios-check:
+    name: iOS check (simulator, no Apple account)
+    instance_type: mac_mini_m2
+    max_build_duration: 75
+    environment:
+      node: 22
+      xcode: latest
+      vars:
+        # A test API with the demo data runs on the build Mac; the simulator shares its network.
+        VITE_API_URL: http://localhost:5000
+        VITE_SITE_URL: http://localhost:3000
+    scripts:
+      - name: Install
+        script: |
+          npm ci --prefix server
+          npm ci --prefix client
+          npm ci --prefix mobile
+      - name: Start a test API with demo data (in-memory database)
+        script: nohup node server/scripts/test-api.js > test-api.log 2>&1 &
+      - name: Build the staff screens (checks no guest code is bundled) and sync the iOS project
+        script: |
+          cd mobile
+          node scripts/app.mjs ios-sync
+          node scripts/app.mjs ios-ats
+      - name: Build for the iOS Simulator
+        script: bash mobile/scripts/ios-ci.sh build-simulator
+      - name: Launch on iPhone and iPad, sign in, screenshots
+        script: bash mobile/scripts/ios-ci.sh screenshots
+    artifacts:
+      - mobile/ios/screenshots/**
+      - test-api.log
+
+  # Signed App Store build, uploaded to TestFlight. Needs the Apple Developer account (see README).
+  ios-release:
+    name: iOS release (TestFlight)
+    instance_type: mac_mini_m2
+    max_build_duration: 90
+    environment:
+      node: 22
+      xcode: latest
+      groups:
+        # APP_STORE_CONNECT_ISSUER_ID, APP_STORE_CONNECT_KEY_IDENTIFIER, APP_STORE_CONNECT_PRIVATE_KEY,
+        # CERTIFICATE_PRIVATE_KEY
+        - app_store_connect
+        # VITE_API_URL, VITE_SITE_URL, VITE_CONTACT_EMAIL, APP_STORE_APPLE_ID, GOOGLE_SERVICE_INFO_PLIST (base64)
+        - qrmenu_ios
+    scripts:
+      - name: Install
+        script: |
+          npm ci --prefix client
+          npm ci --prefix mobile
+      - name: Firebase settings for push notifications
+        script: |
+          if [ -n "$GOOGLE_SERVICE_INFO_PLIST" ]; then
+            echo "$GOOGLE_SERVICE_INFO_PLIST" | base64 --decode > mobile/ios/App/App/GoogleService-Info.plist
+          else
+            echo "GOOGLE_SERVICE_INFO_PLIST is not set: this build has no push notifications"
+          fi
+      - name: Build the staff screens (https only) and sync the iOS project
+        script: |
+          cd mobile
+          node scripts/app.mjs ios-ats --release
+          node scripts/app.mjs ios-sync --release
+      - name: Automatic code signing with the App Store Connect API key
+        script: |
+          keychain initialize
+          app-store-connect fetch-signing-files "com.qrmenu.staff" --type IOS_APP_STORE --create
+          keychain add-certificates
+          xcode-project use-profiles --project mobile/ios/App/App.xcodeproj
+      - name: Build number (one more than the latest TestFlight build)
+        script: |
+          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo 0)
+          node mobile/scripts/app.mjs ios-build-number $((LATEST + 1))
+      - name: Build the signed app
+        script: xcode-project build-ipa --project mobile/ios/App/App.xcodeproj --scheme App
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+        submit_to_testflight: true
