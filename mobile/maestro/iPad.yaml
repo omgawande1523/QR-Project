@@ -1,0 +1,25 @@
+# iOS cloud check (mobile/scripts/ios-ci.sh): the kitchen signs in on an iPad simulator against the test API and
+# the kitchen display is shown in portrait and landscape. OUT is the screenshot folder.
+appId: com.qrmenu.staff
+name: Kitchen on iPad
+---
+- launchApp:
+    clearState: true
+    clearKeychain: true
+- extendedWaitUntil:
+    visible: "Welcome back"
+    timeout: 60000
+- tapOn: "Email or phone"
+- inputText: "kitchen@qrmenu.test"
+- tapOn: "Password"
+- inputText: "Demo@1234"
+- tapOn: "Log in"
+- extendedWaitUntil:
+    visible: "Kitchen"
+    timeout: 30000
+- waitForAnimationToEnd
+- takeScreenshot: ${OUT}/iPad-2-kitchen
+- setOrientation: LANDSCAPE_LEFT
+- waitForAnimationToEnd
+- takeScreenshot: ${OUT}/iPad-3-kitchen-landscape
+- setOrientation: PORTRAIT

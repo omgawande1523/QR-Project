@@ -1,0 +1,120 @@
+# iOS staff app on a GitHub-hosted Mac. A backup for codemagic.yaml with the same two jobs.
+# Manual only (Actions > "iOS staff app" > Run workflow), so pushes never spend macOS minutes.
+name: iOS staff app
+
+on:
+  workflow_dispatch:
+    inputs:
+      job:
+        description: "check: simulator build, launch and screenshots (no Apple account). release: signed build to TestFlight."
+        type: choice
+        options: [check, release]
+        default: check
+
+concurrency:
+  group: ios-${{ github.ref }}-${{ inputs.job }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    if: inputs.job == 'check'
+    name: Simulator build, launch, screenshots
+    runs-on: macos-15
+    timeout-minutes: 75
+    env:
+      # The test API below runs on this Mac; the simulator shares its network.
+      VITE_API_URL: http://localhost:5000
+      VITE_SITE_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: "**/package-lock.json"
+      - name: Install
+        run: |
+          npm ci --prefix server
+          npm ci --prefix client
+          npm ci --prefix mobile
+      - name: Start a test API with demo data (in-memory database)
+        run: nohup node server/scripts/test-api.js > test-api.log 2>&1 &
+      - name: Build the staff screens (checks no guest code is bundled) and sync the iOS project
+        working-directory: mobile
+        run: |
+          node scripts/app.mjs ios-sync
+          node scripts/app.mjs ios-ats
+      - name: Cache Swift packages
+        uses: actions/cache@v4
+        with:
+          path: mobile/ios/build/SourcePackages
+          key: spm-${{ runner.os }}-${{ hashFiles('mobile/ios/App/CapApp-SPM/Package.swift', 'mobile/ios/App/App.xcodeproj/project.pbxproj') }}
+      - name: Show Xcode
+        run: xcodebuild -version
+      - name: Build for the iOS Simulator
+        run: bash mobile/scripts/ios-ci.sh build-simulator
+      - name: Launch on iPhone and iPad, sign in, screenshots
+        run: bash mobile/scripts/ios-ci.sh screenshots
+      - name: Upload screenshots and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-check
+          path: |
+            mobile/ios/screenshots/
+            test-api.log
+          if-no-files-found: warn
+
+  release:
+    if: inputs.job == 'release'
+    name: Signed build to TestFlight
+    runs-on: macos-15
+    timeout-minutes: 75
+    environment: ios-release
+    env:
+      VITE_API_URL: ${{ vars.VITE_API_URL }}
+      VITE_SITE_URL: ${{ vars.VITE_SITE_URL }}
+      VITE_CONTACT_EMAIL: ${{ vars.VITE_CONTACT_EMAIL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: "**/package-lock.json"
+      - name: Install
+        run: |
+          npm ci --prefix client
+          npm ci --prefix mobile
+      - name: Firebase settings for push notifications
+        env:
+          GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+        run: |
+          if [ -n "$GOOGLE_SERVICE_INFO_PLIST" ]; then
+            echo "$GOOGLE_SERVICE_INFO_PLIST" | base64 --decode > mobile/ios/App/App/GoogleService-Info.plist
+          else
+            echo "::warning::GOOGLE_SERVICE_INFO_PLIST is not set: this build has no push notifications"
+          fi
+      - name: Build the staff screens (https only) and sync the iOS project
+        working-directory: mobile
+        run: |
+          node scripts/app.mjs ios-ats --release
+          node scripts/app.mjs ios-sync --release
+      - name: App Store Connect API key
+        env:
+          ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/asc"
+          printf '%s' "$ASC_PRIVATE_KEY" > "$RUNNER_TEMP/asc/AuthKey.p8"
+      - name: Archive, sign and upload to TestFlight
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_PATH: ${{ runner.temp }}/asc/AuthKey.p8
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # Codemagic numbers builds from the last TestFlight upload; these start at 1000 to stay clear of them.
+          BUILD_NUMBER: ${{ github.run_number }}000
+        run: bash mobile/scripts/ios-ci.sh release
+      - name: Remove the API key
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/asc"

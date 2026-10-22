@@ -1,0 +1,28 @@
+# iOS cloud check (mobile/scripts/ios-ci.sh): the owner signs in on an iPhone simulator against the test API
+# (server/scripts/test-api.js, demo data) and opens the orders board. OUT is the screenshot folder.
+appId: com.qrmenu.staff
+name: Owner on iPhone
+---
+- launchApp:
+    clearState: true
+    clearKeychain: true
+- extendedWaitUntil:
+    visible: "Welcome back"
+    timeout: 60000
+- tapOn: "Email or phone"
+- inputText: "demo@qrmenu.test"
+- tapOn: "Password"
+- inputText: "Demo@1234"
+- tapOn: "Log in"
+- extendedWaitUntil:
+    visible: "Olive Leaf Café"
+    timeout: 30000
+- waitForAnimationToEnd
+- takeScreenshot: ${OUT}/iPhone-2-dashboard
+- tapOn: "Open menu"
+- tapOn: "Orders"
+- extendedWaitUntil:
+    visible: "Board"
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ${OUT}/iPhone-3-orders

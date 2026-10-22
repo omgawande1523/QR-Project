@@ -6,6 +6,10 @@
 //   node scripts/app.mjs aab      sync, then a signed release bundle for the Play Store -> mobile/dist/
 //   node scripts/app.mjs run      sync, then install and start on a connected phone or a running emulator
 //   node scripts/app.mjs open     open the Android project in Android Studio
+//   node scripts/app.mjs ios-sync build, then copy the screens and plugins into the iOS project (works on Windows;
+//                                 iOS apps are compiled, signed and uploaded in the cloud: codemagic.yaml)
+//   node scripts/app.mjs ios-ats  (cloud build) allow plain http to the API host in a simulator build;
+//                                 with --release, refuse anything but https
 // The API address comes from VITE_API_URL (client/.env.app, client/.env.app.local or the environment).
 import { spawnSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -17,6 +21,7 @@ const MOBILE = fileURLToPath(new URL('..', import.meta.url));
 const ROOT = join(MOBILE, '..');
 const CLIENT = join(ROOT, 'client');
 const ANDROID = join(MOBILE, 'android');
+const IOS_APP = join(MOBILE, 'ios', 'App');
 const isWindows = process.platform === 'win32';
 const appConfig = JSON.parse(readFileSync(join(MOBILE, 'app.config.json'), 'utf8'));
 
@@ -108,6 +113,53 @@ function sync(options) {
   run('npx', ['cap', 'sync', 'android'], { cwd: MOBILE, env: { QRMENU_ALLOW_HTTP: api.startsWith('http://') ? '1' : '0' } });
 }
 
+// ---------- iOS ----------
+// Version and app id come from app.config.json, like Gradle reads them on Android. The build number
+// (CURRENT_PROJECT_VERSION) is set by the cloud build, one higher than the last TestFlight upload.
+function writeIosVersion() {
+  const file = join(IOS_APP, 'App.xcodeproj', 'project.pbxproj');
+  const project = readFileSync(file, 'utf8')
+    .replace(/MARKETING_VERSION = [^;]+;/g, `MARKETING_VERSION = ${appConfig.versionName};`)
+    .replace(/PRODUCT_BUNDLE_IDENTIFIER = [^;]+;/g, `PRODUCT_BUNDLE_IDENTIFIER = ${appConfig.appId};`);
+  writeFileSync(file, project);
+  const plist = join(IOS_APP, 'App', 'Info.plist');
+  writeFileSync(plist, readFileSync(plist, 'utf8').replace(/(<key>CFBundleDisplayName<\/key>\s*<string>)[^<]*/, `$1${appConfig.appName}`));
+}
+
+function iosSync(options) {
+  build(options);
+  writeIosVersion();
+  run('npx', ['cap', 'sync', 'ios'], { cwd: MOBILE });
+}
+
+// iOS blocks plain http (App Transport Security). A simulator build pointed at a local test API gets an
+// exception for that one host; nothing else, and never in a release build.
+function iosAts(release) {
+  const api = appEnv().VITE_API_URL || '';
+  if (release) {
+    if (!api.startsWith('https://')) fail(`Release builds need an https API address; VITE_API_URL is ${api || 'not set'}.`);
+    console.log(`iOS release build talks https only (${api}).`);
+    return;
+  }
+  if (!api.startsWith('http://')) return;
+  const host = new URL(api).hostname;
+  const plist = join(IOS_APP, 'App', 'Info.plist');
+  const text = readFileSync(plist, 'utf8');
+  if (text.includes('<key>NSAppTransportSecurity</key>')) return;
+  const exception = [
+    '<key>NSAppTransportSecurity</key>',
+    '<dict>',
+    '  <key>NSExceptionDomains</key>',
+    '  <dict>',
+    `    <key>${host}</key>`,
+    '    <dict><key>NSExceptionAllowsInsecureHTTPLoads</key><true/></dict>',
+    '  </dict>',
+    '</dict>'
+  ].map((line) => `\t${line}`).join('\n');
+  writeFileSync(plist, text.replace(/<\/dict>\s*<\/plist>\s*$/, `${exception}\n</dict>\n</plist>\n`));
+  console.log(`Simulator build: plain http allowed to ${host} only.`);
+}
+
 function gradle(task, env) {
   // Full path: Windows may not look in the current folder for commands.
   run(join(ANDROID, isWindows ? 'gradlew.bat' : 'gradlew'), [task, '--no-daemon'], { cwd: ANDROID, env });
@@ -132,7 +184,9 @@ function doctor() {
     [pluginVersionProblems().length ? 'MISMATCH' : 'ok  ', 'Capacitor plugin versions match in client/ and mobile/'],
     [existsSync(join(ANDROID, 'app', 'google-services.json')) ? 'ok  ' : 'off ', 'Firebase (android/app/google-services.json): push notifications'],
     [existsSync(join(ANDROID, 'keystore.properties')) ? 'ok  ' : 'off ', 'Release signing (android/keystore.properties)'],
-    [sdk && existsSync(join(sdk, 'emulator')) ? 'ok  ' : 'off ', 'Android emulator']
+    [sdk && existsSync(join(sdk, 'emulator')) ? 'ok  ' : 'off ', 'Android emulator'],
+    [existsSync(join(MOBILE, 'node_modules', '@capacitor', 'ios')) ? 'ok  ' : 'MISSING', 'iOS project (builds run in the cloud, see codemagic.yaml)'],
+    [existsSync(join(IOS_APP, 'App', 'GoogleService-Info.plist')) ? 'ok  ' : 'off ', 'Firebase for iOS (ios/App/App/GoogleService-Info.plist, added by the cloud build)']
   ];
   lines.forEach(([state, text]) => console.log(`${state.padEnd(8)} ${text}`));
   console.log(`\nApp ${appConfig.appId} ${appConfig.versionName} (${appConfig.versionCode}); API for the app build: ${appEnv().VITE_API_URL || 'http://10.0.2.2:5000 (default)'}`);
@@ -173,6 +227,12 @@ switch (command) {
   case 'open':
     run('npx', ['cap', 'open', 'android'], { cwd: MOBILE });
     break;
+  case 'ios-sync':
+    iosSync({ release: process.argv.includes('--release') });
+    break;
+  case 'ios-ats':
+    iosAts(process.argv.includes('--release'));
+    break;
   default:
-    fail('Usage: node scripts/app.mjs doctor | build | sync | apk | aab | run | open');
+    fail('Usage: node scripts/app.mjs doctor | build | sync | apk | aab | run | open | ios-sync | ios-ats');
 }
