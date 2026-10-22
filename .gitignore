@@ -51,3 +51,18 @@ mobile/dist/
 *.apk
 *.aab
 *service-account*.json
+
+# Staff app (iOS): Firebase file, Apple signing keys and profiles, build output (builds run in the cloud)
+mobile/ios/App/App/GoogleService-Info.plist
+GoogleService-Info.plist
+*.p8
+*.p12
+*.mobileprovision
+*.provisionprofile
+*.cer
+*.ipa
+*.xcarchive
+*.dSYM.zip
+mobile/ios/App/Pods/
+mobile/ios/build/
+mobile/ios/screenshots/
