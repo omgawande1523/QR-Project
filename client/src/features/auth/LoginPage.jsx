@@ -6,7 +6,7 @@ import { Button, TextField } from '../../components/ui';
 import { api, errorMessage } from '../../lib/api';
 import { setSession, isLoggedIn, getRole } from '../../lib/session';
 import { homeFor } from '../../lib/roles';
-import { IS_APP } from '../../lib/platform';
+import { IS_APP, isIOS } from '../../lib/platform';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -44,7 +44,8 @@ export default function LoginPage() {
       {params.get('expired') && <div className="notice notice-info" role="status">Your session ended. Please log in again.</div>}
       {params.get('reset') && <div className="notice notice-info" role="status">Password changed. Log in with your new password.</div>}
       <form className="stack" onSubmit={submit} noValidate>
-        <TextField label="Email or phone" value={identifier} onChange={(e) => setIdentifier(e.target.value)} autoComplete="username" required autoFocus />
+        {/* No autofocus on iPhone: the keyboard would cover the screen as the app opens. */}
+        <TextField label="Email or phone" value={identifier} onChange={(e) => setIdentifier(e.target.value)} autoComplete="username" required autoFocus={!isIOS()} />
         <PasswordField value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
         <div className="row-between">
           <span />

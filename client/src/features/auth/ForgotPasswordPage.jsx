@@ -4,6 +4,7 @@ import { MailCheck } from 'lucide-react';
 import { AuthLayout } from './AuthLayout';
 import { Button, TextField, EmptyState } from '../../components/ui';
 import { api, errorMessage } from '../../lib/api';
+import { isIOS } from '../../lib/platform';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -37,7 +38,7 @@ export default function ForgotPasswordPage() {
         </EmptyState>
       ) : (
         <form className="stack" onSubmit={submit} noValidate>
-          <TextField label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required autoFocus />
+          <TextField label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required autoFocus={!isIOS()} />
           {error && <div className="notice notice-danger" role="alert">{error}</div>}
           <Button type="submit" size="lg" block loading={loading} disabled={!email.trim()}>Send reset code</Button>
           <Link to="/reset-password" className="text-sm bold tap-link" style={{ alignSelf: 'center' }}>I already have a code</Link>

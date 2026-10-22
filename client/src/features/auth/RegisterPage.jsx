@@ -5,6 +5,7 @@ import { PasswordField } from './PasswordField';
 import { Button, TextField } from '../../components/ui';
 import { api, errorMessage } from '../../lib/api';
 import { setSession, isLoggedIn } from '../../lib/session';
+import { isIOS } from '../../lib/platform';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -59,7 +60,7 @@ export default function RegisterPage() {
       footer={<>Already have an account? <Link to="/login">Log in</Link></>}
     >
       <form className="stack" onSubmit={submit} noValidate>
-        <TextField label="Restaurant name" value={form.restaurantName} onChange={set('restaurantName')} error={errors.restaurantName} autoComplete="organization" required autoFocus />
+        <TextField label="Restaurant name" value={form.restaurantName} onChange={set('restaurantName')} error={errors.restaurantName} autoComplete="organization" required autoFocus={!isIOS()} />
         <TextField label="Email" type="email" value={form.email} onChange={set('email')} error={errors.email} autoComplete="email" required />
         <TextField label="Mobile number" hint="Optional. You can log in with it too." type="tel" inputMode="tel" value={form.phoneNumber} onChange={set('phoneNumber')} error={errors.phoneNumber} autoComplete="tel" />
         <PasswordField value={form.password} onChange={set('password')} error={errors.password} hint="At least 8 characters" autoComplete="new-password" required />

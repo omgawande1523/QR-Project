@@ -1,5 +1,5 @@
 # iOS cloud check (mobile/scripts/ios-ci.sh): the kitchen signs in on an iPad simulator against the test API and
-# the kitchen display is shown in portrait and landscape. OUT is the screenshot folder.
+# the kitchen display is shown in portrait and landscape. Screenshots land where Maestro runs.
 appId: com.qrmenu.staff
 name: Kitchen on iPad
 ---
@@ -18,8 +18,8 @@ name: Kitchen on iPad
     visible: "Kitchen"
     timeout: 30000
 - waitForAnimationToEnd
-- takeScreenshot: ${OUT}/iPad-2-kitchen
+- takeScreenshot: iPad-2-kitchen
 - setOrientation: LANDSCAPE_LEFT
 - waitForAnimationToEnd
-- takeScreenshot: ${OUT}/iPad-3-kitchen-landscape
+- takeScreenshot: iPad-3-kitchen-landscape
 - setOrientation: PORTRAIT

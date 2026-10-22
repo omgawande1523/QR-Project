@@ -53,9 +53,9 @@ maestro_bin() {
 
 screenshots() {
   local app="$DERIVED/Build/Products/Debug-iphonesimulator/App.app"
-  local signed_in=0
+  local flows="$PWD/maestro" api=0 failed=0
   mkdir -p "$SHOTS"
-  curl -fs "$API_URL/health" >/dev/null && signed_in=1 || echo "Test API not reachable at $API_URL: login screens only"
+  curl -fs "$API_URL/health" >/dev/null && api=1 || echo "Test API not reachable at $API_URL: login screens only"
   for kind in iPhone iPad; do
     read -r udid name < <(pick_device "$kind")
     echo "== $kind: $name ($udid)"
@@ -63,17 +63,19 @@ screenshots() {
     xcrun simctl bootstatus "$udid" -b
     xcrun simctl status_bar "$udid" override --time "9:41" --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4 || true
     xcrun simctl install "$udid" "$app"
-    xcrun simctl launch "$udid" "$APP_ID"
+    # The app's console (Capacitor prints JavaScript console messages and errors) goes to a log file.
+    xcrun simctl launch --stdout="$SHOTS/$kind-console.log" --stderr="$SHOTS/$kind-console.log" "$udid" "$APP_ID"
     sleep 25
     xcrun simctl io "$udid" screenshot "$SHOTS/$kind-1-login.png"
-    if [ "$signed_in" = 1 ]; then
-      "$(maestro_bin)" --device "$udid" test -e OUT="$SHOTS" "maestro/$kind.yaml" || { echo "Sign-in flow failed on $kind"; signed_in=failed; }
+    if [ "$api" = 1 ]; then
+      # Maestro saves screenshots relative to where it runs.
+      (cd "$SHOTS" && "$(maestro_bin)" --device "$udid" test "$flows/$kind.yaml") || { echo "Sign-in flow failed on $kind"; failed=1; }
     fi
     xcrun simctl spawn "$udid" log show --last 15m --style compact --predicate "process == \"App\"" > "$SHOTS/$kind-app.log" 2>/dev/null || true
     xcrun simctl shutdown "$udid" || true
   done
   ls -la "$SHOTS"
-  [ "$signed_in" != failed ]
+  [ "$failed" = 0 ]
 }
 
 # App Store build signed with an App Store Connect API key (automatic signing), uploaded straight to

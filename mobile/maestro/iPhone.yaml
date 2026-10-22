@@ -1,5 +1,5 @@
 # iOS cloud check (mobile/scripts/ios-ci.sh): the owner signs in on an iPhone simulator against the test API
-# (server/scripts/test-api.js, demo data) and opens the orders board. OUT is the screenshot folder.
+# (server/scripts/test-api.js, demo data) and opens the orders board, which stays upright when turned. Screenshots land where Maestro runs.
 appId: com.qrmenu.staff
 name: Owner on iPhone
 ---
@@ -18,11 +18,16 @@ name: Owner on iPhone
     visible: "Olive Leaf Café"
     timeout: 30000
 - waitForAnimationToEnd
-- takeScreenshot: ${OUT}/iPhone-2-dashboard
+- takeScreenshot: iPhone-2-dashboard
 - tapOn: "Open menu"
 - tapOn: "Orders"
 - extendedWaitUntil:
     visible: "Board"
     timeout: 20000
 - waitForAnimationToEnd
-- takeScreenshot: ${OUT}/iPhone-3-orders
+- takeScreenshot: iPhone-3-orders
+# Turned sideways, the orders board stays in portrait (only the kitchen display rotates on iPhone).
+- setOrientation: LANDSCAPE_LEFT
+- waitForAnimationToEnd
+- takeScreenshot: iPhone-4-turned-sideways
+- setOrientation: PORTRAIT
