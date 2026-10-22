@@ -5,7 +5,8 @@ import { PasswordField } from '../auth/PasswordField';
 import { api, errorMessage } from '../../lib/api';
 import { APP_NAME } from '../../config';
 
-// Public account deletion (the Play Store asks for a web page as well as the in-app option). Signs in with
+// Public account deletion (Google Play asks for a web page as well as the in-app option; the App Store requires
+// the in-app one, in Settings). Signs in with
 // the email and password, then deletes the account with the same password.
 export default function DeleteAccountPage() {
   const [email, setEmail] = useState('');

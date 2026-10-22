@@ -1,7 +1,8 @@
 import { LegalLayout, ContactLine } from './LegalLayout';
 import { APP_NAME } from '../../config';
 
-// The privacy policy for the website and the "QR Menu Staff" Android app (the Play Store links here).
+// The privacy policy for the website and the "QR Menu Staff" app for Android, iPhone and iPad (Google Play, the
+// App Store and the app's Settings link here).
 // Keep it in step with docs/PLAY_STORE.md (Data safety answers).
 export default function PrivacyPage() {
   return (
@@ -30,10 +31,11 @@ export default function PrivacyPage() {
 
       <h2>The {APP_NAME} Staff app</h2>
       <ul>
-        <li><strong>Camera and photos</strong>: only when you choose &quot;Take photo&quot; or &quot;Choose from gallery&quot; to add a dish photo or logo. The picture you pick is uploaded; nothing else on the phone is read.</li>
-        <li><strong>Notifications</strong>: new orders, table requests and ready orders are sent through Google Firebase Cloud Messaging. You can turn each type off in the app&apos;s Settings, or all of them in Android&apos;s settings.</li>
-        <li><strong>Sign-in</strong>: your login is kept in the phone&apos;s secure storage (Android Keystore) and removed when you sign out.</li>
-        <li>The app does not collect your location, contacts, call logs or files.</li>
+        <li><strong>Camera and photos</strong>: only when you choose &quot;Take photo&quot; or &quot;Choose from gallery&quot; (&quot;Choose from Photos&quot; on iPhone) to add a dish photo or logo. The picture you pick is uploaded; nothing else on the phone is read. On iPhone, saving a QR code or bill to Photos only adds that file.</li>
+        <li><strong>Notifications</strong>: new orders, table requests and ready orders are sent through Google Firebase Cloud Messaging (and, on iPhone and iPad, Apple Push Notification service). You can turn each type off in the app&apos;s Settings, or all of them in the phone&apos;s settings.</li>
+        <li><strong>Sign-in</strong>: your login is kept in the phone&apos;s secure storage (Android Keystore, or the iOS Keychain) and removed when you sign out.</li>
+        <li>The app does not collect your location, contacts, call logs or files, and does not track you across other apps or websites.</li>
+        <li><strong>Deleting your account</strong>: in the app or on the website, Settings &gt; Delete account, or on the <a href="/delete-account">account deletion page</a>.</li>
       </ul>
 
       <h2>Where the data is kept</h2>
