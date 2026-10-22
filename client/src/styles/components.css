@@ -242,7 +242,7 @@
   overflow-y: auto;
   background: var(--surface);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  padding: var(--space-3) var(--space-5) calc(var(--space-6) + env(safe-area-inset-bottom));
+  padding: var(--space-3) var(--space-5) calc(var(--space-6) + var(--safe-bottom, env(safe-area-inset-bottom)));
   animation: sheet-up var(--duration) var(--ease-out);
 }
 .sheet-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-4); }

@@ -1,8 +1,10 @@
-// The staff app build (vite --mode app) at phone and tablet sizes: each role sees exactly its own screens
+// The staff app build (vite --mode app) at Android and iOS phone and tablet sizes (Chromium and WebKit): each role
+// sees exactly its own screens
 // (the same rules as the website, also enforced by the server), guest screens are not in the app, and an
 // order placed on the website's customer menu arrives in the app and its status reaches the guest.
 const { test, expect } = require('@playwright/test');
 const { API, demo } = require('../helpers');
+const { platformOf, signedIn } = require('./session');
 
 const WEB = 'http://localhost:3000';
 const PASSWORD = 'Demo@1234';
@@ -17,29 +19,6 @@ const NAV = {
   manager: ['Home', 'Orders', 'Menu', 'Tables & QR', 'Analytics', 'Feedback', 'Settings'],
   waiter: ['Orders', 'Settings']
 };
-
-// One API login per role per test run (the login endpoint is rate limited); the app sends X-Client: app.
-const logins = {};
-async function login(request, role) {
-  if (!logins[role]) {
-    const res = await request.post(`${API}/api/users/login`, { data: { identifier: ACCOUNTS[role], password: PASSWORD }, headers: { 'X-Client': 'app' } });
-    expect(res.ok(), `login ${role}`).toBeTruthy();
-    logins[role] = await res.json();
-  }
-  return logins[role];
-}
-
-// The app build in a browser keeps the session where the phone would use secure storage: localStorage.
-async function signedIn(page, request, role) {
-  const session = await login(request, role);
-  await page.addInitScript((s) => {
-    localStorage.setItem('token', s.token);
-    localStorage.setItem('userId', s.userId);
-    localStorage.setItem('role', s.role);
-    localStorage.setItem('qr.alerts', JSON.stringify({ sound: false, voice: false, browser: false }));
-  }, session);
-  return session;
-}
 
 const watchConsole = (page) => {
   const errors = [];
@@ -65,11 +44,12 @@ test('opens on Login, and signing in lands on the role\'s start screen', async (
 });
 
 for (const role of ['owner', 'manager', 'waiter']) {
-  test(`${role}: sees exactly the website's screens for the role`, async ({ page, request }) => {
-    const session = await signedIn(page, request, role);
+  test(`${role}: sees exactly the website's screens for the role`, async ({ page, request }, testInfo) => {
+    const session = await signedIn(page, role, testInfo);
     await page.goto('/');
     await expect(page).toHaveURL(role === 'waiter' ? /\/dashboard\/orders$/ : /\/dashboard$/);
-    await expect(page.locator('.sidebar-nav a')).toHaveText(NAV[role]);
+    // (Orders may carry a live count of new orders: "Orders1")
+    await expect(page.locator('.sidebar-nav a')).toHaveText(NAV[role].map((name) => new RegExp(`^${name} *[0-9]*$`)));
 
     // Screens outside the role send it back to its start screen, and the server refuses the data.
     const forbidden = { owner: [], manager: ['/dashboard/staff'], waiter: ['/dashboard/analytics', '/dashboard/staff', '/dashboard/menu', '/dashboard'] }[role];
@@ -83,19 +63,19 @@ for (const role of ['owner', 'manager', 'waiter']) {
   });
 }
 
-test('kitchen: only the kitchen display', async ({ page, request }) => {
-  await signedIn(page, request, 'kitchen');
+test('kitchen: only the kitchen display', async ({ page }, testInfo) => {
+  await signedIn(page, 'kitchen', testInfo);
   for (const path of ['/', '/dashboard', '/dashboard/orders', '/dashboard/settings', '/dashboard/menu']) {
     await page.goto(path);
     await expect(page).toHaveURL(path === '/dashboard/settings' ? /\/dashboard\/settings$/ : /\/kitchen$/);
   }
 });
 
-test('guest screens are not part of the app', async ({ page, request }) => {
+test('guest screens are not part of the app', async ({ page, request }, testInfo) => {
   const { restaurantId } = await demo(request);
   await page.goto(`/menu/${restaurantId}?table=1`);
   await expect(page).toHaveURL(/\/login$/);
-  await signedIn(page, request, 'owner');
+  await signedIn(page, 'owner', testInfo);
   for (const path of [`/menu/${restaurantId}/browse`, '/demo', '/privacy']) {
     await page.goto(path);
     await expect(page).toHaveURL(/\/dashboard$/);
@@ -103,10 +83,10 @@ test('guest screens are not part of the app', async ({ page, request }) => {
   await expect(page.getByText('View Menu')).toHaveCount(0);
 });
 
-test('an order from the website menu arrives in the app; its status reaches the guest', async ({ page, browser, request }) => {
+test('an order from the website menu arrives in the app; its status reaches the guest', async ({ page, browser, request }, testInfo) => {
   const { restaurantId } = await demo(request);
   const errors = watchConsole(page);
-  await signedIn(page, request, 'owner');
+  await signedIn(page, 'owner', testInfo);
   await page.goto('/dashboard/orders');
   await expect(page.getByRole('heading', { name: 'Orders', level: 1 })).toBeVisible();
 
@@ -132,17 +112,18 @@ test('an order from the website menu arrives in the app; its status reaches the 
   expect(errors).toEqual([]);
 });
 
-test('Settings lists this device as a staff app session', async ({ page, request }) => {
-  await signedIn(page, request, 'manager');
+test('Settings lists this device as a staff app session, with its platform', async ({ page }, testInfo) => {
+  await signedIn(page, 'manager', testInfo);
   await page.goto('/dashboard/settings');
   const devices = page.getByRole('region', { name: 'Signed-in devices' }).or(page.locator('section', { has: page.getByRole('heading', { name: 'Signed-in devices' }) }));
   await expect(devices.getByText('This device')).toBeVisible();
-  await expect(devices.getByText(/Staff app · active/).first()).toBeVisible();
+  const label = platformOf(testInfo) === 'ios' ? 'Staff app (iPhone/iPad) · active' : 'Staff app (Android) · active';
+  await expect(devices.getByText(label).first()).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Delete account' })).toBeVisible();
 });
 
-test('kitchen display fills the screen without sideways scrolling', async ({ page, request }) => {
-  await signedIn(page, request, 'kitchen');
+test('kitchen display fills the screen without sideways scrolling', async ({ page }, testInfo) => {
+  await signedIn(page, 'kitchen', testInfo);
   await page.goto('/kitchen');
   await expect(page.locator('.kitchen-board')).toBeVisible();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
