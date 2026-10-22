@@ -210,6 +210,29 @@ describe('sessions', () => {
     expect(evil.headers['access-control-allow-origin']).toBeUndefined();
   });
 
+  test('the app tells whether it runs on iOS or Android; iOS devices can be listed and signed out', async () => {
+    const owner = await registerOwner(app);
+    const login = (headers) => request(app).post('/api/users/login').set(headers).send({ identifier: owner.email, password: owner.password });
+    const iphone = await login({ 'X-Client': 'app', 'X-Platform': 'ios', 'X-Device-Name': 'Apple iPhone' });
+    await login({ 'X-Client': 'app', 'X-Platform': 'ios' }); // no device name
+    await login({ 'X-Client': 'app' }); // the first Android app sent no platform
+    await login({ 'X-Platform': 'ios', 'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Safari/604.1' });
+
+    const list = (await request(app).get('/api/sessions').set(auth(iphone.body.token))).body;
+    const rows = list.map((s) => [s.client, s.platform, s.deviceName]).sort();
+    expect(rows).toEqual([
+      ['app', 'android', 'Android app'],
+      ['app', 'ios', 'Apple iPhone'],
+      ['app', 'ios', 'iPhone app'],
+      ['web', 'web', expect.any(String)], // the registerOwner sign-up
+      ['web', 'web', 'Safari on iPhone'] // a browser cannot claim to be the app
+    ].sort());
+
+    const other = list.find((s) => s.platform === 'ios' && !s.current);
+    expect((await request(app).delete(`/api/sessions/${other.id}`).set(auth(owner.token))).status).toBe(204);
+    expect((await request(app).get('/api/sessions').set(auth(iphone.body.token))).body).toHaveLength(4);
+  });
+
   test('browser names for the sessions list', () => {
     expect(describeBrowser(CHROME_WINDOWS)).toBe('Chrome on Windows');
     expect(describeBrowser('Mozilla/5.0 (Linux; Android 14; SM-A546E) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/26.0 Chrome/122.0 Mobile Safari/537.36')).toBe('Samsung Internet on Android');

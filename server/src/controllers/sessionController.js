@@ -8,6 +8,7 @@ const { subjectFilter, otherSessions, reissue, endSessions } = require('../servi
 const view = (session, currentId) => ({
   id: session._id,
   client: session.client,
+  platform: session.platform || (session.client === 'app' ? 'android' : 'web'),
   deviceName: session.deviceName,
   createdAt: session.createdAt,
   lastActiveAt: session.lastActiveAt,

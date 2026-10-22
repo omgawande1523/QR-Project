@@ -22,11 +22,14 @@ function describeBrowser(ua = '') {
   return os ? `${browser} on ${os}` : browser;
 }
 
-// The staff app sends X-Client: app and X-Device-Name (e.g. "Samsung Galaxy Tab A8"); browsers send neither.
+// The staff app sends X-Client: app, X-Platform (ios or android; the first Android version sent none) and
+// X-Device-Name (e.g. "Samsung Galaxy Tab A8"); browsers send none of them.
 function clientInfo(req) {
   const client = req.get('x-client') === 'app' ? 'app' : 'web';
+  const platform = client === 'web' ? 'web' : req.get('x-platform') === 'ios' ? 'ios' : 'android';
   const named = (req.get('x-device-name') || '').replace(CONTROL_CHARS, ' ').trim().slice(0, 60);
-  return { client, deviceName: named || (client === 'app' ? 'Android app' : describeBrowser(req.get('user-agent'))) };
+  const fallback = { web: describeBrowser(req.get('user-agent')), android: 'Android app', ios: 'iPhone app' }[platform];
+  return { client, platform, deviceName: named || fallback };
 }
 
 const expiryFor = (session) => new Date(Date.now() + ttlFor(session) * DAY_MS);

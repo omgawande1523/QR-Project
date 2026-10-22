@@ -11,6 +11,7 @@ const sessionSchema = new mongoose.Schema({
   staff: { type: mongoose.Schema.Types.ObjectId, ref: 'Staff', default: null, index: true }, // null: the owner
   role: { type: String, enum: ['owner', 'manager', 'waiter', 'kitchen'], required: true },
   client: { type: String, enum: ['web', 'app'], default: 'web' },
+  platform: { type: String, enum: ['web', 'android', 'ios'], default: 'web' }, // where the app runs
   deviceName: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now },
   lastActiveAt: { type: Date, default: Date.now },
