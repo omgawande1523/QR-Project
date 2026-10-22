@@ -19,8 +19,7 @@ name: Owner on iPhone
     timeout: 30000
 - waitForAnimationToEnd
 - takeScreenshot: iPhone-2-dashboard
-- tapOn: "Open menu"
-- tapOn: "Orders"
+- tapOn: "Open orders board"
 - extendedWaitUntil:
     visible: "Board"
     timeout: 20000
