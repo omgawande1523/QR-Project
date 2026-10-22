@@ -15,6 +15,7 @@
     "build": "npm --prefix client run build",
     "start": "npm --prefix server start",
     "seed": "npm --prefix server run seed",
+    "seed:review": "npm --prefix server run seed:review",
     "test": "npm --prefix server test && npm --prefix client test",
     "lint": "npm --prefix client run lint",
     "e2e": "playwright test",

@@ -3,8 +3,13 @@
 //   npm run seed            (from the repo root or server/)
 //   Login: demo@qrmenu.test / Demo@1234
 //
-// Safe to re-run: it only replaces the demo account's own data (its menu items, orders,
-// service requests and uploaded images). Nothing else in the database is touched.
+// With --review it loads "App Review Café" instead: the same menu and orders under the account Apple's
+// reviewers sign in with (docs/APP_STORE.md). Its password comes from REVIEW_PASSWORD (required in production).
+//
+//   npm run seed:review     Login: appreview@qrmenu.app / REVIEW_PASSWORD
+//
+// Safe to re-run, also on a production database: it only replaces that one account's own data (its menu
+// items, orders, service requests, staff logins and uploaded images). Nothing else is touched.
 
 const fs = require('fs');
 const path = require('path');
@@ -44,14 +49,31 @@ const DEMO = {
   isDemo: true
 };
 
-const ASSETS = path.join(__dirname, 'seed-assets');
-
 // Demo staff logins, one per role (same password as the owner).
-const DEMO_STAFF = [
+DEMO.staff = [
   { name: 'Asha (Manager)', email: 'manager@qrmenu.test', role: 'manager' },
   { name: 'Ravi (Waiter)', email: 'waiter@qrmenu.test', role: 'waiter' },
   { name: 'Meena (Kitchen)', email: 'kitchen@qrmenu.test', role: 'kitchen' }
 ];
+
+// The App Store review account: a normal restaurant (not the read-only demo), so reviewers can try every
+// feature, deleting the account included. Re-run the seed to bring it back.
+const REVIEW = {
+  ...DEMO,
+  email: 'appreview@qrmenu.app',
+  password: process.env.REVIEW_PASSWORD || 'Review@1234',
+  restaurantName: 'App Review Café',
+  phoneNumber: '+919800000099',
+  isDemo: false,
+  staff: [
+    { name: 'Ravi (Waiter)', email: 'appreview.waiter@qrmenu.app', role: 'waiter' },
+    { name: 'Meena (Kitchen)', email: 'appreview.kitchen@qrmenu.app', role: 'kitchen' }
+  ]
+};
+
+const PROFILE = process.argv.includes('--review') ? REVIEW : DEMO;
+
+const ASSETS = path.join(__dirname, 'seed-assets');
 
 // image: file in seed-assets/ (without .webp). Prices in rupees.
 const MENU = [
@@ -244,8 +266,8 @@ async function addImage(buffer, kind, ownerId) {
   return cropOriginal({ ownerId, originalId: original._id, kind, crop, rotation: 0 });
 }
 
-async function removeExistingDemo() {
-  const existing = await User.findOne({ email: DEMO.email });
+async function removeExisting() {
+  const existing = await User.findOne({ email: PROFILE.email });
   if (!existing) return;
   const items = await MenuItem.find({ owner: existing._id }).select('image');
   const uploads = await Upload.find({ owner: existing._id });
@@ -265,7 +287,7 @@ async function removeExistingDemo() {
     Counter.deleteMany({ _id: { $regex: `^${existing._id}:` } })
   ]);
   await User.deleteOne({ _id: existing._id });
-  console.log('Replaced the existing demo restaurant.');
+  console.log(`Replaced the existing ${PROFILE === DEMO ? 'demo restaurant' : `"${PROFILE.restaurantName}"`}.`);
 }
 
 function buildLines(lines, itemsByName) {
@@ -285,9 +307,10 @@ async function main() {
   await mongoose.connect(config.mongoUri);
   console.log(`Seeding database "${mongoose.connection.name}" on ${mongoose.connection.host}`);
 
-  await removeExistingDemo();
+  await removeExisting();
 
-  const restaurant = await User.create({ ...DEMO, password: await bcrypt.hash(DEMO.password, 10) });
+  const { staff: staffLogins, ...account } = PROFILE;
+  const restaurant = await User.create({ ...account, password: await bcrypt.hash(PROFILE.password, 10) });
   const logoPng = await logoBuffer();
   const [banner, logo, qrLogo] = await Promise.all([
     addImage(fs.readFileSync(path.join(ASSETS, 'hero.webp')), 'banner', restaurant._id),
@@ -340,15 +363,21 @@ async function main() {
 
   await ServiceRequest.create({ restaurantId: restaurant._id, tableNumber: 3, type: 'Water', customerName: 'Meera' });
 
-  const staffPassword = await bcrypt.hash(DEMO.password, 10);
-  await Staff.deleteMany({ email: { $in: DEMO_STAFF.map((s) => s.email) } });
-  await Staff.insertMany(DEMO_STAFF.map((member) => ({ ...member, restaurant: restaurant._id, password: staffPassword })));
+  const staffPassword = await bcrypt.hash(PROFILE.password, 10);
+  await Staff.deleteMany({ email: { $in: staffLogins.map((s) => s.email) } });
+  await Staff.insertMany(staffLogins.map((member) => ({ ...member, restaurant: restaurant._id, password: staffPassword })));
 
-  console.log(`Created "${DEMO.restaurantName}": ${items.length} menu items, ${DEMO.tables.length} tables, ${SAMPLE_ORDERS.length} live orders, ${history.orders.length} past orders.`);
-  console.log(`Login: ${DEMO.email} / ${DEMO.password}`);
-  console.log(`Staff logins (same password): ${DEMO_STAFF.map((m) => `${m.email} (${m.role})`).join(', ')}`);
+  console.log(`Created "${PROFILE.restaurantName}": ${items.length} menu items, ${PROFILE.tables.length} tables, ${SAMPLE_ORDERS.length} live orders, ${history.orders.length} past orders.`);
+  console.log(`Login: ${PROFILE.email} / ${PROFILE === DEMO ? PROFILE.password : '(REVIEW_PASSWORD)'}`);
+  console.log(`Staff logins (same password): ${staffLogins.map((m) => `${m.email} (${m.role})`).join(', ')}`);
   console.log(`Customer menu: ${config.frontendUrl || 'http://localhost:3000'}/menu/${restaurant._id}?table=1`);
   await mongoose.disconnect();
+}
+
+// A guessable password would let anyone into the review account on a live server.
+if (PROFILE === REVIEW && config.env === 'production' && (process.env.REVIEW_PASSWORD || '').length < 10) {
+  console.error('Set REVIEW_PASSWORD (at least 10 characters) to create the App Store review account in production.');
+  process.exit(1);
 }
 
 main().catch(async (err) => {
