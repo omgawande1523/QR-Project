@@ -3,7 +3,7 @@
 QR code menu and table ordering for restaurants and cafés, built for India. Guests scan the QR code on their
 table, browse the menu in English, Hindi or Marathi, order and follow their food live. The restaurant gets a
 live orders board, a kitchen display, staff logins, GST bills with a UPI QR code, sales analytics and guest
-feedback, on the website and in the **QR Menu Staff** Android app with push notifications.
+feedback, on the website and in the **QR Menu Staff** app for Android, iPhone and iPad with push notifications.
 
 <p>
   <img src="docs/screenshots/customer-menu-375.png" alt="Customer menu on a phone" width="220">
@@ -11,7 +11,8 @@ feedback, on the website and in the **QR Menu Staff** Android app with push noti
 </p>
 
 Restaurant owners: the plain-language guide is [docs/USER_GUIDE.md](docs/USER_GUIDE.md). Planned work is in
-[docs/ROADMAP.md](docs/ROADMAP.md). Publishing the app: [docs/PLAY_STORE.md](docs/PLAY_STORE.md).
+[docs/ROADMAP.md](docs/ROADMAP.md). Publishing the app: [docs/PLAY_STORE.md](docs/PLAY_STORE.md) (Android) and
+[docs/APP_STORE.md](docs/APP_STORE.md) (iPhone and iPad).
 
 ## Contents
 
@@ -25,6 +26,7 @@ Restaurant owners: the plain-language guide is [docs/USER_GUIDE.md](docs/USER_GU
 - [Scripts and tests](#scripts-and-tests)
 - [Deployment](#deployment)
 - [Android staff app](#android-staff-app)
+- [iOS staff app](#ios-staff-app)
 - [How it works](#how-it-works)
 - [Resetting the database](#resetting-the-database)
 
@@ -115,9 +117,12 @@ QR-Project/
 │   │   └── sockets/           live orders, menus and order tracking
 │   ├── scripts/               seed, upload cleanup, base64 image migration, guarded database reset
 │   └── tests/                 Jest test suites
-├── mobile/                    QR Menu Staff: Capacitor project (android/), app.config.json, build scripts
+├── mobile/                    QR Menu Staff: Capacitor projects (android/, ios/), app.config.json, build
+│                              scripts, maestro/ (iOS simulator sign-in flows)
 ├── e2e/                       Playwright tests (flows, responsive and accessibility audit, keyboard; app/)
-├── docs/                      USER_GUIDE.md, ROADMAP.md, PLAY_STORE.md, screenshots/
+├── docs/                      USER_GUIDE.md, ROADMAP.md, PLAY_STORE.md, APP_STORE.md, screenshots/
+├── codemagic.yaml             iOS cloud builds: simulator check and TestFlight release
+├── .github/workflows/ios.yml  the same on GitHub Actions (started by hand)
 ├── design-reference/          UI reference image
 ├── render.yaml                Render Blueprint for the API
 ├── playwright.config.js       end-to-end tests against the dev servers
@@ -200,7 +205,9 @@ Never commit `server\.env` or `client\.env`; `.gitignore` already excludes them.
 | `FIREBASE_SERVICE_ACCOUNT` | for app push notifications | The Firebase service-account key (Project settings > Service accounts > Generate new private key): the JSON on one line, or the path to the `.json` file kept outside the repository. Empty: no push notifications. |
 | `APP_MIN_VERSION` | no | Staff app versions below this (e.g. `1.2.0`) must update before they can be used. Default `1.0.0`. |
 | `APP_LATEST_VERSION` | no | Staff app versions below this see a dismissible "Update available". Defaults to `APP_MIN_VERSION`. |
-| `APP_UPDATE_URL` | no | Where the app's Update button goes. Default: the Play Store page of `com.qrmenu.staff`. |
+| `APP_UPDATE_URL` | no | Where the Android app's Update button goes. Default: the Play Store page of `com.qrmenu.staff`. |
+| `APP_UPDATE_URL_IOS` | once the iPhone app is live | Where the iPhone app's Update button goes: `https://apps.apple.com/app/id<Apple ID>`. Default: an App Store search for QR Menu Staff. |
+| `REVIEW_PASSWORD` | to create the App Store review account | Password of the "App Review Café" logins made by `npm run seed:review` (10+ characters in production). Not needed by the running API. |
 
 ### client/.env
 
@@ -245,13 +252,14 @@ Run from the repository root:
 | `npm run install:all` | Installs root, server, client and mobile dependencies |
 | `npm run dev` | API (nodemon) and client (Vite) together |
 | `npm run seed` | Loads the demo restaurant |
-| `npm test` | Server tests (Jest, 283 tests on an in-memory MongoDB) and client tests (Vitest) |
+| `npm run seed:review` | Loads "App Review Café", the App Store review account (see [docs/APP_STORE.md](docs/APP_STORE.md)); only that account's data is replaced |
+| `npm test` | Server tests (Jest, 295 tests on an in-memory MongoDB) and client tests (Vitest) |
 | `npm run lint` | ESLint on the client |
 | `npm run build` | Production build of the client into `client/build` |
 | `npm start` | Starts the API (as Render does) |
 | `npm run e2e` | Playwright end-to-end tests against the dev servers (starts them if needed; run `npm run seed` first) |
 | `npm run e2e:prod` | Builds the client, starts the API with `NODE_ENV=production` and the built client as static files, then runs the same tests. Ports 3000 and 5000 must be free. |
-| `npm run e2e:app` | The staff app build in a browser at phone and tablet sizes: every role's screens, an order from the website menu to the app and back (ports 3000, 3001 and 5000) |
+| `npm run e2e:app` | The staff app build in a browser at Android phone and tablet sizes (Chromium) and iPhone and iPad sizes (WebKit): every role's screens, an order from the website menu to the app and back, safe areas, close buttons, in-app account deletion (ports 3000, 3001 and 5000; once: `npx playwright install webkit`) |
 | `npm run app:doctor` | Checks JDK 21, the Android SDK, plugin versions, Firebase and signing files |
 | `npm run app:build` | Builds the staff screens into `client/dist-app` and checks no guest code is in them |
 | `npm run app:sync` | `app:build`, then copies the screens and plugins into the Android project |
@@ -259,6 +267,7 @@ Run from the repository root:
 | `npm run app:aab` | `app:sync`, then the signed release bundle for the Play Store: `mobile/dist/qr-menu-staff-<version>.aab` |
 | `npm run app:run` | `app:sync`, then installs and starts the app on a connected phone or running emulator |
 | `npm run app:open` | Opens the Android project in Android Studio |
+| `npm run app:ios:sync` | `app:build`, then writes the version into the iOS project and copies the screens and plugins into it (works on Windows; iOS builds run in the cloud, see [iOS staff app](#ios-staff-app)) |
 
 Other tools:
 
@@ -502,8 +511,97 @@ the Play Console steps: [docs/PLAY_STORE.md](docs/PLAY_STORE.md).
   Socket.io, exact matches only. Nothing needs adding on Render.
 - `GET /api/app-version` tells the app the minimum and latest versions (`APP_MIN_VERSION`,
   `APP_LATEST_VERSION`).
-- iOS: the code is iOS-ready (no Android-only assumptions in the web code); adding it needs a Mac with Xcode:
-  `npx cap add ios` in `mobile/`.
+- iOS: the same app, see [iOS staff app](#ios-staff-app).
+
+## iOS staff app
+
+QR Menu Staff for **iPhone and iPad** is the same app as on Android: the same React screens and app build
+(`client/dist-app`), the same app id `com.qrmenu.staff`, accounts and role rules. iOS apps can only be compiled
+on a Mac with Xcode, so this Windows PC prepares the iOS project (`mobile/ios`) and keeps it in sync, and every
+build, simulator run, signature and upload happens on a Mac in the cloud: **Codemagic** (`codemagic.yaml`) or, as a
+backup, **GitHub Actions** (`.github/workflows/ios.yml`). Both are started by hand, so pushes never use Mac
+minutes. Publishing: [docs/APP_STORE.md](docs/APP_STORE.md).
+
+<!-- IOS-SCREENSHOTS -->
+
+### What iOS adds or does differently
+
+| | |
+| --- | --- |
+| Push notifications | Through Firebase Cloud Messaging and Apple's push service: the same alerts, roles, sounds, per-device switches and tap-to-open as Android. New orders and table requests are **time-sensitive**, so they show during Focus. |
+| Sign-in | Kept in the iOS Keychain; iPhones and iPads appear in Settings > Signed-in devices as "Apple iPhone" / "Apple iPad", "Staff app (iPhone/iPad)". |
+| Photos and printing | Take photo / Choose from Photos, then the usual crop; QR codes and bills open the share sheet (Save Image, Files, WhatsApp, Print); Print on a bill uses **AirPrint**. |
+| Screens | Safe areas around the notch, Dynamic Island and home indicator on every screen, dialog and sheet. iPad turns freely; iPhone stays upright except on the kitchen display. The keyboard pushes the screen up so fields stay visible. |
+| No back button | Every dialog and sheet has a visible Close button; swipe in from the left edge to go back. |
+| App Store rules | Delete account in Settings (owners type DELETE), privacy policy in Settings, no prices or upgrade links; review account via `npm run seed:review`. |
+| Update prompt | Opens the App Store page (`APP_UPDATE_URL_IOS` on the API). |
+
+### The iOS project
+
+- `mobile/ios/App` is a Capacitor 8 Xcode project using **Swift Package Manager** (every plugin ships a
+  `Package.swift`, so no CocoaPods). Minimum **iOS 15.0** (Capacitor 8's minimum). Firebase Messaging is a Swift
+  package of the app target.
+- Native code: `AppDelegate.swift` (Firebase turns Apple's device token into an FCM token for the push plugin;
+  Firebase starts only when `GoogleService-Info.plist` is in the build), `MainViewController.swift` (registers the
+  AirPrint plugin, swipe-back, iPhone portrait lock) and `NativePrintPlugin.swift` (the same `NativePrint` plugin
+  as on Android). Entitlements: push notifications and time-sensitive notifications.
+- `npm run app:ios:sync` builds the screens (with the bundle check), writes `versionName` from
+  `mobile/app.config.json` and the app id into the Xcode project, and copies screens and plugins into it. It works
+  on Windows. Icons and launch screen: `node mobile/scripts/make-assets.mjs ios`; sounds:
+  `node mobile/scripts/make-sounds.mjs` (the same WAV files as Android).
+- iOS blocks plain `http` (App Transport Security). Release builds refuse anything but an `https` API; only the
+  simulator check adds an exception, for its own test API host (`node scripts/app.mjs ios-ats`).
+
+### Cloud builds on Codemagic
+
+1. Sign in at [codemagic.io](https://codemagic.io) with GitHub, **Add application** > GitHub >
+   `omgawande1523/QR-Project`. Codemagic finds `codemagic.yaml` in the repository.
+2. **ios-check** (no Apple account): **Start new build** > branch `main` > workflow **iOS check**. It installs,
+   builds the screens and runs the bundle check, builds for the iOS Simulator, starts a test API with the demo
+   data on the build Mac, launches the app on the largest iPhone and the 13-inch iPad simulators, signs in with
+   [Maestro](https://maestro.mobile.dev) (owner on iPhone, kitchen on iPad, landscape too) and saves the
+   screenshots and logs as artifacts.
+3. **ios-release** (needs the Apple Developer account, see [docs/APP_STORE.md](docs/APP_STORE.md)): in Codemagic
+   > the app > **Environment variables**, create two groups and mark every value **Secret**:
+
+   | Group | Variable | Where to find it |
+   | --- | --- | --- |
+   | `app_store_connect` | `APP_STORE_CONNECT_ISSUER_ID` | App Store Connect > Users and Access > Integrations > App Store Connect API: "Issuer ID" above the keys |
+   | | `APP_STORE_CONNECT_KEY_IDENTIFIER` | The same page: the Key ID of your team key (role **Admin**, so it can create the signing certificate) |
+   | | `APP_STORE_CONNECT_PRIVATE_KEY` | The `AuthKey_<Key ID>.p8` downloaded when the key was made: paste the whole text, BEGIN and END lines included |
+   | | `CERTIFICATE_PRIVATE_KEY` | A private key for the distribution certificate Codemagic creates. Make it once in Git Bash, outside the repository: `ssh-keygen -t rsa -b 2048 -m PEM -f qrmenu_ios_cert_key -q -N ""`, and paste the contents of `qrmenu_ios_cert_key` (not the `.pub`). Back it up. |
+   | `qrmenu_ios` | `VITE_API_URL`, `VITE_SITE_URL`, `VITE_CONTACT_EMAIL` | Your API (https), website and support address, as for the Android release |
+   | | `APP_STORE_APPLE_ID` | App Store Connect > the app > App Information > Apple ID (a number) |
+   | | `GOOGLE_SERVICE_INFO_PLIST` | `GoogleService-Info.plist` from Firebase, base64: `base64 -w0 GoogleService-Info.plist` in Git Bash |
+
+   Then **Start new build** > **iOS release**. Signing is automatic (`app-store-connect fetch-signing-files
+   --create`), the build number is one above the latest TestFlight build, and the build is uploaded to TestFlight.
+4. The free Codemagic plan includes macOS build minutes each month; a check takes about 20-30 minutes, a release
+   about 15-25.
+
+### Cloud builds on GitHub Actions (backup)
+
+**Actions** > **iOS staff app** > **Run workflow**, then choose `check` or `release`. The repository is public, so
+GitHub's macOS runners cost nothing. `check` does the same as Codemagic's ios-check and uploads an `ios-check`
+artifact with the screenshots. `release` needs a GitHub environment named `ios-release` (Settings >
+Environments) with these secrets: `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_PRIVATE_KEY` (the API key, as above),
+`APPLE_TEAM_ID` (developer.apple.com > Account > Membership details > Team ID) and `GOOGLE_SERVICE_INFO_PLIST`
+(base64, as above), and the variables `VITE_API_URL`, `VITE_SITE_URL` and `VITE_CONTACT_EMAIL`. It archives with
+Xcode's automatic signing through the API key and uploads straight to App Store Connect.
+
+### Push notifications on iPhone
+
+The server needs nothing new: the same `FIREBASE_SERVICE_ACCOUNT` sends to both platforms. In your Apple and
+Firebase accounts: create an APNs key (developer.apple.com > Keys, Apple Push Notifications service), upload it in
+Firebase > Project settings > Cloud Messaging > Apple app configuration, add an iOS app with bundle ID
+`com.qrmenu.staff` in Firebase and give its `GoogleService-Info.plist` to the cloud build as the
+`GOOGLE_SERVICE_INFO_PLIST` secret (never commit it). Without it the iPhone app works the same, without
+notifications. Simulators cannot receive push: test on a phone through TestFlight.
+
+### Bluetooth printers
+
+Not built yet (on either platform). iPhones only talk to **Bluetooth Low Energy** printers; most cheap "classic
+Bluetooth" 58 mm thermal printers work with Android but not with an iPhone. See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## How it works
 

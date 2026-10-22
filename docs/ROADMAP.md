@@ -48,13 +48,35 @@
   deletion, `/api/app-version` update prompt, docs/PLAY_STORE.md~~ done.
 - Not done (optional): Bluetooth thermal printer receipts (ESC/POS, 58/80 mm) behind a setting.
 
-## Phase 7: next steps
+## Phase 7: QR Menu Staff for iPhone and iPad (done, 22 Oct 2026)
+
+- ~~iOS project in `mobile/ios` from the same React code and app build, Swift Package Manager, iOS 15+, iPhone
+  and iPad (iPad any orientation; iPhone portrait except the kitchen display)~~ done.
+- ~~Icons and launch screen in the brand colours; camera, photo library usage text; safe areas on every screen,
+  dialog, sheet and the kitchen display~~ done.
+- ~~Parity: Keychain login, iOS sessions in the devices list, camera and Photos, share sheet, AirPrint, kitchen
+  kept awake, reconnect and offline banner, pull to refresh, haptics, visible Close buttons and swipe back,
+  keyboard handling, App Store update link (`APP_UPDATE_URL_IOS`)~~ done.
+- ~~Push through FCM and APNs: platform per device token, APNs payload with the sound and the time-sensitive
+  level for new orders and table requests~~ done, tested with the mock sender; live push needs the APNs key and
+  `GoogleService-Info.plist`.
+- ~~App Review: in-app account deletion with typed DELETE, privacy policy in Settings, no purchase links, review
+  account (`npm run seed:review`), docs/APP_STORE.md~~ done.
+- ~~Cloud builds: `codemagic.yaml` (ios-check, ios-release to TestFlight) and a manual GitHub Actions workflow;
+  WebKit end-to-end runs at iPhone and iPad sizes~~ done. The simulator check runs on GitHub's Macs; the signed
+  release needs the Apple Developer account.
+- Bluetooth printer (not built on either platform yet): iOS only allows **Bluetooth Low Energy** printers, and
+  most cheap "classic Bluetooth" 58 mm ESC/POS printers do not work with iPhones. When the feature is built:
+  BLE ESC/POS on iOS, classic and BLE on Android, and a clear "This printer isn't supported on iPhone" message
+  for classic-only printers.
+
+## Phase 8: next steps
 
 Suggested order. The first three turn the product into something that can be sold and run as a business.
 
 1. **Go live**: create the Atlas, Cloudinary, Render and Vercel/Netlify accounts, deploy with `render.yaml`,
    connect the domain, then print QR codes from the final address. Set up Firebase and publish QR Menu Staff
-   (docs/PLAY_STORE.md). Add uptime monitoring on `/health`
+   (docs/PLAY_STORE.md, docs/APP_STORE.md). Add uptime monitoring on `/health`
    (UptimeRobot or Better Stack) and error alerts (Sentry for the client and the API).
 2. **Subscriptions and billing for selling the product**: the plans on the landing page (Starter, Growth,
    Business) become real. Razorpay Subscriptions with a free trial, plan limits enforced on the server (tables,
@@ -67,10 +89,11 @@ Suggested order. The first three turn the product into something that can be sol
    per-branch prices and availability), tables, staff and kitchen screen; analytics per branch and combined;
    staff who work at more than one branch.
 5. **Operations**: daily sales report by email or WhatsApp, simple stock tracking that marks dishes sold out
-   automatically, Bluetooth thermal printers for receipts and kitchen tickets from the app, table merge and
-   transfer, and split bills.
+   automatically, Bluetooth thermal printers for receipts and kitchen tickets from the app (BLE printers only on
+   iPhone, see Phase 7), table merge and transfer, and split bills.
 6. **Guests**: WhatsApp order updates, a loyalty stamp card, and dish recommendations ("goes well with").
 7. **Platform**: automated backups with a tested restore, a staging environment (`CLOUDINARY_FOLDER` and a
    second Atlas database), CI running `npm test`, `npm run lint` and `npm run e2e` on every pull request, and the
    rest of the interface (not just dish names) in Hindi and Marathi.
-8. **Staff app on iOS**: `npx cap add ios` on a Mac with Xcode, APNs key in Firebase, App Store listing.
+8. **Subscriptions in the iPhone app**: if plans are sold inside the iPhone app later, Apple requires In-App
+   Purchase for them; until then the app shows no prices or upgrade links (Phase 7).

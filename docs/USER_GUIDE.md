@@ -241,8 +241,8 @@ Guests can also add the menu to their home screen like an app.
 
 ## 13. The QR Menu Staff app
 
-QR Menu Staff is the app for you and your staff on Android phones and tablets. It has everything from the
-dashboard on the website, and adds alerts that ring even when the phone is in a pocket. Your guests do not need
+QR Menu Staff is the app for you and your staff on Android phones and tablets, iPhones and iPads. It has
+everything from the dashboard on the website, and adds alerts that ring even when the phone is in a pocket. Your guests do not need
 it: they keep ordering by scanning the table QR code.
 
 <p>
@@ -253,8 +253,11 @@ it: they keep ordering by scanning the table QR code.
 
 ### Installing the app
 
-- Search for **QR Menu Staff** on Google Play and tap **Install**. (While the app is being tested you may get it
-  as a file instead: open the file on the phone and allow the install when Android asks.)
+- **Android**: search for **QR Menu Staff** on Google Play and tap **Install**. (While the app is being tested
+  you may get it as a file instead: open the file on the phone and allow the install when Android asks.)
+- **iPhone and iPad** (iOS 15 or later): search for **QR Menu Staff** on the App Store and tap **Get**. While the
+  app is being tested you get an email invitation to **TestFlight** instead: install Apple's TestFlight app,
+  open the invitation on the iPhone and tap **Install**.
 - Open it and sign in with the **same email and password** you use on the website. Staff use their own logins.
   New restaurants can tap **Create your restaurant** in the app.
 - The app opens on the right screen for each person: the kitchen display for Kitchen staff, the orders board for
@@ -262,7 +265,7 @@ it: they keep ordering by scanning the table QR code.
 
 ### Order alerts
 
-The first time you sign in, Android asks whether QR Menu Staff may send notifications: tap **Allow**.
+The first time you sign in, the phone asks whether QR Menu Staff may send notifications: tap **Allow**.
 
 | Alert | Who gets it | Sound |
 | --- | --- | --- |
@@ -275,22 +278,38 @@ The first time you sign in, Android asks whether QR Menu Staff may send notifica
 - If alerts stopped completely: Android **Settings > Apps > QR Menu Staff > Notifications**, and turn them on.
   Some phones (Xiaomi, Oppo, Vivo, Realme) also need **Battery > No restrictions** for the app, or they hold back
   alerts to save battery.
+- iPhone and iPad: new orders and table requests are **time-sensitive**, so they still come through when a Focus
+  (Do Not Disturb, Sleep, Work) is on. If alerts stopped: iPhone **Settings > Notifications > QR Menu Staff**,
+  turn on **Allow Notifications**, **Sounds** and **Time Sensitive Notifications**.
 
 ### The kitchen tablet
 
 - Sign in on the kitchen tablet with a **Kitchen** login. The screen stays on while the kitchen display is open,
   so it does not go dark in the middle of service.
 - Turn the tablet sideways for more tickets on screen. Tap the full-screen button to hide the status bar.
+- An **iPad** works the same way, in either direction. On an **iPhone**, the kitchen display is the one screen
+  that turns sideways; the rest of the app stays upright.
 - Pull down from the top of the screen to refresh.
 
 ### Things the app does that the website cannot
 
-- **Take photo** and **Choose from gallery** when adding a dish photo or your logo.
+- **Take photo** and **Choose from gallery** (on iPhone: **Choose from Photos**) when adding a dish photo or your
+  logo.
 - **PNG** and **Download all (A4 PDF)** on Tables & QR, and **Share PDF** on a bill, open the share menu: send
   them on WhatsApp, save them to Drive, or print them.
-- **Print** on a bill prints through Android's printing (any printer set up on the phone, or "Save as PDF").
+- **Print** on a bill prints through Android's printing (any printer set up on the phone, or "Save as PDF"), or
+  on iPhone and iPad through **AirPrint** (any AirPrint printer, or Save to Files). Shared PDFs have a **Print**
+  button in the share menu too, and on iPhone **Save Image** puts a QR code in your Photos.
 - If the internet drops, a black bar says so; orders update by themselves when you are back online.
-- When a new version is needed, the app asks you to update. Tap **Update** to go to the Play Store.
+- When a new version is needed, the app asks you to update. Tap **Update** to go to the Play Store (on iPhone,
+  the App Store).
+
+### On iPhone and iPad
+
+- iPhones have no back button: **swipe in from the left edge** of the screen to go back, as in Safari. Every
+  window and panel has a **×** (Close) button at the top.
+- The screen moves up when the keyboard opens, so the box you are typing in stays in view.
+- To log out: open the menu (☰) and tap **Log out**.
 
 ### Signed-in devices and signing out
 
@@ -305,7 +324,8 @@ used.
 
 ### Deleting your account
 
-**Settings > Delete account** asks for your password, then deletes:
+**Settings > Delete account**, in the app or on the website, asks for your password (owners also type
+**DELETE**), then deletes:
 
 - for an owner, the whole restaurant: menu, photos, orders and bills, guest ratings, staff logins and devices.
   This cannot be undone, so download any bills you need first.
