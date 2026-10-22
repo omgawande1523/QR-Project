@@ -27,11 +27,11 @@ const appHeaders = { 'X-Client': 'app', 'X-Device-Name': 'Test phone' };
 const sent = () => push.getSender().sent;
 const tokensFor = (type) => sent().filter((m) => m.data.type === type).map((m) => m.token).sort();
 
-async function signInApp(identifier, password, fcmToken, prefs) {
-  const login = await request(app).post('/api/users/login').set(appHeaders).send({ identifier, password });
+async function signInApp(identifier, password, fcmToken, prefs, platform = 'android') {
+  const login = await request(app).post('/api/users/login').set({ ...appHeaders, 'X-Platform': platform }).send({ identifier, password });
   expect(login.status).toBe(200);
   const reg = await request(app).put('/api/sessions/current/push').set(auth(login.body.token))
-    .send({ token: fcmToken, platform: 'android', ...(prefs ? { prefs } : {}) });
+    .send({ token: fcmToken, platform, ...(prefs ? { prefs } : {}) });
   expect(reg.status).toBe(200);
   return login.body.token;
 }
@@ -174,6 +174,67 @@ describe('push fan-out', () => {
     const res = await placeOrder(owner.userId, item);
     expect(res.status).toBe(201);
     await push.idle();
+  });
+});
+
+describe('iPhone and iPad', () => {
+  // The owner and the waiter use iPhones, the kitchen an Android tablet.
+  async function mixedTeam() {
+    const owner = await registerOwner(app);
+    await signInApp(owner.email, owner.password, 'ios-owner-000000000000000000', undefined, 'ios');
+    const devices = {};
+    for (const [role, platform] of [['waiter', 'ios'], ['kitchen', 'android']]) {
+      const email = `${role}.${owner.userId}@test.local`;
+      await request(app).post('/api/staff').set(auth(owner.token)).send({ name: role, email, role, password: 'Staff@12345' });
+      devices[role] = await signInApp(email, 'Staff@12345', `${platform}-${role}-000000000000000000`, undefined, platform);
+    }
+    const item = await createMenuItem(app, owner.token, { name: 'Masala Dosa', price: 120 });
+    return { owner, devices, item };
+  }
+  const messageTo = (token) => sent().find((m) => m.token === token);
+
+  test('the device token records its platform', async () => {
+    const { owner } = await mixedTeam();
+    const platforms = await Session.find({ restaurant: owner.userId }).select('push.platform').lean();
+    expect(platforms.map((s) => s.push.platform).sort()).toEqual(['android', 'ios', 'ios']);
+  });
+
+  test('a new order reaches an iPhone through APNs with its sound, time-sensitive, and Android with its channel', async () => {
+    const { owner, item } = await mixedTeam();
+    await placeOrder(owner.userId, item);
+    await push.idle();
+    const iphone = messageTo('ios-owner-000000000000000000');
+    expect(iphone.notification).toEqual({ title: 'New order · Table 2', body: '2× Masala Dosa' });
+    expect(iphone.android).toBeUndefined();
+    expect(iphone.apns.headers).toMatchObject({ 'apns-priority': '10', 'apns-push-type': 'alert' });
+    expect(Number(iphone.apns.headers['apns-expiration'])).toBeGreaterThan(Date.now() / 1000);
+    expect(iphone.apns.payload.aps).toMatchObject({ sound: 'new_order.wav', 'interruption-level': 'time-sensitive', 'thread-id': 'new_orders' });
+    expect(iphone.data).toMatchObject({ type: 'newOrder', orderId: expect.any(String) }); // tapping opens the order
+
+    const tablet = messageTo('android-kitchen-000000000000000000');
+    expect(tablet.apns).toBeUndefined();
+    expect(tablet.android.notification.channel_id).toBe('new_orders');
+  });
+
+  test('a waiter call is time-sensitive on iPhone; an order ready is an ordinary alert', async () => {
+    const { owner, devices, item } = await mixedTeam();
+    await request(app).post('/api/service-requests').send({ restaurantId: owner.userId, tableNumber: 3, type: 'Waiter' });
+    const order = (await placeOrder(owner.userId, item)).body;
+    await push.idle();
+    expect(messageTo('ios-waiter-000000000000000000').apns.payload.aps).toMatchObject({ sound: 'table_request.wav', 'interruption-level': 'time-sensitive' });
+
+    push.setSender(push.createMockSender());
+    await request(app).put(`/api/orders/${order._id}`).set(auth(devices.kitchen)).send({ status: 'ready' });
+    await push.idle();
+    expect(sent()).toHaveLength(1);
+    expect(sent()[0].apns.payload.aps).toMatchObject({ sound: 'order_ready.wav', 'interruption-level': 'active', 'thread-id': 'order_ready' });
+  });
+
+  test('buildMessage: one platform block per message; a token without a platform is Android', () => {
+    const order = { _id: 'o1', tableNumber: 4, items: [{ quantity: 1, menuItemName: 'Chai' }] };
+    expect(push.buildMessage('t', 'newOrder', order, 'ios')).toMatchObject({ token: 't', apns: { headers: { 'apns-collapse-id': 'order-o1' } } });
+    expect(push.buildMessage('t', 'newOrder', order)).toHaveProperty('android');
+    expect(push.buildMessage('t', 'newOrder', order)).not.toHaveProperty('apns');
   });
 });
 

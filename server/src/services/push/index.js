@@ -5,15 +5,18 @@ const { createFcmSender, loadServiceAccount } = require('./fcmSender');
 
 /*
  * Push notifications to the staff app (Firebase Cloud Messaging). Like socket events, they are sent by the
- * server after the database write, never relayed by clients. Each type goes to the roles that act on it,
- * on a high-priority Android channel of its own (the app creates the channels; ids must match
- * client/src/native/push.js) and only to devices that left that type switched on.
+ * server after the database write, never relayed by clients. Each type goes to the roles that act on it and
+ * only to devices that left that type switched on. Android: a high-priority channel of its own (the app creates
+ * the channels; ids must match client/src/native/push.js). iPhone and iPad, through Apple's APNs: the same
+ * sound from the app bundle (mobile/ios/App/App/Sounds), and "time-sensitive" for what needs someone at a
+ * table now, so it shows during Focus modes.
  */
 const TYPES = {
-  newOrder: { roles: ['owner', 'manager', 'kitchen'], channel: 'new_orders' },
-  tableRequest: { roles: ['owner', 'manager', 'waiter'], channel: 'table_requests' },
-  orderReady: { roles: ['waiter'], channel: 'order_ready' }
+  newOrder: { roles: ['owner', 'manager', 'kitchen'], channel: 'new_orders', sound: 'new_order.wav', interruption: 'time-sensitive' },
+  tableRequest: { roles: ['owner', 'manager', 'waiter'], channel: 'table_requests', sound: 'table_request.wav', interruption: 'time-sensitive' },
+  orderReady: { roles: ['waiter'], channel: 'order_ready', sound: 'order_ready.wav', interruption: 'active' }
 };
+const TTL_SECONDS = 900; // an order older than 15 minutes is no longer news
 
 const REQUEST_TITLES = { Waiter: 'Waiter called', Bill: 'Bill requested', Water: 'Water requested', Cutlery: 'Cutlery requested' };
 
@@ -44,18 +47,29 @@ const BUILDERS = {
   })
 };
 
-function buildMessage(token, type, entity) {
+// One FCM message for one device. `platform` is the device's ('android' when unknown: tokens from before iOS).
+function buildMessage(token, type, entity, platform = 'android') {
   const { title, body, tag, data } = BUILDERS[type](entity);
-  return {
-    token,
-    notification: { title, body },
-    data,
-    android: {
+  const { channel, sound, interruption } = TYPES[type];
+  const message = { token, notification: { title, body }, data };
+  if (platform === 'ios') {
+    message.apns = {
+      headers: {
+        'apns-priority': '10',
+        'apns-push-type': 'alert',
+        'apns-expiration': String(Math.floor(Date.now() / 1000) + TTL_SECONDS),
+        'apns-collapse-id': tag
+      },
+      payload: { aps: { sound, 'interruption-level': interruption, 'thread-id': channel } }
+    };
+  } else {
+    message.android = {
       priority: 'HIGH',
-      ttl: '900s', // an order older than 15 minutes is no longer news
-      notification: { channel_id: TYPES[type].channel, tag, notification_priority: 'PRIORITY_MAX', visibility: 'PUBLIC' }
-    }
-  };
+      ttl: `${TTL_SECONDS}s`,
+      notification: { channel_id: channel, tag, notification_priority: 'PRIORITY_MAX', visibility: 'PUBLIC' }
+    };
+  }
+  return message;
 }
 
 // Records messages instead of sending them (tests, and servers without Firebase in development).
@@ -89,12 +103,12 @@ async function fanOut(restaurantId, type, entity) {
     'push.token': { $exists: true },
     [`push.prefs.${type}`]: { $ne: false },
     expiresAt: { $gt: new Date() }
-  }).select('push.token').lean();
-  const tokens = [...new Set(sessions.map((s) => s.push.token))];
+  }).select('push.token push.platform').lean();
+  const devices = new Map(sessions.map((s) => [s.push.token, s.push.platform]));
 
-  const results = await Promise.all(tokens.map(async (token) => {
+  const results = await Promise.all([...devices].map(async ([token, platform]) => {
     try {
-      return { token, ...(await sender.send(buildMessage(token, type, entity))) };
+      return { token, ...(await sender.send(buildMessage(token, type, entity, platform))) };
     } catch (err) {
       return { token, ok: false, error: err.message };
     }
